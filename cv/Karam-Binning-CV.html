@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Karam Binning — CV</title>
+<style>
+:root{--ink:#15181d;--mut:#5a6270;--line:#dfe3ea;--accent:#0072a3;--accent2:#00374d}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f4f5f7;color:var(--ink)}
+body{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;line-height:1.45;font-size:10.6pt}
+.page{max-width:780px;margin:24px auto;background:#fff;padding:42px 48px 40px;box-shadow:0 2px 24px rgba(0,0,0,.08)}
+h1{font-size:26pt;margin:0;letter-spacing:.5px;color:var(--accent2);font-weight:800}
+.tag{font-size:11pt;color:var(--accent);font-weight:600;margin:3px 0 8px}
+.contact{font-size:9.3pt;color:var(--mut);line-height:1.6}
+.contact a{color:var(--accent);text-decoration:none}
+h2{font-size:10pt;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);border-bottom:2px solid var(--line);padding-bottom:4px;margin:18px 0 9px}
+.role{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin:9px 0 1px}
+.role b{font-size:10.8pt}
+.role .when{color:var(--mut);font-size:9pt;white-space:nowrap}
+.sub{color:var(--mut);font-size:9.3pt;margin:0 0 4px}
+p{margin:5px 0}
+ul{margin:5px 0 6px;padding-left:17px}
+li{margin:3px 0}
+li b,p b{color:var(--accent2)}
+.profile{font-size:10.2pt}
+.stack{font-size:8.9pt;color:var(--mut);font-style:italic;margin-top:6px}
+.skills b{color:var(--accent2)}
+.foot{margin-top:14px;font-size:8.4pt;color:#9aa2b0;text-align:center;border-top:1px solid var(--line);padding-top:8px}
+@media print{
+ body{background:#fff;font-size:10pt}
+ .page{box-shadow:none;margin:0;max-width:none;padding:0 6mm}
+ @page{size:A4;margin:12mm}
+ h2,.role{break-after:avoid}ul,li,.role{break-inside:avoid}
+ .noprint{display:none}
+}
+.bar{position:sticky;top:0;background:var(--accent2);color:#fff;text-align:center;font-size:9pt;padding:7px}
+.bar a{color:#7fd8ff}
+</style></head><body>
+<div class="bar noprint">Print-ready CV — press <b>Cmd/Ctrl-P</b> → <b>Save as PDF</b> for a clean PDF. Word version: <a href="Karam-Binning-Internship-CV-2026.docx">.docx</a></div>
+<div class="page">
+<h1>KARAM BINNING</h1>
+<div class="tag">AI Builder · Founder, Binning.AI · Final-year History &amp; Politics, Loughborough</div>
+<div class="contact">07951 882002 &nbsp;·&nbsp; <a href="mailto:K.S.Binning1-24@student.lboro.ac.uk">K.S.Binning1-24@student.lboro.ac.uk</a> &nbsp;·&nbsp; Luton / Loughborough (London-commutable) &nbsp;·&nbsp; Full UK driving licence<br>Interactive portfolio: <i>the Binning.AI estate</i> — link provided in covering email</div>
+
+<h2>Profile</h2>
+<p class="profile">Final-year History &amp; Politics student and self-taught AI engineer. Over four months I taught myself to build and shipped a one-person, AI-native software estate — a multi-agent intelligence platform, autonomous agents running on local models across a private device fleet, a safety-critical legal-research system, and a quantitatively-validated trading engine. I work the way modern AI teams do: design the system, ground every claim in real data, verify before trusting. Seeking an applied-AI / technical internship where that builder's instinct and a humanities analyst's judgement are both useful.</p>
+
+<h2>Selected Work — Binning.AI</h2>
+<div class="role"><b>Founder &amp; Director, Binning.AI</b><span class="when">March 2026 – present</span></div>
+<p class="sub">A one-person AI-native company.</p>
+<ul>
+<li><b>KAM — a personal intelligence platform</b> (React 19 · Vite · 40+ modules, fully local). Aggregates live world, financial and OSINT data into one terminal interface with a multi-LLM &ldquo;council,&rdquo; in-browser computer vision, and a retrieval-augmented knowledge base. The flagship the rest of the estate is built around.</li>
+<li><b>An autonomous agent fleet across seven networked machines.</b> A director-orchestrator decomposes goals, assigns acceptance-bound tasks to specialist sub-agents, and — critically — <b>no agent can mark its own work done</b>: an independent verification gate, not self-reported success. All on local open models (Ollama / llama.cpp), under deterministic supervision.</li>
+<li><b>THEMIS — a safety-critical legal RAG.</b> Hybrid (dense + BM25) retrieval over a structured legal corpus with an <i>abstention gate</i> that refuses rather than hallucinate — built after studying how legal AI gets practitioners sanctioned, and implementing the mitigations. Local-only for privacy.</li>
+<li><b>A validated trading engine.</b> A multi-agent Polymarket engine (+113% on paper over 289 trades) and an in-play sports model whose edge I validated with <b>closing-line value and Brier score</b>, not just P&amp;L — the variance-resistant test of real edge.</li>
+<li><b>An automated lead-generation &amp; job-application pipeline</b> (Python, OpenStreetMap, local-LLM classification) — national-scale business intelligence feeding a postcard-website outreach product.</li>
+</ul>
+<p class="stack">Stack across the estate: React 19 / TypeScript / Three.js · Python / FastAPI · Ollama, llama.cpp, local LLMs · multi-agent orchestration · RAG · Tailscale-meshed distributed systems · systemd.</p>
+
+<h2>Education</h2>
+<div class="role"><b>Loughborough University — BA History &amp; Politics</b><span class="when">2024 – 2027 (final year, Sept 2026)</span></div>
+<p>First-class module work: African States &amp; Nations <b>70</b>, Politics of Development <b>66</b>, International Political Theory <b>66</b>, The Making &amp; Unmaking of the World Order <b>65</b>, Theories &amp; Methods in Political Research <b>65</b>.<br><b>Dissertation (in progress):</b> an AI-assisted platform for civilian geopolitical &amp; security analysis in peace and conflict — <i>KAM built as the dissertation's analytical instrument</i>, bridging the software and the scholarship.</p>
+<div class="role"><b>Harlington Sixth Form, Luton</b><span class="when">2022 – 2024</span></div>
+<p>A-Levels: Psychology (B), Criminology (B), Media Studies (B) · <b>Head Student</b> of Sixth Form &amp; Upper School.</p>
+
+<h2>Experience</h2>
+<div class="role"><b>Buy Sell and Loan (Questar Ltd), Luton — Team Member</b><span class="when">2024 – present</span></div>
+<p>Regulated retail dealing in high-value electronics, jewellery and luxury goods. High-value item assessment and valuation; regulatory-compliant record-keeping; cash handling; trust-based repeat-customer relationships; independent operation across the store.</p>
+<div class="role"><b>Pret A Manger, Luton Airport (airside) — Team Member</b><span class="when">2022 – 2024</span></div>
+<p>One of Pret's highest-footfall UK sites. Fast, accurate high-volume service to an international clientele; <b>self-initiated barista training above grade</b>; ran the kiosk independently (sales, stock/FIFO, hygiene, closing) with no managerial assistance.</p>
+<p class="sub">~5 years of continuous customer-facing work alongside full-time education.</p>
+
+<h2>Skills</h2>
+<p class="skills"><b>AI / technical:</b> Claude &amp; Claude Code (primary) · multi-agent design &amp; orchestration · prompt &amp; context engineering · retrieval-augmented generation (hybrid, abstention) · local-model deployment (Ollama, llama.cpp) · Python (AI-assisted development) · React 19 + Vite · Linux CLI &amp; networking · calibration/eval discipline (CLV, Brier).<br>
+<b>Analytical / research:</b> OSINT methodology (multi-source verification, structured synthesis) · research design · written analysis to deadline · university-level political analysis.<br>
+<b>Operational:</b> regulated cash handling &amp; compliance · high-volume customer service · reliability under pressure.</p>
+
+<h2>Interests</h2>
+<p>AI as a structural force in geopolitics · dual-use technology &amp; access asymmetry · the emerging agent economy · post-colonial political economy · the space between peace and war (dissertation terrain).</p>
+
+<div class="foot">Karam Binning · Binning.AI · K.S.Binning1-24@student.lboro.ac.uk</div>
+</div></body></html>
