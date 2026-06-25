@@ -210,6 +210,13 @@
       <p style="font-size:13px;color:#9fb6cf;flex:1">Outreach and operations run as live state, worked by an agent.</p>
       <span class="go" style="font-size:10px;letter-spacing:.18em;color:#4a6888;margin-top:14px;transition:.14s">▸ INSPECT</span>
     </button>
+    <button class="ast" data-id="fw" onClick="{{ selectAsset }}" style="text-align:left;border:1px solid #162540;border-top:2px solid #ff5544;background:#070e1c;padding:24px;transition:.14s;display:flex;flex-direction:column;min-height:226px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="font-size:30px;color:#ff5544;line-height:1">◬</span><span style="font-size:9px;letter-spacing:.14em;color:#4a6888">THREE.JS - GEO</span></div>
+      <div style="font-family:'Bebas Neue';font-size:38px;line-height:.95;margin-top:18px">FUTURE WARFARE</div>
+      <div style="font-size:11px;letter-spacing:.12em;color:#4a6888;margin-bottom:14px">CONFLICT-LANDSCAPE MODEL</div>
+      <p style="font-size:13px;color:#9fb6cf;flex:1">Where the next major-power conflict actually plays out.</p>
+      <span class="go" style="font-size:10px;letter-spacing:.18em;color:#4a6888;margin-top:14px;transition:.14s">▸ INSPECT</span>
+    </button>
     <button class="ast" data-id="declaration" onClick="{{ selectAsset }}" style="text-align:left;border:1px solid #162540;border-top:2px solid #c084fc;background:#070e1c;padding:24px;transition:.14s;display:flex;flex-direction:column;min-height:226px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="font-size:30px;color:#c084fc;line-height:1">§</span><span style="font-size:9px;letter-spacing:.14em;color:#4a6888">INTEGRITY SYSTEM</span></div>
       <div style="font-family:'Bebas Neue';font-size:38px;line-height:.95;margin-top:18px">AI DECLARATION</div>
@@ -420,7 +427,7 @@
     </div>
     <div style="padding:22px 28px 28px">
       <p style="font-size:16px;color:#eef6ff;line-height:1.6;margin-bottom:20px">{{ selectedAssetData.oneLine }}</p>
-      <p style="font-size:14px;color:#9fb6cf;line-height:1.75;margin-bottom:22px;white-space:pre-line">{{ selectedAssetData.body }}</p>
+      <sc-if value="{{ selectedAssetData.hasPreview }}" hint-placeholder-val="{{ false }}"><div style="margin:0 0 20px;border:1px solid #1a2c44;background:#04080f"><img src="{{ selectedAssetData.preview }}" alt="preview" style="width:100%;display:block" /><div style="font-size:9px;letter-spacing:.16em;color:#4a6888;padding:7px 10px;border-top:1px solid #122036">▸ ACTUAL APP — LIVE SCREENSHOT</div></div></sc-if><p style="font-size:14px;color:#9fb6cf;line-height:1.75;margin-bottom:22px;white-space:pre-line">{{ selectedAssetData.body }}</p>
       <sc-if value="{{ selectedAssetData.hasHighlights }}" hint-placeholder-val="{{ false }}">
         <div style="font-size:10px;letter-spacing:.2em;color:#4a6888;margin-bottom:10px">SIGNATURE MODULES</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px">
@@ -536,6 +543,7 @@ class Component extends DCLogic {
       tags:['Python','Overpass / OSM','verify-before-build','Leaflet map','GitHub Pages'],
       proof:'46 verified sites across 5 waves · refuses to fabricate · national geo-harvest' },
     command:{ name:'COMMAND', sub:'The ops cockpit · my second brain', kind:'D3 · THREE.JS · LEAFLET', icon:'\u2316', accent:'#6ea8ff', hasModules:false, hasHighlights:false,
+      hasPreview:true, preview:'previews/command.png',
       oneLine:'The single-screen cockpit I actually run operations from.',
       body:'BINNING.AI \u00b7 COMMAND \u2014 a single-viewport, click-to-explore spatial workspace (deliberately separate from KAM; this one is mine to operate from). A permanent director rail, a d3 + topojson + Leaflet map of leads across Loughborough and Luton, Three.js set-pieces (drone/pilot sims, an anatomical brain) plus FUTURE WARFARE - an interactive model of the contemporary conflict landscape with a cyberspace / grey-zone layer, the operational face of the same question my dissertation asks, an academic workstation, a research feed, and \u201cAsk YerDad.\u201d\n\nIt\u2019s where the estate is steered \u2014 the cockpit version of the same cyan terminal, dense and operational rather than presentational.',
       tags:['Future Warfare model','d3 + topojson','Three.js','Leaflet','single-viewport'],
@@ -545,6 +553,11 @@ class Component extends DCLogic {
       body:'MISSION OS is the operations layer of the career node - a live state board for what a one-person company has to track: people, projects, contacts and the threads between them. It pairs a structured workspace (the London-Tech-Week and internship outreach pipeline, target and contact lists, draft-to-sent status) with Mission, an agent designed to work that board: research-grounded, it surfaces gaps and drafts the next action so the live state stays honest instead of drifting.\n\nIt is how outreach stops being a to-do list and becomes a system - the same builder discipline as the rest of the estate, pointed at getting the right work in front of the right people.',
       tags:['mission control','outreach pipeline','contact + project state','Mission agent','career node'],
       proof:'Runs the LTW / internship outreach as live state, not a checklist' },
+    fw:{ name:'FUTURE WARFARE', sub:'Interactive conflict-landscape model - Command', kind:'THREE.JS - GEOPOLITICAL', icon:'◬', accent:'#ff5544', hasModules:false, hasHighlights:false, hasPreview:true, preview:'previews/command.png',
+      oneLine:'An interactive model of where the next major-power conflict actually plays out.',
+      body:'FUTURE WARFARE is the centrepiece of Command - an interactive Three.js model of the contemporary conflict landscape, with a cyberspace / grey-zone layer over the conventional map. It is the visual, operational face of the same question my dissertation asks, built inside the ops cockpit rather than written as a slide: something to fly through and interrogate.\n\nIt is where the scholarship and the software meet - the academic question, the structural preconditions for major-power conflict, given a spatial, explorable form.',
+      tags:['Three.js','cyberspace / grey-zone','conflict landscape','dissertation-aligned','inside Command'],
+      proof:'The operational face of my dissertation question, built into Command' },
     declaration:{ name:'AI DECLARATION', sub:'Authorship & provenance ledger', kind:'INTEGRITY SYSTEM', icon:'\u00A7', accent:'#c084fc', hasModules:false, hasHighlights:false,
       oneLine:'A system that timestamps what was AI-assisted versus my own.',
       body:'An authorship-provenance system built on the same instinct as the rest: declare honestly, don\u2019t overclaim. It logs my AI sessions (ChatGPT, Claude, Claude Code), generates dated declarations against a template, and timestamps authorship \u2014 distinguishing AI-assisted work from original analysis. It houses the formal AI-use declaration for my PIB800 research proposal.\n\nIn a world arguing about what \u201cI built this\u201d means, it\u2019s my answer: a paper trail that timestamps authorship rather than inflating it.',
