@@ -694,7 +694,7 @@ const SCR_W = 1280, SCR_H = 800, SCR_MIN = 104;
 const pScroll = document.querySelector('#profile .p-scroll');
 function fitProfile(){
   if (!profile.classList.contains('open')) return;
-  const scr = pBody.querySelector('.p-screen'), isLog = scr && scr.classList.contains('p-log');
+  const scr = pBody.querySelector('.p-screen'), isShow = !!(scr && scr.dataset.show), isLog = scr && (scr.classList.contains('p-log') || isShow);
   pBody.style.zoom = ''; if (scr){ scr.style.height = '0px'; scr.style.width = ''; }
   const padB = 12, top = pScroll.getBoundingClientRect().top;
   const contentBottom = () => pBody.getBoundingClientRect().bottom - top + pScroll.scrollTop + padB;
@@ -706,7 +706,7 @@ function fitProfile(){
   }
   if (!scr) return;
   const fullW = scr.parentElement.getBoundingClientRect().width;            // visual px
-  const ideal = isLog ? Math.min(fullW / 1.6, scr.firstElementChild.getBoundingClientRect().height + 14 * k) : fullW * SCR_H / SCR_W;
+  const ideal = isShow ? fullW / 1.7 : isLog ? Math.min(fullW / 1.6, scr.firstElementChild.getBoundingClientRect().height + 14 * k) : fullW * SCR_H / SCR_W;
   const r = room(), hVis = Math.max(SCR_MIN * k, Math.min(ideal, r)), wVis = isLog ? fullW : Math.min(fullW, hVis * SCR_W / SCR_H);
   scr.style.height = (hVis / k) + 'px'; scr.style.width = (wVis / k) + 'px';
   scr.style.setProperty('--s', ((wVis / k) / SCR_W).toFixed(4));

@@ -32,7 +32,7 @@
     });
   }
   const roll = document.createElement('div'); roll.className = 'roll'; document.querySelector('.term')?.appendChild(roll);
-  if (d.mock !== 'none'){ const m = document.createElement('span'); m.className = 't-mock'; m.textContent = d.mock || 'mock data · illustration'; (hub || document.body).appendChild(m); }
+  if (d.mock !== 'none'){ const m = document.createElement('span'); m.className = 't-mock'; m.textContent = d.mock || 'mock data · illustration'; if (embedded && !hub) m.style.cssText = 'top:12px;bottom:auto'; (hub || document.body).appendChild(m); }
 
   /* a channel page embedded in the portfolio hands scrolling back to it, unless something inside can scroll */
   if (d.channel !== undefined && parent !== window){
