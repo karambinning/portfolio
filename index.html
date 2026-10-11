@@ -1313,45 +1313,20 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
   // a staged red-team exercise: the screen shakes, tears and turns from blue to red (no windows, no words)
-  function attackIn(){
-    return new Promise(res => {
-      const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
-      if (reduce){ return res(); }
-      layer.innerHTML = ''; layer.hidden = false; tint.className = 'atk-tint'; big.classList.remove('on');
-      const fx = $('#atkFx'); fx.hidden = false; fx.className = 'atk-fx';
-      document.body.classList.add('under-attack'); burst(600);   // short and sharp: the transfer is the main event
-      let i = 0; const total = 10;
-      (function spawn(){
-        if (i < total){
-          i++; tint.style.opacity = (i / total * .82).toFixed(3);
-          document.body.style.setProperty('--shake', (3 + i * 1.2).toFixed(1) + 'px');
-          if (i === 4) fx.classList.add('hard'); if (i === 7) fx.classList.add('max');
-          return setTimeout(spawn, 45);
-        }
-        tint.classList.add('full', 'strobe'); burst(200);
-        setTimeout(() => { document.body.classList.remove('under-attack'); fx.hidden = true; res(); }, 140);
-      })();
-    });
-  }
-  function attackOut(){
-    // mirror of the attack: the screen turns from red back to blue. No words, no windows.
-    return new Promise(res => {
-      const layer = $('#atkLayer'), tint = $('#atkTint');
-      if (reduce || layer.hidden){ layer.hidden = true; return res(); }
-      document.body.classList.add('under-defence');
-      let i = 0; const total = 8;
-      (function spawn(){
-        if (i < total){
-          i++; tint.style.background = `rgb(${Math.round(90 - 90 * i / total)},${Math.round(16 + 60 * i / total)},${Math.round(16 + 90 * i / total)})`;
-          return setTimeout(spawn, 40);
-        }
-        document.body.classList.remove('under-defence'); setTimeout(res, 80);
-      })();
-    });
-  }
+
+
   // after the attack or defence: the windows fold away and the light drops, so the page underneath can be seen coming apart
   // a classic CRT power cycle: the screen flashes, collapses to a line, then to a dot, and goes dark (off),
   // or the reverse (on). Red into the dissertation, blue out of it.
+  // the infection's entry point: a single ring of the opposing colour expands from the centre of the screen
+  function seedPulse(col){
+    const d = document.createElement('div');
+    d.style.cssText = `position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;z-index:60;pointer-events:none;
+      border:2px solid ${col};box-shadow:0 0 30px 6px ${col},inset 0 0 30px 6px ${col}`;
+    document.body.appendChild(d);
+    d.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(60)', opacity: 0 }], { duration: 650, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' })
+      .finished.then(() => d.remove());
+  }
   function crtPower(on, col){
     return new Promise(res => {
       const d = document.createElement('div');
@@ -1375,16 +1350,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       d.animate(on ? up : off, { duration: on ? 440 : 500, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' }).finished.then(() => { d.remove(); res(); });
     });
   }
-  function atkSettle(col){
-    // the windows themselves are taken apart detail by detail (bars, dots, labels, text, frames), and the tint drains away
-    const layer = $('#atkLayer'), tint = $('#atkTint');
-    layer.querySelectorAll('.atkw').forEach(w => { if (w.classList.contains('close')) w.remove(); else w.style.animation = 'none'; });
-    const run = window.KBDismantle ? KBDismantle.run(layer, 'out', 900, col) : Promise.resolve();
-    tint.classList.remove('full', 'strobe'); tint.style.transition = 'opacity .9s'; tint.style.opacity = '0';
-    return Promise.all([run, new Promise(r => setTimeout(r, 920))]).then(() => {
-      window.KBDismantle && KBDismantle.restore(layer);
-      layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.transition = ''; tint.style.background = ''; });
-  }
+
 
 
 
@@ -1551,19 +1517,13 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
     if (b.dataset.attack !== undefined || a.dataset.attack !== undefined){
-      // dissertation, both ways: 1) the attack (in, blue to red) or the defence (out, red to blue) plays out;
+      // dissertation, both ways: 1) a pulse of the opposing colour (red in, blue out);
       // 2) the old slide is infected by the opposing colour and dismantled piece by piece; 3) CRT power off / on; 4) the new one is built piece by piece. No words.
       const into = b.dataset.attack !== undefined, col = into ? 'rgba(255,48,72,.9)' : 'rgba(0,212,255,.9)';
-      if (into) await attackIn();
-      else {
-        const layer = $('#atkLayer'), tint = $('#atkTint');
-        layer.innerHTML = ''; layer.hidden = false;
-        tint.className = 'atk-tint full'; tint.style.opacity = '';
-        await attackOut();
-      }
-      const settled = atkSettle(col);                            // the attack / defence windows come apart detail by detail
-      await new Promise(r => setTimeout(r, 120));                // as they go, the page underneath starts to come apart too
-      await Promise.all([settled, chanText(a, 'out', 2300, col)]);   // the opposing colour infects it, then it comes apart one detail at a time
+      // the opening: one pulse of the opposing colour ripples out from the centre and the infection spreads from it
+      seedPulse(col);
+      await new Promise(r => setTimeout(r, 180));
+      await chanText(a, 'out', 2300, col);   // the opposing colour infects it, then it comes apart one detail at a time
       await crtPower(false, col);                                // then the screen switches off like an old CRT
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
