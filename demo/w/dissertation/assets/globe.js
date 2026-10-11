@@ -12,9 +12,7 @@ window.WarGlobe = (opts) => {
   const coast = topojson.mesh(W, W.objects.countries, (a, b) => a === b);
   const grat = d3.geoGraticule().step([15, 15])();
   const grat30 = d3.geoGraticule().step([30, 30])();
-  const front = d3.geoOrthographic().clipAngle(90).precision(0.5);
-  const far = d3.geoOrthographic().clipAngle(null).precision(0.8);
-  const pFront = d3.geoPath(front, ctx), pFar = d3.geoPath(far, ctx);
+  const equator = { type: 'LineString', coordinates: d3.range(-180, 181, 3).map(l => [l, 0]) };
 
   // anchor points: centroids of the larger countries (unnamed; used only as places to draw marks)
   const anchors = countries.map(f => ({ c: d3.geoCentroid(f), a: d3.geoArea(f) }))
@@ -70,7 +68,6 @@ window.WarGlobe = (opts) => {
     canvas.width = size * dpr; canvas.height = size * dpr;
     canvas.style.width = canvas.style.height = size + 'px';
     R = size / 2 - 26; cx = cy = size / 2;
-    front.scale(R).translate([cx, cy]); far.scale(R).translate([cx, cy]);
     draw(performance.now());
   }
 
@@ -83,14 +80,49 @@ window.WarGlobe = (opts) => {
   }
   const visible = p => d3.geoDistance(p, [-rot[0], -rot[1]]) < Math.PI / 2;
 
-  function stroke(path, geo, c, w, a = 1, dash = []){
-    ctx.globalAlpha = a; ctx.strokeStyle = c; ctx.lineWidth = w; ctx.setLineDash(dash);
-    ctx.beginPath(); path(geo); ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+  // the line work (graticules, coast, borders, the equator) never changes: it is turned into unit vectors once,
+  // finely enough (≤ 1°) that straight segments follow d3's great-circle resampling to well under a pixel. Each frame
+  // then only rotates and projects the points, exactly as d3.geoRotation + geoOrthographic do: the far side unclipped,
+  // the front clipped at the horizon (the same 90° small circle), with the crossing point placed on the rim.
+  const RAD = Math.PI / 180, STEP = RAD;
+  function toVec(geo){
+    const lines = geo.type === 'LineString' ? [geo.coordinates] : geo.coordinates, out = [];
+    for (const line of lines){
+      const v = [], push = ([l, f]) => { const L = l * RAD, F = f * RAD, c = Math.cos(F); v.push(c * Math.cos(L), c * Math.sin(L), Math.sin(F)); };
+      for (let i = 0; i < line.length; i++){
+        if (i){ const a = line[i - 1], b = line[i], n = Math.ceil(d3.geoDistance(a, b) / STEP);
+          if (n > 1){ const ip = d3.geoInterpolate(a, b); for (let k = 1; k < n; k++) push(ip(k / n)); } }
+        push(line[i]);
+      }
+      out.push(Float64Array.from(v));
+    }
+    return out;
   }
+  function lines(vecs, c, w, a, clip){
+    const l = rot[0] * RAD, p = rot[1] * RAD, cl = Math.cos(l), sl = Math.sin(l), cp = Math.cos(p), sp = Math.sin(p);
+    ctx.globalAlpha = a; ctx.strokeStyle = c; ctx.lineWidth = w; ctx.setLineDash([]);
+    ctx.beginPath();
+    for (const v of vecs){
+      let pX = 0, pY = 0, pD = 0;
+      for (let i = 0; i < v.length; i += 3){
+        const x0 = v[i], y0 = v[i + 1], z = v[i + 2], x = x0 * cl - y0 * sl;
+        const X = y0 * cl + x0 * sl, Y = z * cp + x * sp, D = x * cp - z * sp;
+        if (!clip){ i ? ctx.lineTo(cx + R * X, cy - R * Y) : ctx.moveTo(cx + R * X, cy - R * Y); continue; }
+        if (i && (D > 0) !== (pD > 0)){
+          const t = pD / (pD - D); let ix = pX + (X - pX) * t, iy = pY + (Y - pY) * t; const m = Math.hypot(ix, iy) || 1; ix /= m; iy /= m;
+          pD > 0 ? ctx.lineTo(cx + R * ix, cy - R * iy) : ctx.moveTo(cx + R * ix, cy - R * iy);
+        }
+        if (D > 0) i ? ctx.lineTo(cx + R * X, cy - R * Y) : ctx.moveTo(cx + R * X, cy - R * Y);
+        pX = X; pY = Y; pD = D;
+      }
+    }
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  const V = { grat30: toVec(grat30), coast: toVec(coast), grat: toVec(grat), equator: toVec(equator), borders: toVec(borders) };
 
   function draw(now){
     if (!size) return;
-    rotFn = d3.geoRotation(rot); front.rotate(rot); far.rotate(rot);
+    rotFn = d3.geoRotation(rot);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, size, size);
 
     // atmosphere: three rings, no shader
@@ -110,14 +142,14 @@ window.WarGlobe = (opts) => {
 
     // far side, seen through the wireframe (stereo ghost offset to the left)
     ctx.save(); ctx.translate(-2, 0);
-    stroke(pFar, grat30, '#3a0808', .6, .7);
-    stroke(pFar, coast, '#5a0c0c', .7, .55);
+    lines(V.grat30, '#3a0808', .6, .7, false);
+    lines(V.coast, '#5a0c0c', .7, .55, false);
     ctx.restore();
     // focal plane
-    stroke(pFront, grat, '#3a0808', .7);
-    stroke(pFront, { type: 'LineString', coordinates: d3.range(-180, 181, 3).map(l => [l, 0]) }, '#800000', .9);
-    stroke(pFront, borders, '#5a0c0c', .6);
-    stroke(pFront, coast, '#b00000', 1.05);
+    lines(V.grat, '#3a0808', .7, 1, true);
+    lines(V.equator, '#800000', .9, 1, true);
+    lines(V.borders, '#5a0c0c', .6, 1, true);
+    lines(V.coast, '#b00000', 1.05, 1, true);
     ctx.strokeStyle = '#c41414'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
 
     // mirror-scan beam: sweeps across the disc and back, like the Virtual Boy's mirror

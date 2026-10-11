@@ -806,7 +806,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
-<script src="demo/_frame/dismantle.js?v=10112130"></script>
+<script src="demo/_frame/dismantle.js?v=10112230"></script>
 </head>
 <body>
 
@@ -1524,11 +1524,16 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   Object.entries(CHANNELS).forEach(([sid, page]) => {
     const sc = document.getElementById(sid); if (!sc) return;
     sc.classList.add('chan');
-    sc.innerHTML = `<iframe class="chan-app" src="demo/w/${page}/?v=${BUILD}" title="${sc.getAttribute('aria-label')}" ${sid === 'estate' || sid === 'dissertation' ? '' : 'loading="lazy"'}></iframe>`;
+    // estate and dissertation load at once; the others start as soon as the page is idle (never lazily: a lazy frame
+    // inside a hidden channel only began loading on arrival, so on a phone the channel showed blank)
+    const url = `demo/w/${page}/?v=${BUILD}`, now = sid === 'estate' || sid === 'dissertation';
+    sc.innerHTML = `<iframe class="chan-app" ${now ? `src="${url}"` : `data-src="${url}"`} title="${sc.getAttribute('aria-label')}"></iframe>`;
     // a channel that is not on screen is paused (its render loop, globe or rain waits); see frame.js
-    const fr = sc.firstElementChild; fr.addEventListener('load', () => chanRun(sc));
+    const fr = sc.firstElementChild; fr.addEventListener('load', () => { if (fr.getAttribute('src')) chanRun(sc); });
   });
-  function chanRun(sc){ const fr = sc.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage(sc.classList.contains('active') ? { kbResume: 1 } : { kbPause: 1 }, '*'); }
+  function chanRun(sc){ const fr = sc.querySelector('.chan-app'); if (fr && fr.contentWindow && fr.getAttribute('src')) fr.contentWindow.postMessage(sc.classList.contains('active') ? { kbResume: 1 } : { kbPause: 1 }, '*'); }
+  function chanLoad(sc){ const fr = sc && sc.querySelector('.chan-app'); if (fr && !fr.getAttribute('src') && fr.dataset.src) fr.src = fr.dataset.src; }
+  addEventListener('load', () => (window.requestIdleCallback || (f => setTimeout(f, 1200)))(() => scenes.forEach(chanLoad), { timeout: 2500 }));
 
   /* ---------- into the vault: a small terminal SSHes into M1 (a demonstration, nothing connects), then becomes the brain ---------- */
   function warpIn(onReveal){
@@ -1758,7 +1763,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (history.replaceState) history.replaceState(null, '', '#' + s.id);
     typeTerm(TERM[s.id] || '');
     if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
-    scenes.forEach(x => x.classList.contains('chan') && chanRun(x));   // only the channel on screen runs
+    chanLoad(s); scenes.forEach(x => x.classList.contains('chan') && chanRun(x));   // only the channel on screen runs
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
     s.scrollTop = 0; SCROLLED.forEach(el => { if (s.contains(el) && el.scrollTop > 0 && !el.closest('.tl-step')){ el.scrollTop = 0; SCROLLED.delete(el); } });   // every channel starts at the top
   }
@@ -1835,6 +1840,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (scenes[n] && scenes[n].dataset.steps !== undefined){ const max = scenes[n].querySelectorAll('.tl-step').length - 1; TL.p = n > cur ? 0 : max; TL.over = 0; tlStep = -1; tlRender(); }
     busy = true;
     const a = scenes[cur], b = scenes[n];
+    chanLoad(b);   // if its frame has not started loading yet, start now, before the change itself
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
     if (b.dataset.attack !== undefined || a.dataset.attack !== undefined){
@@ -1931,8 +1937,13 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (scenes[cur].id === 'agents' && !busy && ['ArrowLeft','ArrowRight',' ','Enter','Escape'].includes(e.key)){
       const fr = scenes[cur].querySelector('.chan-app'); if (fr && fr.contentWindow){ e.preventDefault(); fr.contentWindow.postMessage({ kbKey: e.key }, '*'); return; } }
     const fwd = ['ArrowDown','ArrowRight','PageDown',' '], back = ['ArrowUp','ArrowLeft','PageUp'];
-    if (fwd.includes(e.key) && !canScroll(scenes[cur], 1)){ e.preventDefault(); go(cur + 1); }
-    else if (back.includes(e.key) && !canScroll(scenes[cur], -1)){ e.preventDefault(); go(cur - 1); }
+    // the timeline moves along its rail, never scrolls; a channel taller than the screen scrolls first (the scene is
+    // not the browser's keyboard-scroll target, so the keys would otherwise do nothing and the visitor was stuck)
+    const s = scenes[cur], tl = s.dataset.steps !== undefined, dir = fwd.includes(e.key) ? 1 : back.includes(e.key) ? -1 : 0;
+    if ((dir || e.key === 'Home' || e.key === 'End') && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;   // typing (arrows move the caret, Space is a space)
+    if (dir && !tl && canScroll(s, dir)){ e.preventDefault(); s.scrollBy({ top: dir * (/Page| /.test(e.key) ? s.clientHeight * .85 : 80), behavior: reduce ? 'auto' : 'smooth' }); }
+    else if (dir > 0){ e.preventDefault(); go(cur + 1); }
+    else if (dir < 0){ e.preventDefault(); go(cur - 1); }
     else if (e.key === 'Home'){ e.preventDefault(); go(0); }
     else if (e.key === 'End'){ e.preventDefault(); go(N - 1); }
   });

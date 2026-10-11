@@ -137,7 +137,9 @@ try {
   if (!renderer.getContext()) throw new Error('no context');
 } catch (e) { gl = false; }
 
-const W = () => host.clientWidth, H = () => host.clientHeight;
+// the host's size is read once per frame: read after the frame's style writes, it forced a fresh layout on every call
+let frameWH = null;
+const W = () => frameWH ? frameWH[0] : host.clientWidth, H = () => frameWH ? frameWH[1] : host.clientHeight;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x07010f);
 const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
@@ -436,7 +438,8 @@ function drawLeaders(){
   let s = '';
   for (const c of cos){
     const slot = c.dataset.slot;
-    const x0 = slot[0] === 'l' ? c.offsetLeft + COL + 6 : c.offsetLeft - 6, y0 = c.offsetTop + 9;
+    const ox = c._ox ?? c.offsetLeft, oy = c._oy ?? c.offsetTop; c._ox = c._oy = undefined;   // read before the frame's writes (see frame)
+    const x0 = slot[0] === 'l' ? ox + COL + 6 : ox - 6, y0 = oy + 9;
     project(ANCH[slot](), sp);
     const col = c._col || (c._col = getComputedStyle(c).getPropertyValue('--c').trim() || '#00f0ff');
     if (c.classList.contains('hide')) continue;
@@ -591,6 +594,7 @@ const v3 = new THREE.Vector3();
 function project(local, out){ v3.copy(local); brain.localToWorld(v3); v3.project(camera); out[0] = (v3.x + 1) / 2 * W() - (camera.view && camera.view.enabled ? 0 : 0); out[1] = (1 - v3.y) / 2 * H(); out[2] = v3.z; return out; }
 const sp = [0, 0, 0];
 function frame(now){
+  frameWH = [host.clientWidth, host.clientHeight];
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   const animating = !reduce;
   if (animating){
@@ -638,7 +642,7 @@ function frame(now){
       f.spark.position.lerpVectors(f.from, f.to, tr); f.spark.scale.setScalar(.7 + .6 * Math.sin(tr * Math.PI));
       f.sparkMat.opacity = f.life > .4 ? 1 : f.life / .4; f.glowMat.opacity = f.sparkMat.opacity; f.mat.opacity = Math.min(1, (f.life / f.max) * 1.2);
     }
-    hF.textContent = firings.length;
+    if (hF.textContent !== String(firings.length)) hF.textContent = firings.length;   // only when it changes: a write dirties the layout
     // core + lint sweep
     const cp = reduce ? 0 : (Math.sin(T * 2) + 1) / 2;
     coreHalo.scale.setScalar(1 + cp * .3);
@@ -660,6 +664,9 @@ function frame(now){
       y += (front ? 1 : -1) * (bh / 2 + 16);
       return { id, b, x, y, bw, bh, z, front };
     });
+    // every size this frame needs is read here, before anything is written, so the writes below never force a re-layout
+    const flW = FL.map(f => f.el.offsetWidth), stW = STATIC.map(s => s.el.offsetWidth);
+    if (!narrow() && !sel) for (const c of cos){ c._ox = c.offsetLeft; c._oy = c.offsetTop; }
     const clampC = c => { c.x = Math.max(lo + c.bw / 2, Math.min(w - lo - c.bw / 2, c.x)); c.y = Math.max(top + c.bh / 2, Math.min(floor - c.bh / 2, c.y)); };
     cards.forEach(clampC);
     // cards never sit on each other: when two meet, the one further back moves up, the nearer one down
@@ -679,14 +686,15 @@ function frame(now){
     for (let i = FL.length - 1; i >= 0; i--){
       const f = FL[i], k = (T - f.t0) / f.ttl;
       if (k > 1 && !reduce){ f.el.remove(); FL.splice(i, 1); continue; }
-      project(f.p, sp); const fw = f.el.offsetWidth;
+      project(f.p, sp); const fw = flW[i];
       f.el.style.transform = `translate(${Math.max(4, Math.min(w - fw - 4, sp[0] - fw / 2))}px,${sp[1] - 14 - (reduce ? 0 : k * 22)}px)`;
       f.el.style.opacity = reduce ? .9 : (k < .12 ? k / .12 : 1 - Math.max(0, k - .55) / .45) * (sel ? .3 : 1);
     }
-    for (const s of STATIC){ project(s.p, sp); const fw = s.el.offsetWidth; s.el.style.transform = `translate(${sp[0] - fw / 2}px,${sp[1]}px)`; s.el.style.opacity = sel ? .25 : .85; }
+    STATIC.forEach((s, i) => { project(s.p, sp); const fw = stW[i]; s.el.style.transform = `translate(${sp[0] - fw / 2}px,${sp[1]}px)`; s.el.style.opacity = sel ? .25 : .85; });
     drawLeaders();
     dirty = false;
   }
+  frameWH = null;
   requestAnimationFrame(frame);
 }
 
@@ -740,7 +748,9 @@ function go(id){
   profile.style.setProperty('--c', m.c); profile.classList.add('open'); profile.setAttribute('aria-hidden', 'false');
   if (PHONE()) profile.querySelector('.p-scroll').scrollTop = 0;
   pTag.textContent = PHONE() ? `PROFILE · ${m.name.toUpperCase()}` : `INTELLIGENCE PROFILE · ${m.name.toUpperCase()}`;
-  pBody.classList.remove('in'); stopShow(); pBody.innerHTML = render(m); requestAnimationFrame(fitProfile);
+  // the profile shows at once (built ahead, see PROFILE_HTML); the ssh lines type alongside it, never before it
+  pBody.classList.remove('in'); stopShow(); pBody.innerHTML = PROFILE_HTML[id] || (PROFILE_HTML[id] = render(m));
+  requestAnimationFrame(() => { fitProfile(); if (my === seq) pBody.classList.add('in'); });
   const sh = pBody.querySelector('[data-show]'); if (sh && window.KBShow) stopShow = KBShow.mount(sh, sh.dataset.show);
   pSsh.innerHTML = '<div><span class="pr">visitor@estate ~ %</span> <span class="cmd"></span></div><div class="l1"></div><div class="l2 ok"></div>';
   KB.beep(520, 50); KB.twitch(profile);
@@ -748,10 +758,10 @@ function go(id){
   if (!reduce) for (let i = 0; i < 5; i++) setTimeout(() => sel === id && live && synapse(hubLocal(id), pick(graph.nodes).pos, m.c, 1.2), i * 160);
   if (!TOUCH()) $('#pBack').focus({ preventScroll: true });
   const q = s => pSsh.querySelector(s);
-  KB.type(q('.cmd'), `ssh ${id}`, 22)
-    .then(() => my === seq && KB.type(q('.l1'), `→ tunnel up · brain ⇄ ${m.name} · key accepted`, 90))
-    .then(() => my === seq && KB.type(q('.l2'), `→ connected. ${m.k.toLowerCase()} · profile follows`, 90))
-    .then(() => { if (my !== seq) return; pBody.classList.add('in'); KB.beep(880, 40); log(m.name.toUpperCase(), ' session open · read-only', m.c); });
+  KB.type(q('.cmd'), `ssh ${id}`, 60)
+    .then(() => my === seq && KB.type(q('.l1'), `→ tunnel up · brain ⇄ ${m.name} · key accepted`, 220))
+    .then(() => my === seq && KB.type(q('.l2'), `→ connected. ${m.k.toLowerCase()} · profile follows`, 220))
+    .then(() => { if (my !== seq) return; KB.beep(880, 40); log(m.name.toUpperCase(), ' session open · read-only', m.c); });
   dirty = true;
 }
 let stopShow = () => {};
@@ -784,6 +794,7 @@ function appBlock(m){
   return `<div class="p-sec p-app"><div class="t-label p-scr-head"><span>${a.label}</span></div>
     <div class="p-screen" data-show="${a.show}" role="img" aria-label="An animated showcase of ${m.name}'s app, with invented data"></div></div>`;
 }
+const PROFILE_HTML = {};   // each profile's markup, built once when the page is idle so a click only has to show it
 function render(m){
   const load = 3 + ((m.name.length * 7) % 6);   // illustrative only
   return `<div class="p-name"><b>${m.name}</b><span>${m.k}</span><span class="p-where">${m.where}</span></div>
@@ -796,6 +807,7 @@ function render(m){
 }
 
 $('#pBack').addEventListener('click', home);
+setTimeout(() => IDS.forEach(id => { PROFILE_HTML[id] = PROFILE_HTML[id] || render(M[id]); }), 1500);   // pre-build the profiles
 homeBtn.addEventListener('click', home);
 document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!closeReadout()) home(); } });

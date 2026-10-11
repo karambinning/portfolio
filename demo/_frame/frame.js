@@ -80,6 +80,27 @@
     }, { passive:false });
   })();
 
+  /* off screen, a channel costs nothing: the portfolio sends {kbPause} when the channel is not the one showing and
+     {kbResume} when it comes up. While paused, animation frames and repeating timers simply wait (render loops,
+     the globe, the rain, tickers); one-off timers still run. Nothing changes on screen: a paused page is not visible. */
+  (function(){
+    if (parent === window) return;
+    const raf = window.requestAnimationFrame.bind(window), caf = window.cancelAnimationFrame.bind(window), si = window.setInterval.bind(window);
+    const held = new Map(), alias = new Map(); let paused = false, seq = 0;
+    window.requestAnimationFrame = cb => { if (!paused) return raf(cb); const id = -(++seq); held.set(id, cb); return id; };
+    window.cancelAnimationFrame = id => { if (id < 0){ held.delete(id); const n = alias.get(id); if (n !== undefined){ alias.delete(id); caf(n); } } else caf(id); };
+    window.setInterval = function(fn, ms, ...a){ return typeof fn === 'function' ? si(function(){ if (!paused && !document.hidden) fn.apply(this, a); }, ms) : si(fn, ms, ...a); };
+    // a page that loaded while its channel was hidden laid itself out at no size: if the size it last saw is not the
+    // real one when it comes up, it gets the resize it would otherwise wait for (browsers do not always send one)
+    let seen = innerWidth + 'x' + innerHeight; addEventListener('resize', () => { seen = innerWidth + 'x' + innerHeight; });
+    const fit = () => { if (innerWidth && innerWidth + 'x' + innerHeight !== seen) dispatchEvent(new Event('resize')); };
+    addEventListener('message', e => { const m = e.data || {};
+      if (m.kbPause) paused = true;
+      else if (m.kbResume){ fit(); raf(fit);
+        if (!paused) return; paused = false; const q = [...held]; held.clear();
+        q.forEach(([id, cb]) => { alias.set(id, raf(t => { alias.delete(id); cb(t); })); }); } });
+  })();
+
   /* deconstruct / reconstruct on request from the portfolio (the dissertation transitions): every element, see dismantle.js */
   (function(){
     if (parent === window) return;
@@ -97,9 +118,13 @@
   })();
 
   /* arriving on a channel always starts at the top: the portfolio sends kbReset when the channel comes up */
+  // only elements that have actually scrolled are reset (every scroll fires a scroll event), so arriving never walks
+  // and measures the whole page
+  const scrolled = new Set();
+  addEventListener('scroll', e => { if (e.target && e.target.nodeType === 1) scrolled.add(e.target); }, { capture: true, passive: true });
   addEventListener('message', e => { if (!e.data || !e.data.kbReset) return;
     document.scrollingElement && (document.scrollingElement.scrollTop = 0);
-    document.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
+    scrolled.forEach(el => { if (el.isConnected && el.scrollTop > 0) el.scrollTop = 0; }); scrolled.clear(); });
 
   /* helpers each window can use */
   const KB = window.KB = {
