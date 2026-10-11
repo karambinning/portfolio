@@ -29,7 +29,7 @@
       for (const c of el.children){
         if (SKIP.has(c.tagName) || c.dataset.kbBeam !== undefined) continue;
         const cs = getComputedStyle(c);
-        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+        if (cs.display === 'none') continue;   // (visibility is not checked: a page is briefly hidden while it is measured)
         const r = c.getBoundingClientRect();
         const on = r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw && cs.display !== 'contents';
         let me = parentIdx;

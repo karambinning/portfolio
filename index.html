@@ -1379,6 +1379,32 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     });
   }
   // after the attack or defence: the windows fold away and the light drops, so the page underneath can be seen coming apart
+  // a classic CRT power cycle: the screen flashes, collapses to a line, then to a dot, and goes dark (off),
+  // or the reverse (on). Red into the dissertation, blue out of it.
+  function crtPower(on, col){
+    return new Promise(res => {
+      const d = document.createElement('div');
+      d.style.cssText = `position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:60;pointer-events:none;background:#fff;
+        box-shadow:0 0 40px 12px ${col},0 0 120px 30px ${col};transform-origin:50% 50%`;
+      document.body.appendChild(d);
+      const off = [
+        { transform: 'scale(1,1)', opacity: 0, background: col },
+        { transform: 'scale(1,1)', opacity: .85, background: '#fff', offset: .12 },
+        { transform: 'scale(1,.006)', opacity: 1, background: '#fff', offset: .45 },
+        { transform: 'scale(.004,.006)', opacity: 1, background: '#fff', offset: .78 },
+        { transform: 'scale(0,0)', opacity: 0, background: col }
+      ];
+      const up = [
+        { transform: 'scale(0,0)', opacity: 0, background: col },
+        { transform: 'scale(.004,.006)', opacity: 1, background: '#fff', offset: .2 },
+        { transform: 'scale(1,.006)', opacity: 1, background: '#fff', offset: .5 },
+        { transform: 'scale(1,1)', opacity: .8, background: '#fff', offset: .8 },
+        { transform: 'scale(1,1)', opacity: 0, background: col }
+      ];
+      d.animate(on ? up : off,
+        { duration: on ? 520 : 620, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' }).finished.then(() => { d.remove(); res(); });
+    });
+  }
   function atkSettle(col){
     // the windows themselves are taken apart detail by detail (bars, dots, labels, text, frames), and the tint drains away
     const layer = $('#atkLayer'), tint = $('#atkTint');
@@ -1567,11 +1593,13 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       }
       const settled = atkSettle(col);                            // the attack / defence windows come apart detail by detail
       await new Promise(r => setTimeout(r, 420));                // as they go, the page underneath starts to come apart too
-      await Promise.all([settled, chanText(a, 'out', 2600, col)]);   // every element, timed to the scan line; the swap lands the moment it is gone
+      await Promise.all([settled, chanText(a, 'out', 2600, col)]);   // every element, one detail at a time
+      await crtPower(false, col);                                // then the screen switches off like an old CRT
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
       const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
       b.style.visibility = 'hidden'; b.scrollTop = 0; b.classList.add('active'); cur = n; update();
+      await crtPower(true, col);                                 // powers back up
       const built = chanText(b, 'in', 2800, col);                             // it starts blank, so show it only once the rebuild has begun
       setTimeout(() => { b.style.visibility = ''; }, 60);
       await built;
