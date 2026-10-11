@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script>if(matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=600&&!/[?&]full=1(&|$)/.test(location.search))location.replace('mobile.html'+location.hash)</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Karam Binning — Portfolio</title>
@@ -545,45 +544,143 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 .pts li.minor{opacity:.7;font-size:.92em}
 .ssh-l.ok .sp-tx{font-weight:600}
 
-/* ---------- the timeline: one channel, a sequence along a rail ---------- */
-.tl-wrap{display:flex;flex-direction:column;gap:clamp(14px,3vh,28px);width:100%}
-.tl-rail{position:relative;height:54px;margin:0 clamp(20px,4vw,48px)}
-.tl-line{position:absolute;left:0;right:0;top:12px;height:2px;background:#0d1e35}
-.tl-line i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--phos);box-shadow:0 0 10px var(--phos);transition:width .6s cubic-bezier(.4,0,.2,1)}
-.tl-stop{all:unset;cursor:pointer;position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px}
-.tl-stop i{width:12px;height:12px;margin-top:7px;border:2px solid #1e3a5f;background:var(--void);transition:all .3s}
-.tl-stop span{font:500 11px/1 var(--mono);letter-spacing:.12em;color:var(--dim);white-space:nowrap;text-transform:uppercase}
-.tl-stop.done i{background:var(--phos);border-color:var(--phos)}
-.tl-stop.on i{background:var(--phos);border-color:#fff;box-shadow:0 0 14px var(--phos);transform:scale(1.35)}
-.tl-stop.on span{color:var(--phos)}
-.tl-stop:first-of-type{transform:none;align-items:flex-start} .tl-stop:last-of-type{transform:translateX(-100%);align-items:flex-end}
-.tl-stop:focus-visible{outline:2px solid var(--phos);outline-offset:6px}
-/* the timeline plays itself: the rail is four summary cards, each filling as its moment plays */
-#timeline .tl-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;height:auto;margin:0}
-#timeline .tl-line{display:none}
-#timeline .tl-stop{position:relative;left:auto!important;transform:none!important;align-items:flex-start!important;text-align:left;gap:5px;
-  padding:11px 13px 14px;border:1px solid var(--rule);background:rgba(0,212,255,.025);transition:border-color .3s,background .3s}
-#timeline .tl-stop i{position:absolute;left:0;bottom:0;height:2px;width:0;margin:0;border:0;background:var(--phos);box-shadow:0 0 8px var(--phos);transform:none!important}
-#timeline .tl-stop.done i{width:100%;opacity:.45}
-#timeline .tl-stop span{font-size:11px;letter-spacing:.14em}
-#timeline .tl-stop .tl-ttl{font:500 13px/1.35 var(--mono);color:var(--body);white-space:normal;letter-spacing:.01em}
-#timeline .tl-stop.on{border-color:color-mix(in srgb,var(--phos) 60%,var(--rule));background:rgba(0,212,255,.07)}
-#timeline .tl-stop.on .tl-ttl{color:#fff}
-#timeline .tl-stop:hover{border-color:color-mix(in srgb,var(--phos) 40%,var(--rule))}
-#timeline .tl-step.play .pts li{animation:tlLi .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.5s + var(--n) * .75s)}
-@keyframes tlLi{from{opacity:0;transform:translateX(-10px)}}
-#timeline .pts li{padding:8px 0 8px 22px}
-#timeline .tl-wrap{gap:clamp(12px,2.4vh,24px)}
-@media (prefers-reduced-motion:reduce){ #timeline .tl-step.play .pts li{animation:none} }
-.tl-step{display:none;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(28px,5vw,72px);align-items:center}
-.tl-step.on{display:grid}
-.tl-step .date{font-size:clamp(56px,min(8vw,14vh),150px)}
-.tl-step.enter{animation:tlIn .55s cubic-bezier(.2,.8,.2,1) both}
-.tl-step.enter.back{animation-name:tlInBack}
-@keyframes tlIn{from{opacity:0;transform:translateX(60px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
-@keyframes tlInBack{from{opacity:0;transform:translateX(-60px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
-.tl-hint{font:500 11px/1 var(--mono);color:var(--dim);letter-spacing:.08em}
-.tl-hint b{color:var(--phos);font-weight:500}
+/* ---------- the timeline: one slide, one sequence. A playhead flows along a data track from March to now ---------- */
+#timeline{overflow:hidden}
+#timeline > .tl-wrap{height:100%;margin:0;display:flex;flex-direction:column;gap:10px;min-height:0}
+.tl-src{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.tl-head{display:flex;align-items:center;gap:10px 18px;min-height:36px;position:relative;z-index:9}
+.tl-title{font:800 clamp(24px,2.5vw,32px)/1 var(--mono);color:#fff;letter-spacing:-.01em;white-space:nowrap;text-shadow:0 0 18px rgba(0,212,255,.7),0 0 2px #00d4ff}
+.tl-title .br,.tl-title .cur{color:var(--phos)}
+.tl-title .cur{animation:blink 1.05s steps(1) infinite}
+.tl-chip{font:600 11px/1 var(--mono);letter-spacing:.2em;color:#001018;background:var(--phos);padding:5px 8px;white-space:nowrap}
+.tl-stat{margin-left:auto;font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim);white-space:nowrap;text-transform:uppercase}
+.tl-stat b{color:var(--phos);font-weight:600}
+.tl-btn{all:unset;box-sizing:border-box;cursor:pointer;font:600 11px/1 var(--mono);letter-spacing:.14em;color:var(--phos);border:1px solid color-mix(in srgb,var(--phos) 55%,var(--rule));padding:7px 10px;white-space:nowrap;text-transform:uppercase}
+.tl-btn:hover,.tl-btn:focus-visible{background:var(--phos);color:var(--void)}
+.tl-board{position:relative;flex:1;min-height:0;overflow:hidden;--T:50%}
+/* phase bands, brighter as the signal gets closer to now */
+.tl-band{position:absolute;top:0;bottom:0;pointer-events:none;border-left:1px dashed rgba(0,212,255,.16);z-index:1}
+.tl-band:first-child{border-left:0}
+.tl-tint{position:absolute;left:0;right:0;top:calc(var(--T) - 24px);height:48px;background:linear-gradient(180deg,transparent,rgba(0,212,255,var(--a)) 50%,transparent);opacity:.35;transition:opacity .6s}
+.tl-band.cur .tl-tint{opacity:1}
+.tl-ghost{position:absolute;left:8px;right:8px;top:var(--T);transform:translateY(-50%);font:400 64px/.86 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--phos);
+  text-shadow:0 0 26px rgba(0,212,255,.7);opacity:0;white-space:normal;overflow-wrap:anywhere}
+.tl-ghost.on{opacity:var(--go)}
+.tl-ghost.glitch{animation:tlGh .7s steps(7) both}
+@keyframes tlGh{
+  0%{opacity:0;transform:translate(-18px,-50%) skewX(-10deg);text-shadow:-8px 0 var(--red),8px 0 var(--phos);clip-path:inset(0 0 70% 0)}
+  20%{opacity:.75;transform:translate(14px,-50%);text-shadow:7px 0 var(--red),-7px 0 var(--phos);clip-path:inset(30% 0 30% 0)}
+  40%{opacity:.35;transform:translate(-6px,-50%) skewX(6deg);text-shadow:-5px 0 var(--red),5px 0 var(--phos);clip-path:inset(60% 0 0 0)}
+  60%{opacity:.6;transform:translate(4px,-50%);text-shadow:3px 0 var(--red),-3px 0 var(--phos);clip-path:inset(0 0 0 0)}
+  80%{opacity:.3;transform:translate(-2px,-50%)}
+  100%{opacity:var(--go);transform:translateY(-50%);text-shadow:0 0 26px rgba(0,212,255,.7);clip-path:none}}
+/* the data track */
+.tl-trk,.tl-fill{position:absolute;left:0;right:0;top:calc(var(--T) - 1px);height:2px;transform-origin:0 50%;z-index:4;pointer-events:none}
+.tl-trk{background:#1f4166;box-shadow:0 0 6px rgba(0,212,255,.25)}
+.tl-fill{background:var(--phos);box-shadow:0 0 12px var(--phos),0 0 2px #fff;transform:scaleX(0)}
+.tl-scan{position:absolute;left:0;top:calc(var(--T) - 30px);width:3px;height:60px;margin-left:-1px;z-index:5;pointer-events:none;opacity:0;
+  background:linear-gradient(transparent,#fff 45%,#fff 55%,transparent);box-shadow:0 0 22px 6px rgba(0,212,255,.65)}
+.tl-tick{position:absolute;top:var(--T);width:1px;height:7px;background:#3d6a95;opacity:0;transition:opacity .3s;z-index:4;pointer-events:none}
+.tl-tick.m{height:15px;top:calc(var(--T) - 7px);background:#7aa6cf}
+.tl-tick.on{opacity:1}
+.tl-mon{position:absolute;top:calc(var(--T) + 12px);font:500 11px/1 var(--mono);letter-spacing:.16em;color:var(--dim);opacity:0;transition:opacity .3s;z-index:4;pointer-events:none;white-space:nowrap}
+.tl-mon.on{opacity:1}
+.tl-mon.now{color:var(--amber);text-shadow:0 0 10px rgba(245,197,24,.5)}
+.tl-hit{position:absolute;left:0;right:0;top:calc(var(--T) - 18px);height:46px;z-index:5;cursor:crosshair}
+.tl-aim{position:absolute;top:calc(var(--T) - 18px);height:46px;width:1px;background:rgba(245,197,24,.8);box-shadow:0 0 8px rgba(245,197,24,.6);z-index:5;pointer-events:none;display:none}
+.tl-hit:hover + .tl-aim{display:block}
+/* a node per point, pulsing as the playhead reaches it */
+.tl-node{position:absolute;top:var(--T);width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border:1.5px solid #4f7ca6;background:var(--void);transform:rotate(45deg);z-index:6;opacity:0;transition:opacity .3s;pointer-events:none}
+.tl-node.vis{opacity:1}
+.tl-node.on{background:var(--phos);border-color:#e9fbff;box-shadow:0 0 10px var(--phos)}
+.tl-node.on::after{content:"";position:absolute;inset:-7px;border:1px solid var(--phos);animation:tlPulse .9s ease-out both}
+@keyframes tlPulse{from{transform:scale(.3);opacity:1}to{transform:scale(2.4);opacity:0}}
+/* phase labels: the date and title, crisp, on the track */
+.tl-plab{position:absolute;z-index:6;cursor:pointer;box-sizing:border-box;overflow:hidden;padding:2px 8px 1px 8px;background:linear-gradient(90deg,rgba(4,8,15,.92),rgba(4,8,15,.78) 70%,rgba(4,8,15,0));border-left:2px solid var(--phos);opacity:0;transition:opacity .4s}
+.tl-plab.on{opacity:1}
+.tl-plab b{display:block;font:400 21px/1 var(--display);letter-spacing:.08em;color:var(--phos);text-shadow:0 0 14px rgba(0,212,255,.6);white-space:nowrap}
+.tl-plab span{display:block;font:600 11px/1.3 var(--mono);color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-plab:hover b{color:#fff}
+.tl-plab p{display:none}
+/* leader lines from node to card */
+.tl-leads{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
+.tl-leads path{fill:none;stroke:var(--phos);stroke-width:1;opacity:0;stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset .4s ease-out,opacity .3s}
+.tl-leads path.on{opacity:.62;stroke-dashoffset:0}
+.tl-leads path.old{opacity:.34}
+.tl-leads path.hl{opacity:1;stroke-width:1.5}
+/* point cards: small KAM terminals */
+.tl-card{position:absolute;z-index:6;box-sizing:border-box;background:#03070d;border:1px solid color-mix(in srgb,var(--phos) 40%,#0d1e35);cursor:default;padding-bottom:6px;
+  opacity:0;visibility:hidden;transform:scaleY(.2);transform-origin:50% var(--org,100%);transition:opacity .2s,transform .28s cubic-bezier(.2,.8,.2,1),border-color .8s,box-shadow .8s,visibility 0s .28s}
+.tl-card.on{opacity:1;visibility:visible;transform:none;transition:opacity .2s,transform .28s cubic-bezier(.2,.8,.2,1),border-color .8s,box-shadow .8s,visibility 0s}
+.tl-card.hot{border-color:var(--phos);box-shadow:0 0 24px rgba(0,212,255,.38),inset 0 0 22px rgba(0,212,255,.09)}
+.tl-card.old{border-color:#24476b}
+.tl-ch{position:absolute;left:7px;right:7px;top:-7px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--phos);white-space:nowrap}
+.tl-ch>*,.tl-ch{line-height:13px}
+.tl-ch b,.tl-ch span{background:#03070d;padding:0 4px}
+.tl-ch b{font-weight:600}
+.tl-ch span{color:#8fb0cf;font-weight:500;letter-spacing:.06em}
+.tl-card.trunc .tl-ch span::after{content:" [+]";color:var(--amber)}
+.tl-cb{padding:9px 9px 0;font:400 12px/1.38 var(--mono);color:#e2f2ff;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:var(--lines,3);overflow:hidden;max-height:calc(var(--lines,3) * 1.38em + 9px)}
+.tl-card.old .tl-cb{color:#c7dcef}
+.tl-card.typing .tl-cb::after{content:"\2588";color:var(--phos);margin-left:1px}
+.tl-card.open{z-index:20;border-color:var(--phos);box-shadow:0 0 34px rgba(0,212,255,.4),0 0 0 1px rgba(0,212,255,.4);opacity:1;visibility:visible;transform:none}
+.tl-card.open .tl-cb{display:block;-webkit-line-clamp:unset;max-height:none;color:#fff}
+.tl-card.open .tl-ch span::after{content:""}
+/* the "now playing" console */
+.tl-con{position:absolute;z-index:7;box-sizing:border-box;background:rgba(3,7,13,.97);border:1px solid rgba(0,212,255,.6);box-shadow:0 0 34px rgba(0,212,255,.18),inset 0 0 40px rgba(0,212,255,.04);opacity:0;transition:opacity .4s}
+.tl-con.on{opacity:1}
+.tl-con-bar{display:flex;align-items:center;gap:5px;padding:6px 9px;border-bottom:1px solid #12263e;font:500 11px/1 var(--mono);color:#9fc0de;letter-spacing:.06em;white-space:nowrap}
+.tl-con-bar i{width:7px;height:7px;border-radius:50%;background:#1e3a5f}
+.tl-con-bar i:first-child{background:var(--red);box-shadow:0 0 6px var(--red)}
+.tl-con-bar span{margin-left:6px}
+.tl-con-bar em{margin-left:auto;font-style:normal;color:var(--phos)}
+.tl-con-body{padding:9px 12px 10px}
+.tl-con-h{font:400 21px/1.05 var(--display);letter-spacing:.06em;color:var(--phos);text-shadow:0 0 12px rgba(0,212,255,.55);margin-bottom:6px}
+.tl-con-p{font:400 12.5px/1.5 var(--mono);color:var(--text);white-space:pre-line}
+.tl-con-p::after{content:"_";color:var(--phos);animation:blink 1s steps(1) infinite}
+/* the playhead: a block cursor with a scanline through the whole board */
+.tl-ph{position:absolute;left:0;top:0;bottom:0;width:0;z-index:8;pointer-events:none;opacity:0;will-change:transform}
+.tl-ph.on{opacity:1}
+.tl-ph i{position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(transparent,rgba(0,212,255,.55) 20%,rgba(160,240,255,.95) 50%,rgba(0,212,255,.55) 80%,transparent);box-shadow:0 0 10px rgba(0,212,255,.55)}
+.tl-ph s{position:absolute;right:0;top:calc(var(--T) - 1px);height:2px;width:180px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9));filter:blur(.5px)}
+.tl-ph b{position:absolute;left:-6px;top:calc(var(--T) - 10px);width:12px;height:20px;background:var(--phos);box-shadow:0 0 16px var(--phos),0 0 4px #fff}
+.tl-ph.end i,.tl-ph.end s{opacity:0;transition:opacity .8s}
+.tl-ph.end b{animation:blink 1.05s steps(1) infinite}
+.tl-ph.held b{background:var(--amber);box-shadow:0 0 16px var(--amber)}
+/* narrow screens: the track runs top to bottom; each moment opens with its own console block; the channel scrolls */
+#timeline.tl-vert{overflow-y:auto}
+#timeline.tl-vert > .tl-wrap{height:auto;margin:0}
+.tl-vert .tl-head{flex-wrap:wrap;gap:8px 12px}
+.tl-vert .tl-chip{display:none}
+.tl-vert .tl-stat{margin-left:0}
+.tl-board.vert{flex:none;height:0}
+.vert .tl-band{border-left:0;border-top:1px dashed rgba(0,212,255,.16)}
+.vert .tl-tint{top:0;bottom:0;height:auto;left:calc(var(--X) - 30px);right:auto;width:60px;background:linear-gradient(90deg,transparent,rgba(0,212,255,var(--a)) 50%,transparent)}
+.vert .tl-ghost{text-align:center}
+.vert .tl-trk,.vert .tl-fill{left:calc(var(--X) - 1px);right:auto;top:0;width:2px;height:var(--L);transform-origin:50% 0}
+.vert .tl-fill{transform:scaleY(0)}
+.vert .tl-scan{top:0;left:calc(var(--X) - 30px);width:60px;height:3px;margin:-1px 0 0;background:linear-gradient(90deg,transparent,#fff 45%,#fff 55%,transparent)}
+.vert .tl-tick{width:7px;height:1px;margin-left:-3px}
+.vert .tl-tick.m{width:15px;height:1px;margin:0 0 0 -7px}
+.vert .tl-mon,.vert .tl-aim{display:none}
+.vert .tl-hit{left:calc(var(--X) - 12px);right:auto;width:24px;top:0;height:100%}
+.vert .tl-con{display:none}
+.vert .tl-plab{z-index:7;overflow:visible;box-sizing:border-box;padding:9px 12px 10px;background:rgba(3,7,13,.97);border:1px solid rgba(0,212,255,.6);border-left-width:3px;box-shadow:0 0 28px rgba(0,212,255,.16)}
+.vert .tl-plab b{font-size:26px}
+.vert .tl-plab span{font-size:11.5px;white-space:normal}
+.vert .tl-plab p{display:block;margin-top:7px;font:400 13px/1.5 var(--mono);color:var(--text);white-space:normal}
+.vert .tl-plab.on p::after{content:"_";color:var(--phos);animation:blink 1s steps(1) infinite}
+.vert .tl-ph{left:0;right:0;top:0;bottom:auto;width:auto;height:0}
+.vert .tl-ph i{left:0;right:0;top:0;bottom:auto;width:auto;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.55) 20%,rgba(160,240,255,.95) 50%,rgba(0,212,255,.55) 80%,transparent)}
+.vert .tl-ph s{left:calc(var(--X) - 1px);right:auto;top:auto;bottom:0;width:2px;height:140px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.9))}
+.vert .tl-ph b{left:calc(var(--X) - 6px);top:-10px}
+.vert .tl-ph{z-index:5}
+.vert .tl-cb{padding-left:8px;padding-right:8px}
+.vert .tl-ch{padding:5px 7px 4px;letter-spacing:.06em}
+@media (prefers-reduced-motion:reduce){
+  .tl-ghost.glitch,.tl-node.on::after,.tl-ph.end b,.tl-title .cur{animation:none}
+  .tl-card,.tl-card.on,.tl-leads path,.tl-tick,.tl-mon,.tl-node,.tl-plab,.tl-con{transition:none}
+}
 /* ---------- also built: chips with a small terminal on hover ---------- */
 .also{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .also-k{font:600 12px/1 var(--mono);letter-spacing:.12em;color:var(--phos);margin-right:4px}
@@ -599,18 +696,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
 
-@media (max-width:900px){ .tl-step{grid-template-columns:1fr} .tl-stop span{font-size:9px;letter-spacing:.04em} }
-.tl-stop .yr{font-style:normal}
-/* phones: each moment fits the screen; its list scrolls inside its own panel */
-@media (max-width:600px){
-  #timeline .tl-wrap{height:100%;margin:0}
-  .tl-stop .yr{display:none}
-  .tl-stage{flex:1;min-height:0;position:relative}
-  .tl-step.on{display:flex;flex-direction:column;height:100%;gap:10px}
-  .tl-step .date{font-size:clamp(40px,12vw,56px)}
-  .tl-step .pts{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-mask:linear-gradient(#000 85%,transparent)}
-  .tl-step .pts li{padding:8px 0 8px 20px;font-size:13px}
-}
 
 @media (max-width:900px){ .ct{grid-template-columns:1fr} }
 
@@ -691,77 +776,67 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 <section class="scene" id="timeline" data-name="MARCH TO NOW" aria-label="March 2026 to now">
   <div class="in-wrap tl-wrap">
-    <div class="tl-rail" role="tablist" aria-label="Timeline">
-      <div class="tl-line"><i id="tlFill"></i></div>
-      <button type="button" role="tab" class="tl-stop on" data-i="0" style="left:0.0000%"><i></i><span>Mar<em class="yr"> 2026</em></span></button>
-      <button type="button" role="tab" class="tl-stop" data-i="1" style="left:33.3333%"><i></i><span>Apr<em class="yr"> 2026</em></span></button>
-      <button type="button" role="tab" class="tl-stop" data-i="2" style="left:66.6667%"><i></i><span>May–Jun<em class="yr"> 2026</em></span></button>
-      <button type="button" role="tab" class="tl-stop" data-i="3" style="left:100.0000%"><i></i><span>Jul<em class="yr"> 2026</em> – now</span></button>
+    <div class="tl-head" id="tlHead">
+      <h2 class="tl-title"><span class="br">[ </span>MARCH TO NOW<span class="br"> ]</span><span class="cur" aria-hidden="true">_</span></h2>
+      <span class="tl-chip" aria-hidden="true">ONE TRACK · FOUR MOMENTS</span>
+      <button type="button" class="tl-btn" id="tlReplay" aria-label="Replay the timeline">↻ replay</button>
     </div>
-    <div class="tl-stage">
-      <div class="tl-step on" data-i="0" data-term="mar">
-    <div>
-      <div class="date">Mar 2026</div>
-      <h3>First line of code</h3>
-      <p class="copy">A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.</p>
-    </div>
-    <ul class="pts">
-      <li>First Claude session, after a year on ChatGPT, without ever having written a line of code</li>
-      <li>First build: an in-browser AI analyst for live Polymarket data</li>
-      <li>9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
-      <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
-      <li>The War Room conceived: a seven-agent trading team, run on paper</li>
-    </ul>
-  </div>
-      <div class="tl-step" data-i="1" data-term="apr">
-    <div>
-      <div class="date">Apr 2026</div>
-      <h3>A security scare, turned into a curriculum</h3>
-      <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
-    </div>
-    <ul class="pts">
-      <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
-      <li>Learned to read the logs properly; the evidence showed a false alarm</li>
-      <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
-      <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
-      <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
-      <li>It later grew into Future Warfare, a wider curriculum on modern conflict</li>
-      <li>Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis</li>
-    </ul>
-  </div>
-      <div class="tl-step" data-i="2" data-term="jun">
-    <div>
-      <div class="date">May–Jun 2026</div>
-      <h3>A small, semi-autonomous agent fleet</h3>
-      <p class="copy">I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me. Alongside it, the summer brought more tools for study, work and outreach.</p>
-    </div>
-    <ul class="pts" id="junPts">
-      <li>May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
-      <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
-      <li>June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
-      <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
-      <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
-      <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
-      <li class="minor">Anthropic Academy: three AI Fluency courses</li>
-    </ul>
-  </div>
-      <div class="tl-step" data-i="3" data-term="now">
-    <div>
-      <div class="date">Jul 2026 – now</div>
-      <h3>The estate comes together</h3>
-      <p class="copy">Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.</p>
-    </div>
-    <ul class="pts" id="nowPts">
-      <li>July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day</li>
-      <li>A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion</li>
-      <li>The intelligence engine audited and made queryable by my director agent</li>
-      <li>September: one canonical vault with written rules and a checker; Sentinel watching every machine</li>
-      <li>Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop</li>
-      <li>Final year: a dissertation on great-power war as a process, with its own forecasting lab</li>
-    </ul>
-  </div>
-    </div>
-    <div class="tl-hint">plays on its own · hover to pause · click a moment to jump · <b id="tlPos">1 / 4</b></div>
+    <ol class="tl-src" id="tlSrc" aria-label="Timeline, March 2026 to now">
+      <li class="tl-m" data-term="mar" data-from="2026-03-01" data-to="2026-04-01">
+        <div class="date">Mar 2026</div>
+        <h3>First line of code</h3>
+        <p class="copy">A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.</p>
+        <ul class="pts">
+          <li>First Claude session, after a year on ChatGPT, without ever having written a line of code</li>
+          <li>First build: an in-browser AI analyst for live Polymarket data</li>
+          <li data-at="2026-03-09">9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
+          <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
+          <li>The War Room conceived: a seven-agent trading team, run on paper</li>
+        </ul>
+      </li>
+      <li class="tl-m" data-term="apr" data-from="2026-04-01" data-to="2026-05-01">
+        <div class="date">Apr 2026</div>
+        <h3>A security scare, turned into a curriculum</h3>
+        <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
+        <ul class="pts">
+          <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
+          <li>Learned to read the logs properly; the evidence showed a false alarm</li>
+          <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
+          <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
+          <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
+          <li>It later grew into Future Warfare, a wider curriculum on modern conflict</li>
+          <li>Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis</li>
+        </ul>
+      </li>
+      <li class="tl-m" data-term="jun" data-from="2026-05-01" data-to="2026-07-01">
+        <div class="date">May–Jun 2026</div>
+        <h3>A small, semi-autonomous agent fleet</h3>
+        <p class="copy">I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me. Alongside it, the summer brought more tools for study, work and outreach.</p>
+        <ul class="pts">
+          <li data-at="2026-05-05">May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
+          <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
+          <li data-at="2026-06-09">June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
+          <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
+          <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
+          <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
+          <li class="minor">Anthropic Academy: three AI Fluency courses</li>
+        </ul>
+      </li>
+      <li class="tl-m" data-term="now" data-from="2026-07-01">
+        <div class="date">Jul 2026 – now</div>
+        <h3>The estate comes together</h3>
+        <p class="copy">Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.</p>
+        <ul class="pts">
+          <li data-at="2026-07-06">July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day</li>
+          <li>A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion</li>
+          <li>The intelligence engine audited and made queryable by my director agent</li>
+          <li data-at="2026-09-05">September: one canonical vault with written rules and a checker; Sentinel watching every machine</li>
+          <li data-at="2026-09-23">Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop</li>
+          <li data-at="2026-10-01">Final year: a dissertation on great-power war as a process, with its own forecasting lab</li>
+        </ul>
+      </li>
+    </ol>
+    <div class="tl-board" id="tlBoard" aria-hidden="true"></div>
   </div>
 </section>
 
@@ -983,7 +1058,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     apr:'> false alarm · curriculum written · drills logged',
     jun:'> semi-autonomous fleet · reviewer checks every task',
     now:'> estate online · vault mounted · final year',
-    timeline:'> march to now · scroll to move along it',
+    timeline:'> march to now · one track · hover to hold it',
     work:'> eight terminals · open any to use it',
     estate:'> four macs · one vault · select a machine',
     agents:'> director · builder · reviewer · no self-grading',
@@ -1194,7 +1269,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
   /* ---------- the estate: machines, and the apps on them ---------- */
   const NODESET = {
-    m1:{ kind:'Mac mini · always on', name:'M1', text:'Holds the canonical vault on a 12 TB drive and serves it to every other machine. Runs Command, the dashboard I operate the estate from. One drive, one writer, one truth.',
+    m1:{ kind:'MacBook Pro 13" · always on', name:'M1', text:'Holds the canonical vault on a 12 TB drive and serves it to every other machine. Runs Command, the dashboard I operate the estate from. One drive, one writer, one truth.',
          apps:[['command','Command'],['vault','The vault']] },
     m3:{ kind:'MacBook Pro · daily machine', name:'M3', text:'Where I work. Runs the work app: job triage across tracks, a pipeline from found to offer, and an outreach drafter.',
          apps:[['work','Work app']] },
@@ -1545,104 +1620,304 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (window.tlStart){ if (s.id === 'timeline') window.tlStart(); else window.tlStop(); }   // the timeline plays itself while it is on screen
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
   }
-  /* ---------- the timeline as one continuous scroll: position p runs 0 → steps-1 along the rail ---------- */
-  const TL = { p: 0, max: 3, over: 0, raf: 0, tween: null };
-  const TL_G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>';
-  function tlRender(){
-    const sc = $('#timeline'); if (!sc) return;
-    const steps = [...sc.querySelectorAll('.tl-step')], stops = [...sc.querySelectorAll('.tl-stop')];
-    TL.max = steps.length - 1;
-    const p = TL.p, k = Math.max(0, Math.min(TL.max, Math.round(p))), d = Math.abs(p - k);   // d: 0 at a date, 0.5 halfway
-    const f = Math.max(0, 1 - d / .5);                                                       // 1 → fully rendered, 0 → gone
-    steps.forEach((st, i) => { const on = i === k; st.classList.toggle('on', on); st.classList.remove('enter', 'back'); });
-    stops.forEach((st, i) => { st.classList.toggle('on', i === k); st.classList.toggle('done', i < p); });
-    $('#tlFill').style.transition = 'none'; $('#tlFill').style.width = (p / TL.max * 100) + '%';
-    $('#tlPos').textContent = `${k + 1} / ${steps.length}`;
-    const st = steps[k];
-    st.style.opacity = (.25 + .75 * f).toFixed(3);
-    st.style.transform = `translateX(${((p - k) * -60).toFixed(1)}px)`;
-    // text decodes in as you arrive at a date and decays out as you leave it
-    textNodes(st).forEach(n => { const o = ORIG.get(n), L = o.length, n2 = Math.ceil(L * f);
-      n.nodeValue = f >= .999 ? o : o.slice(0, n2) + o.slice(n2, n2 + Math.min(4, L - n2)).replace(/\S/g, () => TL_G[(Math.random() * TL_G.length) | 0]); });
-    if (tlStep !== k){ tlStep = k; typeTerm(TERM[st.dataset.term] || ''); }
+  /* ---------- the timeline: one slide, one sequence ----------
+     A playhead flows along a data track from March 2026 to now. Entering a moment glitches its title in behind the track
+     and types its paragraph in the "now playing" console; reaching a point pulses its node and types a card in.
+     Cards stay, so it ends as the whole timeline on one board. Everything is derived from one clock (TLX.t, ms),
+     so scrubbing is just setting it. Content is read from the hidden ordered list (#tlSrc), which screen readers use. */
+  const TLX = { touched: -1e9, t: 0, base: -1e9, on: false, paused: false, raf: 0, last: 0, built: false, ph: -2, hoverPh: -1, ended: false };
+  const TL_LAB = 36, TL_PLAY = 26000, TL_DRAW = 1300, TL_TYPE = 900, TL_DECODE = 700;
+  const tlSc = $('#timeline'), tlBoard = $('#tlBoard');
+  const TL_D = s => Date.parse(s + 'T12:00:00Z');
+  const TL_MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const TL_NOW = Math.max(Date.now(), TL_D('2026-10-11'));
+  const TL_W = [.205, .26, .265, .27];                        // band widths: the screen is shared by what happened, not by days
+  const TL_G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>▓▒░';
+  const tlPhases = [...tlSc.querySelectorAll('.tl-m')].map((m, i) => ({
+    i, term: m.dataset.term, from: TL_D(m.dataset.from), to: m.dataset.to ? TL_D(m.dataset.to) : TL_NOW,
+    date: m.querySelector('.date').textContent, title: m.querySelector('h3').textContent, copy: m.querySelector('.copy').textContent,
+    pts: [...m.querySelectorAll('.pts li')].map(li => ({ text: li.textContent, at: li.dataset.at ? TL_D(li.dataset.at) : null, minor: li.classList.contains('minor') })) }));
+  // each point sits at its date: dated ones ("May:", "9 March:") at that date, the rest spread evenly between them
+  tlPhases.forEach(p => { let prevT = p.from, prevI = -1;
+    for (let k = 0; k <= p.pts.length; k++){
+      if (k < p.pts.length && p.pts[k].at == null) continue;
+      const nextT = k === p.pts.length ? p.to : p.pts[k].at, n = k - prevI - 1;
+      for (let j = 1; j <= n; j++) p.pts[prevI + j].t = prevT + (nextT - prevT) * j / (n + 1);
+      if (k < p.pts.length){ p.pts[k].t = nextT; prevT = nextT; prevI = k; }
+    } });
+  const tlCards = []; tlPhases.forEach(p => p.pts.forEach(pt => { pt.p = p.i; pt.k = tlCards.length; tlCards.push(pt); }));
+  const tlEl = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (parent) parent.appendChild(e); return e; };
+  const tlEsc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
+  const TL_END_H = 'March to now // ' + tlPhases.length + ' moments · ' + tlCards.length + ' points';
+  const TL_END_P = tlPhases.map(p => `> ${String(p.i + 1).padStart(2, '0')} · ${p.date} · ${p.title}`).join('\n') + '\n> hover any card to read it in full\n> click the track to replay from there';
+  let tlB = {};
+  function tlBuild(){
+    if (TLX.built) return; TLX.built = true;
+    const head = $('#tlHead');
+    tlB.stat = tlEl('span', 'tl-stat', null); head.insertBefore(tlB.stat, $('#tlReplay'));
+    tlPhases.forEach(p => {
+      p.band = tlEl('div', 'tl-band', tlBoard); p.band.style.setProperty('--a', (.05 + p.i * .025).toFixed(3));
+      tlEl('div', 'tl-tint', p.band);
+      p.ghost = tlEl('div', 'tl-ghost', p.band); p.ghost.textContent = p.title; p.ghost.style.setProperty('--go', (.2 + p.i * .03).toFixed(2));
+    });
+    tlB.leads = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); tlB.leads.setAttribute('class', 'tl-leads'); tlBoard.appendChild(tlB.leads);
+    tlB.trk = tlEl('div', 'tl-trk', tlBoard); tlB.fill = tlEl('div', 'tl-fill', tlBoard); tlB.scan = tlEl('div', 'tl-scan', tlBoard);
+    tlB.ticks = []; const d0 = new Date(tlPhases[0].from);
+    for (let t = TL_D('2026-03-02'); t <= TL_NOW; t += 7 * 864e5) tlB.ticks.push({ t, el: tlEl('div', 'tl-tick', tlBoard) });   // Mondays
+    tlB.mons = [];
+    for (let m = d0.getUTCMonth(), y = d0.getUTCFullYear(); ; m++){ const t = Date.UTC(y, m, 1, 12); if (t > TL_NOW) break;
+      tlB.ticks.push({ t, el: tlEl('div', 'tl-tick m', tlBoard) }); tlB.mons.push({ t, el: tlEl('div', 'tl-mon', tlBoard, TL_MON[m % 12]) }); }
+    tlB.now = tlEl('div', 'tl-mon now', tlBoard, 'NOW ▸');
+    tlB.hit = tlEl('div', 'tl-hit tl-hov', tlBoard); tlB.aim = tlEl('div', 'tl-aim', tlBoard);
+    tlCards.forEach(c => {
+      c.node = tlEl('div', 'tl-node', tlBoard);
+      c.lead = document.createElementNS('http://www.w3.org/2000/svg', 'path'); c.lead.setAttribute('pathLength', '1'); tlB.leads.appendChild(c.lead);
+      const d = new Date(c.t), exact = /^\d{1,2} [A-Z][a-z]+:/.test(c.text);
+      c.el = tlEl('div', 'tl-card tl-hov', tlBoard,
+        `<div class="tl-ch"><b>${exact ? String(d.getUTCDate()).padStart(2, '0') + ' ' : ''}${TL_MON[d.getUTCMonth()]} 2026</b><span>${String(c.k + 1).padStart(2, '0')}/${tlCards.length}</span></div><div class="tl-cb"></div>`);
+      c.body = c.el.querySelector('.tl-cb'); c.body.textContent = c.text; c.shown = -1;
+    });
+    tlPhases.forEach(p => { p.lab = tlEl('div', 'tl-plab tl-hov', tlBoard, `<b>${tlEsc(p.date)}</b><span>${tlEsc(p.title)}</span><p></p>`); p.labP = p.lab.querySelector('p'); });
+    tlB.con = tlEl('div', 'tl-con tl-hov', tlBoard, '<div class="tl-con-bar"><i></i><i></i><i></i><span>now_playing</span><em></em></div><div class="tl-con-body"><div class="tl-con-h"></div><div class="tl-con-p"></div></div>');
+    tlB.conN = tlB.con.querySelector('em'); tlB.conH = tlB.con.querySelector('.tl-con-h'); tlB.conP = tlB.con.querySelector('.tl-con-p');
+    tlB.ph = tlEl('div', 'tl-ph', tlBoard, '<i></i><s></s><b></b>');
+    tlWire();
   }
-  function tlScroll(dy){
-    const next = TL.p + dy / 420;                     // ~420px of scrolling per date
-    if (next > TL.max){ TL.p = TL.max; TL.over += dy; if (TL.over > 160){ TL.over = 0; go(cur + 1, true); } }
-    else if (next < 0){ TL.p = 0; TL.over += dy; if (TL.over < -160){ TL.over = 0; go(cur - 1, true); } }
-    else { TL.p = next; TL.over = 0; }
-    if (!TL.raf) TL.raf = requestAnimationFrame(() => { TL.raf = 0; tlRender(); });
+  /* ---------- layout: measure real sizes, then pack every card so none overlaps and none leaves the board ---------- */
+  function tlLayout(){
+    if (!TLX.built) return;
+    const vert = tlSc.clientWidth < 680; tlB.vert = vert;
+    tlSc.classList.toggle('tl-vert', vert); tlBoard.classList.toggle('vert', vert);
+    tlBoard.style.height = '';
+    const W = tlBoard.clientWidth; if (W < 50) return;
+    tlCards.forEach(c => { c.el.classList.remove('open'); c.body.textContent = c.text; c.shown = -1; c.lead.classList.remove('hl'); });
+    tlPhases.forEach(p => { p.ghost.textContent = p.title; p.labP.textContent = ''; p.lab.style.height = ''; p.lab.style.width = ''; });
+    TLX.conKey = '';
+    if (vert) tlLayoutV(W); else tlLayoutH(W);
+    tlB.leads.setAttribute('viewBox', `0 0 ${W} ${tlB.H}`);
+    tlCards.forEach(c => { c.tf = c.np / tlB.L * TL_PLAY; c.node.style.left = (vert ? tlB.X : c.np) + 'px'; c.node.style.top = (vert ? c.np : tlB.T) + 'px';
+      c.el.classList.toggle('trunc', c.body.scrollHeight > c.body.clientHeight + 2); });
+    tlPhases.forEach(p => { p.tf = p.np / tlB.L * TL_PLAY; });
+    tlB.ticks.forEach(k => { k.el.style.left = (vert ? tlB.X : k.p) + 'px'; k.el.style.top = (vert ? k.p : tlB.T) + 'px'; });
+    tlRender(true);
   }
-  function tlTo(target){                               // keys and rail clicks glide to a date
-    cancelAnimationFrame(TL.tween); const from = TL.p, t0 = performance.now(), dur = reduce ? 0 : 600;
-    (function f(now){ const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3); TL.p = from + (target - from) * e; tlRender(); if (k < 1) TL.tween = requestAnimationFrame(f); })(t0);
+  function tlFitGhost(p, bw, maxH){ const g = p.ghost; let fs = Math.min(150, maxH * .42);
+    for (; fs > 26; fs -= 3){ g.style.fontSize = fs + 'px'; if (g.scrollWidth <= bw + 1 && g.offsetHeight <= maxH && g.offsetHeight <= fs * .9 * 3.2) break; } }
+  // phase labels sit just above the track at the start of their band; returns them, and the track strip, as obstacles
+  function tlLabels(T, W){
+    tlPhases.forEach(p => { const l = p.lab; l.style.maxWidth = (p.x1 - p.x0 - 12) + 'px'; l.style.left = (p.x0 + 6) + 'px'; l.style.top = (T - 10 - TL_LAB) + 'px'; l.style.height = TL_LAB + 'px'; });
+    return [{ x: 0, y: T - 10 - TL_LAB, w: W, h: TL_LAB + 10 + 24 }];
   }
-
-  /* the timeline channel steps through its moments before handing scroll on */
-  let tlStep = 0;
-  function tlSet(i, dir){
-    const sc = $('#timeline'), steps = sc.querySelectorAll('.tl-step'), stops = sc.querySelectorAll('.tl-stop');
-    if (i === tlStep && dir) return;
-    tlStep = i;
-    steps.forEach((st, k) => { st.classList.toggle('on', k === i); st.classList.remove('enter', 'back'); });
-    stops.forEach((st, k) => { st.classList.toggle('on', k === i); st.classList.toggle('done', k < i); st.setAttribute('aria-selected', k === i); });
-    $('#tlFill').style.width = (i / (steps.length - 1) * 100) + '%';
-    $('#tlPos').textContent = `${i + 1} / ${steps.length}`;
-    const st = steps[i];
-    if (dir && !reduce){ void st.offsetWidth; st.classList.add('enter'); if (dir < 0) st.classList.add('back'); animateText(st, 520, 'in').then(() => restore(st)); SFX.blip(); }
-    typeTerm(TERM[st.dataset.term] || '');
-    NODES.delete(sc);
+  function tlLayoutH(W){
+    const H = tlBoard.clientHeight; let T = Math.round(H * .5); tlB.W = W; tlB.H = H; tlB.T = T; tlB.L = W; tlBoard.style.setProperty('--T', T + 'px');
+    let acc = 0; tlPhases.forEach(p => { p.x0 = Math.round(acc * W); acc += TL_W[p.i]; p.x1 = Math.round(acc * W); p.np = p.x0;
+      Object.assign(p.band.style, { left: p.x0 + 'px', width: (p.x1 - p.x0) + 'px', top: '', height: '' }); p.ghost.style.top = ''; });
+    const X = t => { const p = tlPhases.find(q => t < q.to) || tlPhases[tlPhases.length - 1]; return p.x0 + (p.x1 - p.x0) * Math.max(0, Math.min(1, (t - p.from) / (p.to - p.from))); };
+    tlB.ticks.forEach(k => { k.p = X(k.t); });
+    const nowW = 44; tlB.now.style.left = (W - nowW) + 'px';
+    tlB.mons.forEach(m => { m.p = X(m.t) + 4; m.el.style.left = m.p + 'px'; m.el.style.display = m.p + 30 > W - nowW ? 'none' : ''; });
+    tlPhases.forEach(p => tlFitGhost(p, p.x1 - p.x0 - 16, H * .62));
+    tlLabels(T, W);
+    // the console: as tall as its longest paragraph, at a few widths
+    const cons = [.34, .42].map(f => { const cw = Math.round(Math.max(300, Math.min(f < .4 ? 430 : 520, W * f))); tlB.con.style.width = cw + 'px'; tlB.con.style.height = 'auto';
+      let ch = 0; [...tlPhases.map(p => [p.date + ' // ' + p.title, p.copy]), [TL_END_H, TL_END_P]].forEach(([h, p]) => { tlB.conH.textContent = h; tlB.conP.textContent = p; ch = Math.max(ch, tlB.con.offsetHeight); });
+      return [cw, ch]; });
+    tlCards.forEach(c => { c.np = c.nx = Math.round(X(c.t)); });
+    // try card sizes from roomiest to tightest, the console in each corner and the track a little up or down;
+    // keep the best layout that fits every card with no overlap
+    const CFG = [[.2, 3], [.185, 3], [.17, 3], [.2, 2], [.17, 2], [.155, 2], [.14, 2]];
+    let best = null;
+    for (const [fw, lines] of CFG){
+      const w = Math.round(Math.max(150, Math.min(250, W * fw)));
+      let hh = 0; tlCards.forEach(c => { c.el.style.width = w + 'px'; c.el.style.height = 'auto'; c.el.style.setProperty('--lines', lines); c.w = w; hh = Math.max(hh, c.el.offsetHeight); });
+      tlCards.forEach(c => { c.h = hh; });
+      for (const tf of [.5, .54, .46, .58, .42, .62, .38]) for (const [cw, ch] of cons){
+        const T2 = Math.round(H * tf), ob = tlLabels(T2, W);
+        for (const corner of ['br', 'tr', 'bl', 'tl']){
+          const con = { x: corner[1] === 'l' ? 0 : W - cw, y: corner[0] === 't' ? 0 : H - ch, w: cw, h: ch };
+          if (ob.some(r => con.x < r.x + r.w + 8 && con.x + con.w + 8 > r.x && con.y < r.y + r.h + 8 && con.y + con.h + 8 > r.y)) continue;
+          const r = tlPack(ob.concat([con]), W, H, T2);
+          if (window.TL_DEBUG) console.log('cfg', fw, lines, tf, cw, corner, r ? r.score | 0 : 'fail@' + TLX.failAt);
+          if (r && (!best || r.score < best.score)) best = { ...r, con, w, lines, T: T2 };
+        }
+      }
+      if (best) break;
+    }
+    if (!best){ // nothing fits (a very small window): place them anyway, readable on hover
+      const w = Math.round(Math.max(140, W * .14)), [cw, ch] = cons[0]; best = { score: 0, T, con: { x: W - cw, y: H - ch, w: cw, h: ch }, w, lines: 2, pos: tlCards.map((c, i) => ({ x: Math.min(W - w, Math.max(0, c.nx - w / 2)), y: i % 2 ? T + 30 : Math.max(0, T - 30 - c.h), side: i % 2 ? 1 : -1 })) };
+    }
+    T = tlB.T = best.T; tlBoard.style.setProperty('--T', T + 'px'); tlLabels(T, W);
+    tlB.con.style.left = best.con.x + 'px'; tlB.con.style.top = best.con.y + 'px'; tlB.con.style.width = best.con.w + 'px'; tlB.con.style.height = best.con.h + 'px';
+    tlCards.forEach((c, i) => { const q = best.pos[i];
+      c.el.style.width = best.w + 'px'; c.el.style.setProperty('--lines', best.lines); c.h = best.pos[0].h; c.el.style.height = c.h + 'px';
+      c.x = q.x; c.y = q.y; c.side = q.side; c.w = best.w;
+      c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px'; c.el.style.setProperty('--org', c.side < 0 ? '50% 100%' : '50% 0%');
+      // leader: straight up or down from the node, then across to the card's nearest edge
+      const ex = Math.max(c.x + 12, Math.min(c.x + c.w - 12, c.nx)), ey = c.side < 0 ? c.y + c.h : c.y, ny = c.side < 0 ? T - 6 : T + 6;
+      const ky = c.side < 0 ? Math.max(ey + 6, ny - 14) : Math.min(ey - 6, ny + 14);
+      c.lead.setAttribute('d', ex === c.nx ? `M${c.nx},${ny}V${ey}` : `M${c.nx},${ny}V${ky}L${ex},${ey}`);
+    });
   }
-  /* the timeline plays itself: each moment for TL_DUR, its points arriving one by one; hover pauses, a card jumps */
-  const TL_DUR = 8000;
-  const tlSc = $('#timeline'), tlSteps = [...tlSc.querySelectorAll('.tl-step')], tlStops = [...tlSc.querySelectorAll('.tl-stop')];
-  tlStops.forEach((b, i) => { const t = document.createElement('b'); t.className = 'tl-ttl'; t.textContent = tlSteps[i].querySelector('h3').textContent; b.appendChild(t); });
-  const TLP = { i: 0, timer: 0, left: TL_DUR, start: 0, paused: false, on: false };
-  function tlShow(i){
-    clearTimeout(TLP.timer); TLP.i = i; TLP.left = TL_DUR;
-    tlSteps.forEach((st, k) => { st.classList.toggle('on', k === i); st.classList.remove('play', 'enter', 'back'); st.style.opacity = ''; st.style.transform = ''; });
-    tlStops.forEach((b, k) => { b.classList.toggle('on', k === i); b.classList.toggle('done', k < i); b.setAttribute('aria-selected', k === i);
-      const bar = b.querySelector('i'); bar.style.transition = 'none'; bar.style.width = k < i ? '100%' : '0'; });
-    $('#tlPos').textContent = `${i + 1} / ${tlSteps.length}`;
-    const st = tlSteps[i]; st.querySelectorAll('.pts li').forEach((li, n) => li.style.setProperty('--n', n));
-    void st.offsetWidth; st.classList.add('play', 'enter');
-    if (!reduce){ animateText(st, 520, 'in').then(() => restore(st)); }
-    typeTerm(TERM[st.dataset.term] || '');
-    tlRun();
+  /* narrow screens: the track runs top to bottom, each moment opens with its own console block, cards alternate left and right */
+  function tlLayoutV(W){
+    const X = Math.round(W / 2), gap = 13, knots = []; let y = 16;
+    tlB.W = W; tlB.X = X; tlBoard.style.setProperty('--X', X + 'px');
+    tlPhases.forEach(p => {
+      const l = p.lab; Object.assign(l.style, { left: '0px', width: W + 'px', maxWidth: 'none' });
+      p.labP.textContent = p.copy; const bh = l.offsetHeight; l.style.height = bh + 'px'; l.style.top = y + 'px';
+      p.y0 = y; p.np = y; y += bh + 20; knots.push([p.from, y - 10]);
+      const bot = [y, y + 34]; let lastTop = y - 34;
+      p.pts.forEach((c, k) => { const s = k % 2, w = s ? W - X - gap : X - gap;
+        c.el.style.width = w + 'px'; c.el.style.height = 'auto'; c.el.style.setProperty('--lines', 4); c.w = w; c.h = c.el.offsetHeight; c.el.style.height = c.h + 'px';
+        const cy = Math.max(bot[s], lastTop + 30); c.x = s ? X + gap : 0; c.y = cy; c.side = 1; lastTop = cy; bot[s] = cy + c.h + 10; c.np = cy + 11;
+        c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px'; c.el.style.setProperty('--org', s ? '0% 50%' : '100% 50%');
+        c.lead.setAttribute('d', `M${X + (s ? 5 : -5)},${c.np}H${s ? c.x : c.x + c.w}`); knots.push([c.t, c.np]); });
+      y = Math.max(...bot) + 14; p.y1 = y; knots.push([p.to, y - 4]);
+      Object.assign(p.band.style, { left: '0px', width: W + 'px', top: p.y0 + 'px', height: (p.y1 - p.y0) + 'px' });
+    });
+    tlB.L = y; tlB.H = y; tlB.T = 0;
+    const Y = t => { for (let i = 1; i < knots.length; i++) if (t <= knots[i][0]){ const [t0, y0] = knots[i - 1], [t1, y1] = knots[i]; return t1 > t0 ? y0 + (y1 - y0) * (t - t0) / (t1 - t0) : y1; } return y; };
+    tlB.ticks.forEach(k => { k.p = Y(k.t); });
+    tlPhases.forEach(p => { tlFitGhost(p, W - 16, (p.y1 - p.y0) * .8); p.ghost.style.top = ((p.y1 - p.y0) / 2) + 'px'; });
+    tlBoard.style.setProperty('--L', y + 'px');
   }
-  function tlRun(){
-    if (!TLP.on || TLP.paused) return;
-    const bar = tlStops[TLP.i].querySelector('i'); void bar.offsetWidth;
-    bar.style.transition = `width ${TLP.left}ms linear`; bar.style.width = '100%';
-    TLP.start = performance.now();
-    TLP.timer = setTimeout(() => { if (TLP.i < tlSteps.length - 1) tlShow(TLP.i + 1); else { tlStops[TLP.i].classList.add('done'); $('#tlPos').textContent = 'played · click any moment to revisit'; } }, TLP.left);
+  function tlPack(obst, W, H, T){
+    const rects = obst.slice(), pos = [], M = 8; let score = 0;
+    for (const c of tlCards){
+      const pref = c.k % 2 ? 1 : -1; let best = null;
+      for (const side of [pref, -pref]){
+        const y0 = side < 0 ? T - 10 - TL_LAB - M - c.h : T + 24 + M, st = c.h + M, n = side < 0 ? Math.floor(y0 / st) : Math.floor((H - c.h - y0) / st);
+        for (let j = 0; j <= n; j++){
+          const y = side < 0 ? y0 - j * st : y0 + j * st, base = j * 40 + (side !== pref ? 30 : 0);
+          if (best && base >= best.s) break;
+          for (let dx = 0; dx <= W; dx += 8){
+            if (best && base + dx * .12 >= best.s) break;
+            for (const sg of dx ? [1, -1] : [1]){
+              const x = Math.round(c.nx - c.w / 2 + sg * dx); if (x < 0 || x + c.w > W) continue;
+              const off = Math.max(0, x + 14 - c.nx, c.nx - (x + c.w - 14));          // 0 while the node sits under the card
+              const s = base + off * 1.1 + dx * .12; if (best && s >= best.s) continue;
+              let hit = false; for (const r of rects) if (x < r.x + r.w + M && x + c.w + M > r.x && y < r.y + r.h + M && y + c.h + M > r.y){ hit = true; break; }
+              if (!hit) best = { x, y, side, s };
+            }
+          }
+        }
+      }
+      if (!best){ TLX.failAt = c.k; return null; }
+      rects.push({ x: best.x, y: best.y, w: c.w, h: c.h }); best.h = c.h; pos.push(best); score += best.s;
+    }
+    return { pos, score };
   }
-  function tlPause(p){
-    if (!TLP.on || p === TLP.paused) return; TLP.paused = p;
-    const bar = tlStops[TLP.i].querySelector('i');
-    if (p){ clearTimeout(TLP.timer); TLP.left = Math.max(0, TLP.left - (performance.now() - TLP.start)); bar.style.width = getComputedStyle(bar).width; bar.style.transition = 'none'; }
-    else tlRun();
+  /* ---------- render: everything follows from TLX.t ---------- */
+  const tlCls = (el, c, on) => { if (el.classList.contains(c) !== on) el.classList.toggle(c, on); };
+  function tlGlyphs(s, k){ let o = s.slice(0, k); for (let i = k; i < Math.min(s.length, k + 6); i++) o += s[i] === ' ' ? ' ' : TL_G[Math.random() * TL_G.length | 0]; return o; }
+  function tlRender(force){
+    if (!TLX.built || !tlB.W) return;
+    const t = TLX.t, L = tlB.L, V = tlB.vert, draw = Math.max(0, Math.min(1, (t + TL_DRAW) / TL_DRAW)), drawP = draw * L;
+    const pp = Math.max(0, Math.min(1, t / TL_PLAY)) * L, ended = t >= TL_PLAY, live = t >= 0;
+    tlB.trk.style.transform = V ? `scaleY(${draw})` : `scaleX(${draw})`;
+    tlB.scan.style.opacity = draw > 0 && draw < 1 ? 1 : 0; tlB.scan.style.transform = V ? `translateY(${drawP}px)` : `translateX(${drawP}px)`;
+    tlB.fill.style.transform = V ? `scaleY(${pp / L})` : `scaleX(${pp / L})`;
+    tlB.ticks.forEach(k => tlCls(k.el, 'on', k.p <= drawP));
+    tlB.mons.forEach(m => tlCls(m.el, 'on', m.p <= drawP)); tlCls(tlB.now, 'on', draw >= 1);
+    tlCls(tlB.ph, 'on', live); tlCls(tlB.ph, 'end', ended); tlCls(tlB.ph, 'held', TLX.paused && live && !ended);
+    tlB.ph.style.transform = V ? `translateY(${pp}px)` : `translateX(${pp}px)`;
+    let cur = -1; tlPhases.forEach(p => { if (live && t >= p.tf) cur = p.i; });
+    const ptype = q => q.tf < TLX.base || reduce ? 1 : Math.max(0, Math.min(1, (t - q.tf) / Math.min(((q.i + 1 < tlPhases.length ? tlPhases[q.i + 1].tf : TL_PLAY) - q.tf) * .82, q.copy.length * 16)));
+    let reach = 0;
+    tlPhases.forEach(p => { const on = live && t >= p.tf, dec = p.tf < TLX.base ? 1 : (t - p.tf) / TL_DECODE;
+      tlCls(p.band, 'cur', p.i === cur && !ended); tlCls(p.lab, 'on', on); tlCls(p.ghost, 'on', on);
+      tlCls(p.ghost, 'glitch', on && dec < 1 && !reduce);
+      const txt = on && dec < 1 && !reduce ? tlGlyphs(p.title, Math.floor(p.title.length * Math.max(0, dec))) : p.title;
+      if (p.ghost.textContent !== txt) p.ghost.textContent = txt;
+      if (V){ const s = on ? p.copy.slice(0, Math.round(p.copy.length * ptype(p))) : ''; if (p.labP.textContent !== s) p.labP.textContent = s;
+        if (on) reach = Math.max(reach, p.y0 + p.lab.offsetHeight); } });
+    tlCards.forEach(c => { const on = live && t >= c.tf, open = c.el.classList.contains('open'), age = t - c.tf;
+      const typed = !on ? 0 : (c.tf < TLX.base || reduce) ? 1 : Math.min(1, age / TL_TYPE), n = open ? c.text.length : Math.round(c.text.length * typed);
+      tlCls(c.node, 'vis', c.np <= drawP); tlCls(c.node, 'on', on); tlCls(c.el, 'on', on || open);
+      tlCls(c.el, 'typing', on && typed < 1 && !open); tlCls(c.el, 'hot', on && age < 1800 && c.tf >= TLX.base);
+      tlCls(c.el, 'old', on && (age > 3200 || c.tf < TLX.base)); tlCls(c.lead, 'on', on); tlCls(c.lead, 'old', on && (age > 3200 || c.tf < TLX.base));
+      if (on && V) reach = Math.max(reach, c.y + c.h);
+      if (n !== c.shown){ c.shown = n; c.body.textContent = n >= c.text.length ? c.text : c.text.slice(0, n); } });
+    // narrow screens: the board grows as the sequence reveals it, so a swipe at the bottom always moves on
+    if (V){ const h = Math.round(Math.min(L, Math.max(reach, pp) + 40)); if (tlB.grown !== h){ tlB.grown = h; tlBoard.style.height = h + 'px'; }
+      if (TLX.on && !TLX.paused && !ended && performance.now() - TLX.touched > 3500){ const vh = tlSc.clientHeight, top = tlBoard.offsetTop;
+        const want = Math.max(0, top + pp - vh * .6); if (want > tlSc.scrollTop + 1) tlSc.scrollTop += Math.max(1, (want - tlSc.scrollTop) * .12); } }
+    // the console: the moment being played, or one being hovered, or the end card
+    tlCls(tlB.con, 'on', live || TLX.hoverPh >= 0);
+    let key, h, p, num;
+    if (TLX.hoverPh >= 0){ const q = tlPhases[TLX.hoverPh]; key = 'h' + q.i; h = q.date + ' // ' + q.title; p = q.copy; num = `${q.i + 1}/${tlPhases.length}`; }
+    else if (ended){ key = 'end'; h = TL_END_H; p = TL_END_P; num = 'end'; }
+    else if (cur >= 0){ const q = tlPhases[cur]; h = q.date + ' // ' + q.title; p = q.copy.slice(0, Math.round(q.copy.length * ptype(q))); key = 'p' + q.i + ':' + p.length; num = `${q.i + 1}/${tlPhases.length}`; }
+    else { key = 'boot'; h = 'March to now'; p = '> scanning track'; num = '0/' + tlPhases.length; }
+    if (key !== TLX.conKey){ TLX.conKey = key; tlB.conH.textContent = h; tlB.conP.textContent = p; tlB.conN.textContent = num; }
+    const pct = Math.round(Math.max(0, Math.min(1, t / TL_PLAY)) * 100);
+    const stat = ended ? '<b>■ END</b> · MAR 2026 → NOW' : `<b>${TLX.paused && live ? '❚❚ HELD' : '▶ PLAY'}</b> · ${cur >= 0 ? tlEsc(tlPhases[cur].date).toUpperCase() : 'SCAN'} · ${pct}%`;
+    if (tlB.stat.innerHTML !== stat) tlB.stat.innerHTML = stat;
+    // the typing line at the foot follows the moments
+    const ph = ended ? 4 : cur;
+    if (ph !== TLX.ph && TLX.on){ TLX.ph = ph; if (ph >= 0) typeTerm(ended ? '> march to now · played · click the track to replay from any point' : TERM[tlPhases[ph].term] || ''); }
   }
-  window.tlStart = () => { TLP.on = true; TLP.paused = false; tlShow(0); };
-  window.tlStop = () => { TLP.on = false; clearTimeout(TLP.timer); };
-  tlSc.querySelector('.tl-stage').addEventListener('mouseenter', () => tlPause(true));
-  tlSc.querySelector('.tl-stage').addEventListener('mouseleave', () => tlPause(false));
-  tlStops.forEach(b => b.addEventListener('click', () => { TLP.paused = false; tlShow(+b.dataset.i); }));
+  function tlFrame(now){
+    TLX.raf = 0; if (!TLX.on) return;
+    const dt = Math.min(80, now - (TLX.last || now)); TLX.last = now;
+    if (!TLX.paused) TLX.t += dt;
+    tlRender();
+    const decoding = tlPhases.some(p => TLX.t >= p.tf && TLX.t - p.tf < TL_DECODE);
+    if ((!TLX.paused && TLX.t < TL_PLAY + 3600) || decoding) TLX.raf = requestAnimationFrame(tlFrame);
+  }
+  function tlKick(){ if (TLX.on && !TLX.raf){ TLX.last = 0; TLX.raf = requestAnimationFrame(tlFrame); } }
+  function tlSeek(t, scrub){ TLX.t = t; TLX.base = scrub ? t : -1e9; TLX.ph = -2; tlRender(); tlKick(); }
+  function tlHold(p){ if (TLX.paused === p) return; TLX.paused = p; tlRender(); tlKick(); }
+  function tlOpen(c, open){
+    if (open === c.el.classList.contains('open')) return;
+    if (!open){ c.el.classList.remove('open'); c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px'; c.el.style.width = c.w + 'px'; c.el.style.height = c.h + 'px'; c.lead.classList.remove('hl'); tlRender(); return; }
+    const W = tlB.W, H = tlB.H, w = tlB.vert ? c.w : Math.max(c.w, Math.min(340, W * .3));
+    c.el.classList.add('open'); c.el.style.width = w + 'px'; c.el.style.height = 'auto'; c.body.textContent = c.text; c.shown = c.text.length;
+    const h = c.el.offsetHeight, x = Math.max(0, Math.min(W - w, c.x + (c.w - w) / 2)), y = c.side < 0 ? Math.max(0, c.y + c.h - h) : Math.min(tlB.vert ? tlBoard.offsetHeight - h : H - h, c.y);
+    c.el.style.left = x + 'px'; c.el.style.top = Math.max(0, y) + 'px'; c.lead.classList.add('hl');
+  }
+  function tlWire(){
+    // hover pauses, but only a real move of the pointer: a card appearing under a resting mouse must not stop the show
+    let lx = -1, ly = -1;
+    tlBoard.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch' || (e.clientX === lx && e.clientY === ly)) return; lx = e.clientX; ly = e.clientY;
+      tlHold(!!e.target.closest('.tl-hov'));
+      if (e.target === tlB.hit && !tlB.vert){ const r = tlBoard.getBoundingClientRect(), k = r.width / tlBoard.offsetWidth; tlB.aim.style.left = ((e.clientX - r.left) / k) + 'px'; }
+    });
+    tlBoard.addEventListener('pointerleave', () => { lx = ly = -1; tlHold(false); TLX.hoverPh = -1; });
+    tlB.hit.addEventListener('click', e => {
+      const r = tlBoard.getBoundingClientRect(), k = r.width / tlBoard.offsetWidth, x = tlB.vert ? (e.clientY - r.top) / k : (e.clientX - r.left) / k;
+      tlSeek(Math.max(0, Math.min(1, x / tlB.L)) * TL_PLAY, true); TLX.touched = performance.now(); if (window.SFX && SFX.blip) SFX.blip();
+    });
+    tlCards.forEach(c => {
+      c.el.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') tlOpen(c, true); });
+      c.el.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') tlOpen(c, false); });
+      c.el.addEventListener('click', () => { const o = !c.el.classList.contains('open'); tlCards.forEach(d => d !== c && tlOpen(d, false)); tlOpen(c, o); });
+    });
+    tlPhases.forEach(p => {
+      p.lab.addEventListener('pointerenter', () => { TLX.hoverPh = p.i; tlRender(); });
+      p.lab.addEventListener('pointerleave', () => { TLX.hoverPh = -1; tlRender(); });
+      p.lab.addEventListener('click', () => { tlSeek(p.tf + 1, true); TLX.hoverPh = p.i; tlRender(); });
+    });
+    $('#tlReplay').addEventListener('click', () => { tlCards.forEach(c => tlOpen(c, false)); TLX.paused = false; tlSeek(reduce ? TL_PLAY : -TL_DRAW, reduce); });
+    ['touchstart', 'wheel'].forEach(ev => tlSc.addEventListener(ev, () => { TLX.touched = performance.now(); }, { passive: true }));
+    let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (scenes[cur] === tlSc) tlLayout(); else tlB.W = 0; }, 160); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (scenes[cur] === tlSc) tlLayout(); });
+  }
+  window.tlStart = () => {
+    tlBuild(); TLX.on = true; TLX.touched = -1e9; tlB.grown = -1; TLX.paused = false; TLX.hoverPh = -1; tlLayout();
+    tlSeek(reduce ? TL_PLAY : -TL_DRAW, reduce);
+  };
+  window.tlStop = () => { TLX.on = false; cancelAnimationFrame(TLX.raf); TLX.raf = 0; if (TLX.built) tlCards.forEach(c => tlOpen(c, false)); };
+  window.TLX = TLX;
   /* TRANSITIONS ARE LOCKED — see BRIEF.md "Transitions — LOCKED". In and out differ per channel:
      estate IN = ssh build (data-warp) · agents IN/OUT = hologram (data-holo) · dissertation IN = red-team
-     attack, OUT = blue-team defence, each then deconstructs old / shutters / reconstructs new, no words (data-attack) · timeline = continuous scroll (data-steps) · else glitch.
+     attack, OUT = blue-team defence, each then deconstructs old / shutters / reconstructs new, no words (data-attack) · timeline = glitch, then it plays itself on one slide · else glitch.
      After any edit here run: node tools/transitions.cjs */
   async function go(n, force){
     if (typeof n === 'string') n = scenes.findIndex(s => s.id === n);
     const here = scenes[cur];
-    if (!busy && here && here.dataset.steps !== undefined && Math.abs(n - cur) === 1 && !arguments[1]){
-      const k = Math.round(TL.p);
-      if (n > cur && k < TL.max){ tlTo(k + 1); return; }
-      if (n < cur && k > 0){ tlTo(k - 1); return; }
-    }
     if (busy || n === cur || n < 0 || n >= N) return;
-    // arriving at the timeline: from above start at the beginning, from below at the end
-    if (scenes[n] && scenes[n].dataset.steps !== undefined){ const max = scenes[n].querySelectorAll('.tl-step').length - 1; TL.p = n > cur ? 0 : max; TL.over = 0; tlStep = -1; tlRender(); }
     busy = true;
     const a = scenes[cur], b = scenes[n];
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
@@ -1724,7 +1999,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   });
   addEventListener('wheel', e => {
     if (dv.open) return;
-    if (scenes[cur].dataset.steps !== undefined && !busy){ e.preventDefault(); tlScroll(e.deltaY); return; }
     const s = scenes[cur], dir = Math.sign(e.deltaY);
     if (canScroll(s, dir)) return;
     e.preventDefault();
@@ -1744,16 +2018,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   });
   let ty = null, tTop = false, tBot = false;
   addEventListener('touchstart', e => { const s = scenes[cur]; ty = e.touches[0].clientY; tTop = !canScroll(s, -1); tBot = !canScroll(s, 1); }, { passive:true });
-  // on the timeline a swipe moves along it, except inside a moment's list that still has more to scroll (phones)
-  let tlTy = null; addEventListener('touchmove', e => { if (scenes[cur].dataset.steps === undefined || busy) return; const y = e.touches[0].clientY;
-    const list = e.target.closest && e.target.closest('.tl-step .pts');
-    if (list && tlTy !== null && list.scrollHeight > list.clientHeight + 2){ const dir = Math.sign(tlTy - y); const can = dir > 0 ? list.scrollTop + list.clientHeight < list.scrollHeight - 2 : list.scrollTop > 2; if (can){ tlTy = y; return; } }
-    if (tlTy !== null) tlScroll((tlTy - y) * 2.2); tlTy = y; }, { passive:true });
-  addEventListener('touchend', () => { tlTy = null; }, { passive:true });
   addEventListener('touchend', e => {
     if (ty === null || dv.open) return;
     const dy = ty - e.changedTouches[0].clientY; ty = null;
-    if (scenes[cur].dataset.steps !== undefined) return;   // the timeline handles its own swipes
     if (dy > 50 && tBot) go(cur + 1); else if (dy < -50 && tTop) go(cur - 1);
   }, { passive:true });
   document.addEventListener('click', e => {
