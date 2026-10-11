@@ -84,7 +84,7 @@
   .act:hover,.act:focus-visible{background:color-mix(in srgb,var(--a) 16%,transparent);color:var(--text)}
   .act[disabled]{opacity:.35;cursor:not-allowed;background:none}
   .opts{display:grid;gap:6px}
-  .opt{all:unset;cursor:pointer;box-sizing:border-box;display:block;padding:7px 10px;font:600 12.5px/1.4 var(--mono);color:var(--text);
+  .opt{all:unset;cursor:pointer;box-sizing:border-box;display:block;padding:5px 10px;font:600 12px/1.4 var(--mono);color:var(--text);
     border:1px solid color-mix(in srgb,var(--a) 35%,transparent);border-left:3px solid var(--a)}
   .opt:hover,.opt:focus-visible{background:color-mix(in srgb,var(--a) 14%,transparent)}
   .opt b{color:var(--a);margin-right:6px}
@@ -96,7 +96,7 @@
   .gauges .t-bar{font-size:12px} .gauges .t-bar .fill{height:10px}
   .gauges .det .t-bar .fill i{background:var(--b)}
   /* newest entry on top; older ones fall off the bottom of the window rather than scrolling */
-  .log{flex:none;max-height:86px;overflow:hidden;border-top:1px dashed var(--line);padding-top:6px}
+  .log{flex:0 1 auto;min-height:25px;max-height:86px;overflow:hidden;border-top:1px dashed var(--line);padding-top:6px}
   .log div{font-size:11.5px;color:var(--body);line-height:1.45;padding:1px 0}
   .log .g{color:#00ff88} .log .p{color:#ffcc00} .log .r{color:#ff3355}
   .end{display:flex;flex-direction:column;gap:8px}
