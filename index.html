@@ -436,6 +436,12 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 .atkw.quar .atkw-bar i:first-child,.atkw.quar .atkw-b .pr,.atkw.quar .atkw-bar em{background:none;color:#00d4ff}
 .atkw.quar .atkw-b{color:#9ff3ff}
 @media (prefers-reduced-motion:reduce){ body.under-attack #stage,.atkw,.atk-tears i,.atk-edge{animation:none} }
+/* the way out mirrors the way in, in blue */
+.atkw.blue{border-color:rgba(0,212,255,.55);box-shadow:0 0 28px rgba(0,212,255,.25);color:#d8f6ff;background:#020a12}
+.atkw.blue .atkw-bar{color:#3a8aa0;border-color:rgba(0,212,255,.3)} .atkw.blue .atkw-bar i:first-child{background:#00d4ff} .atkw.blue .atkw-bar em,.atkw.blue .atkw-b .pr,.atkw.blue .atkw-b b{color:#00d4ff}
+body.under-defence #stage{animation:shake .12s steps(2) 6}
+.atk-shut.blue i{background:#003a52;box-shadow:0 1px 0 #00d4ff,0 -1px 0 #002a3a}
+.atk-shut.blue i span{text-shadow:0 0 18px rgba(0,212,255,.85)}
 /* the arrival into the dissertation: red shutters rip apart */
 .atk-shut[hidden]{display:none}
 .atk-shut{position:fixed;inset:0;z-index:51;pointer-events:none;overflow:hidden}
@@ -1332,26 +1338,41 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
     });
   }
   // leaving the dissertation: the blue team recovers, windows close one by one, red fades back to blue
+  const DEF_MSG = ['blue team online', 'threat isolated', 'channel 08 recovered', 'display control restored', 'signal secured', 'defences back up', 'routing restored', 'all channels blue'];
   function attackOut(){
+    // mirror of the attack: blue-team windows spread, each quarantining a red one; red turns to blue; one phrase; shutters open
     return new Promise(res => {
-      const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig'), def = $('#defFx');
+      const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
       if (reduce || layer.hidden){ layer.hidden = true; return res(); }
-      def.hidden = false; def.className = 'def-fx go';
-      // the scan beam sweeps down; each window it passes is quarantined, turns blue and collapses
-      const wins = [...layer.querySelectorAll('.atkw')], H = innerHeight, t0 = performance.now(), sweep = 620;
-      (function f(now){
-        const y = (now - t0) / sweep * H;
-        wins.forEach(w => { if (!w.dataset.q && w.getBoundingClientRect().top < y){ w.dataset.q = 1; w.classList.add('quar');
-          w.querySelector('.atkw-b').innerHTML = 'QUARANTINED ✓'; setTimeout(() => w.classList.add('close'), 160); } });
-        if (now - t0 < sweep) requestAnimationFrame(f);
-      })(t0);
-      tint.classList.add('recover');
-      setTimeout(() => { big.textContent = 'THREAT CONTAINED'; big.className = 'atk-big blue on'; }, 380);
-      setTimeout(() => { big.textContent = 'SYSTEM RESTORED'; }, 820);
-      setTimeout(() => { layer.hidden = true; layer.innerHTML = ''; def.hidden = true; def.className = 'def-fx';
-        tint.className = 'atk-tint'; tint.style.opacity = '0'; big.className = 'atk-big'; big.textContent = 'SYSTEM COMPROMISED'; res(); }, 1150);
+      const reds = [...layer.querySelectorAll('.atkw')];
+      document.body.classList.add('under-defence');
+      let i = 0; const total = Math.max(reds.length, 12);
+      (function spawn(){
+        if (i < total){
+          const w = atkWin(layer, i); w.classList.add('blue');
+          w.querySelector('.atkw-bar span').textContent = '~/blue-team/0' + ((i % 9) + 1);
+          w.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> ' + DEF_MSG[i % DEF_MSG.length] + '<b>_</b>';
+          const r = reds[i]; if (r){ r.classList.add('quar'); r.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> quarantined ✓'; setTimeout(() => r.classList.add('close'), 140); }
+          i++; tint.style.background = `rgb(${Math.round(90 - 90 * i / total)},${Math.round(16 + 60 * i / total)},${Math.round(16 + 90 * i / total)})`;
+          return setTimeout(spawn, Math.max(30, 100 - i * 5));
+        }
+        big.textContent = 'THREAT CONTAINED'; big.className = 'atk-big blue on';
+        setTimeout(() => {
+          // cyan shutters rip apart, carrying the phrase, and reveal the next channel
+          const sh = $('#atkShut'), N = 12; sh.innerHTML = ''; sh.classList.add('blue');
+          for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
+            d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28).toFixed(0) + 'ms';
+            d.innerHTML = `<span style="top:${(-k * 100).toFixed(2)}%"><em style="color:#00d4ff;font-style:normal">[&nbsp;</em>THREAT CONTAINED<em style="color:#00d4ff;font-style:normal">&nbsp;]_</em></span>`; sh.appendChild(d); }
+          sh.hidden = false; sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
+          big.className = 'atk-big'; big.textContent = 'SYSTEM COMPROMISED';
+          layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.opacity = '0'; tint.style.background = '';
+          document.body.classList.remove('under-defence');
+          setTimeout(() => { sh.hidden = true; sh.innerHTML = ''; sh.classList.remove('blue'); res(); }, 900);
+        }, 380);
+      })();
     });
   }
+
 
   /* ---------- hack to top: a quick fake intrusion in green, then straight back to channel 1 ---------- */
   $('#hackTop').addEventListener('click', () => {
@@ -1528,9 +1549,10 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
       const layer = $('#atkLayer'), tint = $('#atkTint');
       layer.innerHTML = ''; layer.hidden = false; for (let k = 0; k < 12; k++) atkWin(layer, k);
       tint.className = 'atk-tint full'; tint.style.opacity = '';
-      a.classList.remove('active'); restore(a);
-      b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      await attackOut();
+      await new Promise(r => setTimeout(r, 120));
+      const atkOutP = attackOut();
+      setTimeout(() => { a.classList.remove('active'); restore(a); b.scrollTop = 0; b.classList.add('active'); cur = n; update(); }, 900);
+      await atkOutP;
       busy = false; lockUntil = performance.now() + 300; return;
     }
     if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && !b.dataset.warp && !b.dataset.attack)){ // hologram projection: close to a line, then project open between two scan lines
