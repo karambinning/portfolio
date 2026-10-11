@@ -1320,10 +1320,10 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         const off = () => { removeEventListener('message', on); clearTimeout(tm); };
         const tm = setTimeout(() => { off(); res(); }, ms + 900);
         addEventListener('message', on);
-        fr.contentWindow.postMessage(mode === 'out' ? { kbDecon: ms, color } : { kbRecon: ms, color }, '*');
+        fr.contentWindow.postMessage(mode === 'out' ? { kbDecon: ms, color, infect: color } : { kbRecon: ms, color }, '*');
       });
     }
-    return window.KBDismantle ? KBDismantle.run(scene, mode, ms, color) : Promise.resolve();
+    return window.KBDismantle ? KBDismantle.run(scene, mode, ms, color, mode === 'out' ? color : null) : Promise.resolve();
   }
 
 
@@ -1401,8 +1401,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         { transform: 'scale(1,1)', opacity: .5, background: '#fff', offset: .8 },
         { transform: 'scale(1,1)', opacity: 0, background: col }
       ];
-      d.animate(on ? up : off,
-        { duration: on ? 520 : 620, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' }).finished.then(() => { d.remove(); res(); });
+      d.animate(on ? up : off, { duration: on ? 440 : 500, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' }).finished.then(() => { d.remove(); res(); });
     });
   }
   function atkSettle(col){
@@ -1582,7 +1581,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
     if (b.dataset.attack !== undefined || a.dataset.attack !== undefined){
       // dissertation, both ways: 1) the attack (in, blue to red) or the defence (out, red to blue) plays out;
-      // 2) the cover clears; 3) every element of the old slide is dismantled; 4) every element of the new one is built back. No words.
+      // 2) the old slide is infected by the opposing colour and dismantled piece by piece; 3) CRT power off / on; 4) the new one is built piece by piece. No words.
       const into = b.dataset.attack !== undefined, col = into ? 'rgba(255,48,72,.9)' : 'rgba(0,212,255,.9)';
       if (into) await attackIn();
       else {
@@ -1593,14 +1592,14 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       }
       const settled = atkSettle(col);                            // the attack / defence windows come apart detail by detail
       await new Promise(r => setTimeout(r, 420));                // as they go, the page underneath starts to come apart too
-      await Promise.all([settled, chanText(a, 'out', 2600, col)]);   // every element, one detail at a time
+      await Promise.all([settled, chanText(a, 'out', 2300, col)]);   // the opposing colour infects it, then it comes apart one detail at a time
       await crtPower(false, col);                                // then the screen switches off like an old CRT
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
       const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
       b.style.visibility = 'hidden'; b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      await crtPower(true, col);                                 // powers back up
-      const built = chanText(b, 'in', 2800, col);                             // it starts blank, so show it only once the rebuild has begun
+      await crtPower(true, col);                                 // and powers back up
+      const built = chanText(b, 'in', 2300, col);                             // it starts blank, so show it only once the rebuild has begun
       setTimeout(() => { b.style.visibility = ''; }, 60);
       await built;
       busy = false; lockUntil = performance.now() + 300; return;

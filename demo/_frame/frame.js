@@ -58,7 +58,7 @@
     const sc = document.createElement('script'); sc.src = src.replace(/frame\.js(\?.*)?$/, 'dismantle.js$1'); document.head.appendChild(sc);
     addEventListener('message', e => { const m = e.data || {}, D = window.KBDismantle; if (!D) return;
       const done = mode => () => parent.postMessage({ kbDismantled: mode }, '*');   // tell the portfolio the moment it is finished
-      if (m.kbDecon) D.run(document.body, 'out', m.kbDecon, m.color).then(done('out'));
+      if (m.kbDecon) D.run(document.body, 'out', m.kbDecon, m.color, m.infect).then(done('out'));
       else if (m.kbRecon){
         // the page has only just been shown: keep it hidden while its layout settles at the real size, then measure
         const h = document.documentElement; h.style.visibility = 'hidden'; dispatchEvent(new Event('resize'));

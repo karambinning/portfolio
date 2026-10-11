@@ -33,7 +33,7 @@
         const r = c.getBoundingClientRect();
         const on = r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw && cs.display !== 'contents';
         let me = parentIdx;
-        if (on && els.length < 1400){ me = els.length; els.push({ el: c, r, parent: parentIdx, depth, vis: draws(c, cs), op0: cs.opacity, clip0: cs.clipPath, inline: cs.display.startsWith('inline') && c.tagName !== 'IMG' && c.tagName !== 'CANVAS' && c.tagName !== 'svg' }); idx.set(c, me); }
+        if (on && els.length < 1400){ me = els.length; els.push({ el: c, r, parent: parentIdx, depth, vis: draws(c, cs), op0: cs.opacity, clip0: cs.clipPath, bg: !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor), media: /^(IMG|CANVAS|svg|VIDEO)$/.test(c.tagName), inline: cs.display.startsWith('inline') && c.tagName !== 'IMG' && c.tagName !== 'CANVAS' && c.tagName !== 'svg' }); idx.set(c, me); }
         if (c.tagName.toLowerCase() !== 'svg' && c.tagName !== 'CANVAS') walk(c, me, depth + 1);
       }
     };
@@ -63,7 +63,7 @@
 
 
 
-  function run(root, mode, ms, color){
+  function run(root, mode, ms, color, infect){
     root = root || document.body; color = color || 'rgba(0,212,255,.9)';
     restore(root);
     const st = { anims: [], texts: [], job: Math.random() }; state.set(root, st);
@@ -96,6 +96,15 @@
       ];
       if (!e.vis) return;   // a plain wrapper: its contents do the work
       try { st.anims.push(e.el.animate(kf, { duration: D, delay: T[i], easing: 'steps(6,end)', fill: mode === 'out' ? 'forwards' : 'both' })); } catch (_){}
+      // infection: before a piece is torn down, the opposing colour spreads into it (text, borders, fills, the globe),
+      // running a little ahead of the destruction so the colour visibly travels through the page
+      if (mode === 'out' && infect){
+        const lead = Math.min(700, W * .3), hue = /255,\s*48|ff3355|red/i.test(infect) ? '-40deg' : '150deg';
+        const to = e.media ? { filter: `sepia(1) saturate(7) hue-rotate(${hue}) brightness(1.1)` }
+          : { color: infect, borderColor: infect, textShadow: `0 0 8px ${infect}`, ...(e.bg ? { backgroundColor: infect.replace(/[\d.]+\)$/, '.28)') } : {}) };
+        const from = e.media ? { filter: 'none' } : {};
+        try { st.anims.push(e.el.animate([from, { ...to, offset: .35 }, to], { duration: lead, delay: Math.max(0, T[i] - lead * .8), easing: 'steps(4,end)', fill: 'forwards' })); } catch (_){}
+      }
     });
     // the text: decays as its element is torn down, types back in once its element has formed
     texts.forEach(x => { x.t = T[x.owner] || 0; x.L = x.o.length; x.sc = scr(x.o); if (mode === 'in') x.n.nodeValue = x.sc; });
