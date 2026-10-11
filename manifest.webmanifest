@@ -3,7 +3,7 @@
   "short_name": "K·B",
   "description": "Karam Binning — final-year History & Politics at Loughborough, and a self-taught builder of working AI systems.",
   "id": "./mobile.html",
-  "start_url": "./mobile.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
