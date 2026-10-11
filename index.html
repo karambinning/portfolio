@@ -530,6 +530,15 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 .sshw.green.grow{background:#021008}
 .btn.hack{color:#00ff88;border-color:rgba(0,255,136,.45);font-family:var(--mono)}
 .btn.hack:hover,.btn.hack:focus-visible{background:#00ff88;color:#02060b}
+.btn.inbox{color:var(--phos);border-color:color-mix(in srgb,var(--phos) 50%,transparent);font-family:var(--mono)}
+.btn.inbox .arw{display:inline-block;animation:arw 1.1s ease-in-out infinite}
+.btn.inbox:hover,.btn.inbox:focus-visible{background:var(--phos);color:#02060b}
+@keyframes arw{50%{transform:translateX(6px)}}
+@media (max-width:900px){ .btn.inbox .arw{transform:rotate(90deg);animation:none} }
+@media (prefers-reduced-motion:reduce){ .btn.inbox .arw{animation:none} }
+.tx.ping{animation:txPing .9s ease-out}
+@keyframes txPing{0%{box-shadow:0 0 0 0 rgba(0,212,255,.9),0 0 60px rgba(0,212,255,.5)}100%{box-shadow:0 0 0 18px rgba(0,212,255,0),0 0 46px rgba(0,212,255,.10)}}
+.pts li.minor{opacity:.7;font-size:.92em}
 .ssh-l.ok .sp-tx{font-weight:600}
 
 /* ---------- the timeline: one channel, a sequence along a rail ---------- */
@@ -700,6 +709,8 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <li>June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
       <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
       <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
+      <li>An AI learning academy built into Command: a four-stage path through Anthropic's courses, research papers and code, with a study workstation</li>
+      <li class="minor">Completed Anthropic Academy's three AI Fluency courses</li>
     </ul>
   </div>
       <div class="tl-step" data-i="3" data-term="now">
@@ -729,7 +740,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <span class="wk-hint">&gt; ls ~/work · select one to open its terminal</span>
     </div>
     <div class="files" id="files"></div>
-    <div class="also"><span class="also-k">ALSO BUILT ›</span><button type="button" class="ab" style="--c:#ff3355" data-d="A reusable app for running missions: any objective, from an event to a project, gets its own research, plan, targets, dossier and debrief, with Mission, an analyst I can question about that mission's notes. London Tech Week was the first." data-p="mission-os">Mission OS</button><button type="button" class="ab" style="--c:#38bdf8" data-d="Webcam biomechanics scoring with MediaPipe: four movement tests scored live in the browser, reviewed with two Loughborough academics." data-p="motion-coach">Motion Coach</button><button type="button" class="ab" style="--c:#22d3ee" data-d="An offline field app for beginner anglers, driven by live river levels, weather and species data, with a bankside mode for cold hands." data-p="fish">FISH</button><button type="button" class="ab" style="--c:#00d4ff" data-d="About 47 million time-synced prediction-market trade prints from the trading work, catalogued with a data dictionary as a research dataset." data-p="dataset">The Dataset</button><button type="button" class="ab" style="--c:#00ff88" data-d="An alarm that checks I am actually up, switches the room on through smart plugs and prints a morning paper with the day’s brief." data-p="morning">Morning system</button><button type="button" class="ab" style="--c:#ff7a00" data-d="A trip planner for a group road trip around Scotland, in the KAM orange style, that works offline on the road." data-p="kam-travel">KAM Travel</button><button type="button" class="ab" style="--c:#34d399" data-d="A voiced golf caddy that uses GPS, the compass and live weather to solve for wind, with a four-player mode." data-p="caddy">KAM Caddy</button><button type="button" class="ab" style="--c:#ff7700" data-d="An isometric ops console in TypeScript and Phaser, where each agent is a character in a room." data-p="hq">Binning.AI HQ</button></div>
+    <div class="also"><span class="also-k">ALSO BUILT ›</span><button type="button" class="ab" style="--c:#ff3355" data-d="A reusable app for running missions: any objective, from an event to a project, gets its own research, plan, targets, dossier and debrief, with Mission, an analyst I can question about that mission's notes. London Tech Week was the first." data-p="mission-os">Mission OS</button><button type="button" class="ab" style="--c:#38bdf8" data-d="Webcam biomechanics scoring with MediaPipe: four movement tests scored live in the browser, reviewed with two Loughborough academics." data-p="motion-coach">Motion Coach</button><button type="button" class="ab" style="--c:#22d3ee" data-d="An offline field app for beginner anglers, driven by live river levels, weather and species data, with a bankside mode for cold hands." data-p="fish">FISH</button><button type="button" class="ab" style="--c:#00d4ff" data-d="About 47 million time-synced prediction-market trade prints from the trading work, catalogued with a data dictionary as a research dataset." data-p="dataset">The Dataset</button><button type="button" class="ab" style="--c:#00ff88" data-d="An alarm that checks I am actually up, switches the room on through smart plugs and prints a morning paper with the day’s brief." data-p="morning">Morning system</button><button type="button" class="ab" style="--c:#ff7a00" data-d="A trip planner for a group road trip around Scotland, in the KAM orange style, that works offline on the road." data-p="kam-travel">KAM Travel</button><button type="button" class="ab" style="--c:#34d399" data-d="A voiced golf caddy that uses GPS, the compass and live weather to solve for wind, with a four-player mode." data-p="caddy">KAM Caddy</button><button type="button" class="ab" style="--c:#ff7700" data-d="An isometric ops console in TypeScript and Phaser, where each agent is a character in a room." data-p="hq">Binning.AI HQ</button><button type="button" class="ab" style="--c:#00bcd4" data-d="An AI learning academy inside Command: a four-stage path through about 25 hand-picked sources, from Anthropic’s own courses to research papers and code, with a study workstation for live sessions." data-p="academy">AI Academy</button></div>
     <div class="ab-pop" id="abPop" hidden role="tooltip"><div class="ab-bar"><i></i><i></i><i></i><span id="abPath"></span></div><div class="ab-body"><span class="ab-pr">$ cat README</span><p id="abText"></p></div></div>
   </div>
 </section>
@@ -839,6 +850,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         <a class="btn" href="cv/Karam-Binning-CV.pdf?v=8ed74404" target="_blank" rel="noopener">Download CV</a>
         <a class="btn quiet" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the research proposal</a>
         <button class="btn hack" type="button" id="hackTop">[ HACK TO TOP ]</button>
+        <button class="btn inbox" type="button" id="hackInbox">HACK INTO MY INBOX <span class="arw" aria-hidden="true">→</span></button>
       </div>
       <div class="sh" id="sh" aria-label="Share this portfolio">
         <div class="sh-h"><span>[K·B] SHARE · PASS IT ON</span><span class="sh-hint">for a colleague, a manager, anyone</span></div>
@@ -1402,6 +1414,11 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
   /* ---------- hack to top: a quick fake intrusion in green, then straight back to channel 1 ---------- */
+  // points visitors at the message terminal: it lights up and the cursor lands in the first field
+  $('#hackInbox').addEventListener('click', () => {
+    const t = $('#tx'); t.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+    t.classList.remove('ping'); void t.offsetWidth; t.classList.add('ping'); setTimeout(() => t.email.focus({ preventScroll: true }), 250);
+  });
   $('#hackTop').addEventListener('click', () => {
     if (busy) return;
     const box = $('#sshTerm'), out = box.querySelector('.ssh-body');
