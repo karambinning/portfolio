@@ -905,7 +905,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <li>May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
       <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
       <li>June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
-      <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
+      <li>Mission OS: a reusable app for running missions, with its own co-pilot. London Tech Week was the first mission: research, planning and outreach in one place</li>
       <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
       <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
       <li class="minor">Anthropic Academy: three AI Fluency courses</li>
@@ -939,7 +939,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <span class="wk-hint">&gt; ls ~/work · select one to open its terminal</span>
     </div>
     <div class="files" id="files"></div>
-    <div class="also"><span class="also-k">ALSO BUILT ›</span><button type="button" class="ab" style="--c:#ff3355" data-d="A reusable app for running any mission, from an event to a project: research, plan, targets, dossier and debrief, with an analyst to question. London Tech Week was the first." data-p="mission-os">Mission OS</button><button type="button" class="ab" style="--c:#38bdf8" data-d="Scores four movement tests live from a webcam, using MediaPipe. Reviewed with two Loughborough academics." data-p="motion-coach">Motion Coach</button><button type="button" class="ab" style="--c:#22d3ee" data-d="An offline app for beginner anglers, using live river levels, weather and species data, with a bankside mode for cold hands." data-p="fish">FISH</button><button type="button" class="ab" style="--c:#00d4ff" data-d="46.8 million time-synced prediction-market trades from the trading work, catalogued with a data dictionary." data-p="dataset">The Dataset</button><button type="button" class="ab" style="--c:#00ff88" data-d="An alarm that checks I’m actually up, turns the room on through smart plugs and prints the day’s brief." data-p="morning">Morning system</button><button type="button" class="ab" style="--c:#ff7a00" data-d="An offline trip planner for a group road trip around Scotland." data-p="kam-travel">KAM Travel</button><button type="button" class="ab" style="--c:#34d399" data-d="A voiced golf caddy: GPS, compass and live weather solve for the wind. Four-player mode." data-p="caddy">KAM Caddy</button><button type="button" class="ab" style="--c:#ff7700" data-d="An isometric ops console in TypeScript and Phaser, where each agent is a character in a room." data-p="hq">Binning.AI HQ</button><button type="button" class="ab" style="--c:#00bcd4" data-d="My own learning tools in one place: an AI academy (Anthropic’s courses, then papers and code, with a tutor), a French tutor, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion." data-p="academy">Academy</button></div>
+    <div class="also"><span class="also-k">ALSO BUILT ›</span><button type="button" class="ab" style="--c:#ff3355" data-d="A reusable app for running any mission, from an event to a project: research, plan, targets, dossier and debrief, with a co-pilot to work it with me. London Tech Week was the first." data-p="mission-os">Mission OS</button><button type="button" class="ab" style="--c:#38bdf8" data-d="Scores four movement tests live from a webcam, using MediaPipe. Reviewed with two Loughborough academics." data-p="motion-coach">Motion Coach</button><button type="button" class="ab" style="--c:#22d3ee" data-d="An offline app for beginner anglers, using live river levels, weather and species data, with a bankside mode for cold hands." data-p="fish">FISH</button><button type="button" class="ab" style="--c:#00d4ff" data-d="46.8 million time-synced prediction-market trades from the trading work, catalogued with a data dictionary." data-p="dataset">The Dataset</button><button type="button" class="ab" style="--c:#00ff88" data-d="An alarm that checks I’m actually up, turns the room on through smart plugs and prints the day’s brief." data-p="morning">Morning system</button><button type="button" class="ab" style="--c:#ff7a00" data-d="An offline trip planner for a group road trip around Scotland." data-p="kam-travel">KAM Travel</button><button type="button" class="ab" style="--c:#34d399" data-d="A voiced golf caddy: GPS, compass and live weather solve for the wind. Four-player mode." data-p="caddy">KAM Caddy</button><button type="button" class="ab" style="--c:#ff7700" data-d="An isometric ops console in TypeScript and Phaser, where each agent is a character in a room." data-p="hq">Binning.AI HQ</button><button type="button" class="ab" style="--c:#00bcd4" data-d="My own learning tools in one place: an AI academy (Anthropic’s courses, then papers and code, with a tutor), a French tutor, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion." data-p="academy">Academy</button></div>
     <div class="ab-pop" id="abPop" hidden role="tooltip"><div class="ab-bar"><i></i><i></i><i></i><span id="abPath"></span></div><div class="ab-body"><span class="ab-pr">$ cat README</span><p id="abText"></p></div></div>
   </div>
 </section>
@@ -1527,7 +1527,10 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     const sc = document.getElementById(sid); if (!sc) return;
     sc.classList.add('chan');
     sc.innerHTML = `<iframe class="chan-app" src="demo/w/${page}/?v=${BUILD}" title="${sc.getAttribute('aria-label')}" ${sid === 'estate' || sid === 'dissertation' ? '' : 'loading="lazy"'}></iframe>`;
+    // a channel that is not on screen is paused (its render loop, globe or rain waits); see frame.js
+    const fr = sc.firstElementChild; fr.addEventListener('load', () => chanRun(sc));
   });
+  function chanRun(sc){ const fr = sc.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage(sc.classList.contains('active') ? { kbResume: 1 } : { kbPause: 1 }, '*'); }
 
   /* ---------- into the vault: a small terminal SSHes into M1 (a demonstration, nothing connects), then becomes the brain ---------- */
   function warpIn(onReveal){
@@ -1756,6 +1759,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (history.replaceState) history.replaceState(null, '', '#' + s.id);
     typeTerm(TERM[s.id] || '');
     if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
+    scenes.forEach(x => x.classList.contains('chan') && chanRun(x));   // only the channel on screen runs
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
     s.scrollTop = 0; s.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0 && !el.closest('.tl-step')) el.scrollTop = 0; });   // every channel starts at the top
   }
