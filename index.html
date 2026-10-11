@@ -1694,18 +1694,21 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
   /* ---------- static: a low-res noise field, louder during a channel change ---------- */
   const cv = $('#static'), cx = cv.getContext('2d');
-  // fine grain at any screen size: one noise pixel is about 3 screen pixels, never stretched into big squares
-  let img;
-  function sizeNoise(){ cv.width = Math.max(160, Math.min(900, Math.round(innerWidth / 3))); cv.height = Math.max(100, Math.min(560, Math.round(innerHeight / 3))); img = cx.createImageData(cv.width, cv.height); }
+  // fine grain at any screen size (about 3 screen pixels per grain), and cheap: eight noise tiles are made once,
+  // then each frame just paints one of them as a pattern at a random offset
+  const TILES = [];
+  for (let k = 0; k < 8; k++){ const t = document.createElement('canvas'); t.width = t.height = 128; const tx = t.getContext('2d'), im = tx.createImageData(128, 128), d = im.data;
+    for (let i = 0; i < d.length; i += 4){ const v = Math.random() * 255 | 0; d[i] = v * .55; d[i+1] = v * .85; d[i+2] = v; d[i+3] = 255; }
+    tx.putImageData(im, 0, 0); TILES.push(cx.createPattern(t, 'repeat')); }
+  function sizeNoise(){ cv.width = Math.max(160, Math.min(700, Math.round(innerWidth / 3))); cv.height = Math.max(100, Math.min(440, Math.round(innerHeight / 3))); }
   sizeNoise(); addEventListener('resize', sizeNoise);
   let loud = 0, lastNoise = 0;
   function noise(t){
-    const fps = loud ? 30 : 10;
+    const fps = loud ? 24 : 8;
     if (t - lastNoise > 1000 / fps){
       lastNoise = t;
-      const d = img.data;
-      for (let i = 0; i < d.length; i += 4){ const v = Math.random() * 255 | 0; d[i] = v * .55; d[i+1] = v * .85; d[i+2] = v; d[i+3] = 255; }
-      cx.putImageData(img, 0, 0);
+      const ox = Math.random() * 128 | 0, oy = Math.random() * 128 | 0;
+      cx.save(); cx.translate(-ox, -oy); cx.fillStyle = TILES[Math.random() * TILES.length | 0]; cx.fillRect(0, 0, cv.width + 128, cv.height + 128); cx.restore();
     }
     if (!reduce) requestAnimationFrame(noise);
   }
