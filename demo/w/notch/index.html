@@ -21,6 +21,8 @@
 .stagecol .readout .t-label{margin:0 !important}
 .stagecol .readout .t-tag,.stagecol .readout .ln{margin-top:0}
 .stagecol .readout .cred{flex-basis:100%;margin-top:0}
+/* a steady height, so a track change never resizes the screen above it */
+@media (min-width:861px){ .stagecol .readout{min-height:76px;align-content:flex-start} }
 #lap{position:relative;min-height:0;min-width:0}
 #bezel{position:absolute;left:50%;top:0;transform:translateX(-50%);background:#0b0b0e;border-radius:16px 16px 4px 4px;
   box-shadow:0 0 0 1px #2b2b33,0 0 0 2px #050507,0 18px 40px rgba(0,0,0,.6),0 0 40px color-mix(in srgb,var(--a) 10%,transparent)}

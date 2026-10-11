@@ -14,11 +14,13 @@
   const head = document.querySelector('header[data-frame]');
   if (head){
     head.innerHTML = `<div class="t-head"><span class="t-brand">${d.brand || '[K·B]'}</span>
-        <span class="t-icons" aria-hidden="true">${d.icons || '♪ ◖) ◷'}</span><span class="sp"></span>
+        <span class="t-icons" aria-hidden="true">${d.icons || ''}</span><span class="sp"></span>
         ${d.link ? `<a class="t-link" href="${d.link}" target="_blank" rel="noopener">${d.linkLabel || 'OPEN'} ↗</a>` : ''}</div>
       <div class="t-unit"><span>${d.unit || 'K·B TERMINAL · UNIT 01'}</span><span class="live">${d.status || 'SIGNAL'} <i></i> ${d.statusTail || 'LIVE'}</span></div>`;
   }
-  const hub = document.querySelector('nav[data-hub]');
+  // inside the portfolio a window is a channel: the portfolio has its own navigation, so the hub bar is dropped
+  const embedded = d.channel !== undefined && parent !== window;
+  const hub = embedded ? (document.querySelector('nav[data-hub]')?.remove(), null) : document.querySelector('nav[data-hub]');
   if (hub){
     hub.className = 't-hub'; hub.setAttribute('aria-label', 'Other windows');
     hub.innerHTML = `<button type="button" data-open="" style="--c:var(--hub-hub)">K·B HUB</button>` +
