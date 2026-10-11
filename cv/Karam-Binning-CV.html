@@ -1,79 +1,204 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Karam Binning — CV</title>
-<style>
-:root{--ink:#15181d;--mut:#5a6270;--line:#dfe3ea;--accent:#0072a3;--accent2:#00374d}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#f4f5f7;color:var(--ink)}
-body{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;line-height:1.45;font-size:10.6pt}
-.page{max-width:780px;margin:24px auto;background:#fff;padding:42px 48px 40px;box-shadow:0 2px 24px rgba(0,0,0,.08)}
-h1{font-size:26pt;margin:0;letter-spacing:.5px;color:var(--accent2);font-weight:800}
-.tag{font-size:11pt;color:var(--accent);font-weight:600;margin:3px 0 8px}
-.contact{font-size:9.3pt;color:var(--mut);line-height:1.6}
-.contact a{color:var(--accent);text-decoration:none}
-h2{font-size:10pt;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);border-bottom:2px solid var(--line);padding-bottom:4px;margin:18px 0 9px}
-.role{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin:9px 0 1px}
-.role b{font-size:10.8pt}
-.role .when{color:var(--mut);font-size:9pt;white-space:nowrap}
-.sub{color:var(--mut);font-size:9.3pt;margin:0 0 4px}
-p{margin:5px 0}
-ul{margin:5px 0 6px;padding-left:17px}
-li{margin:3px 0}
-li b,p b{color:var(--accent2)}
-.profile{font-size:10.2pt}
-.stack{font-size:8.9pt;color:var(--mut);font-style:italic;margin-top:6px}
-.skills b{color:var(--accent2)}
-.foot{margin-top:14px;font-size:8.4pt;color:#9aa2b0;text-align:center;border-top:1px solid var(--line);padding-top:8px}
-@media print{
- body{background:#fff;font-size:10pt}
- .page{box-shadow:none;margin:0;max-width:none;padding:0 6mm}
- @page{size:A4;margin:12mm}
- h2,.role{break-after:avoid}ul,li,.role{break-inside:avoid}
- .noprint{display:none}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.11" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Karam Binning — CV</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
 }
-.bar{position:sticky;top:0;background:var(--accent2);color:#fff;text-align:center;font-size:9pt;padding:7px}
-.bar a{color:#7fd8ff}
-</style></head><body>
-<div class="bar noprint">Print-ready CV — press <b>Cmd/Ctrl-P</b> → <b>Save as PDF</b> for a clean PDF. Word version: <a href="Karam-Binning-Internship-CV-2026.docx">.docx</a></div>
-<div class="page">
-<h1>KARAM BINNING</h1>
-<div class="tag">AI Builder · Founder, Binning.AI · Second-year History &amp; Politics, Loughborough</div>
-<div class="contact">07951 882002 &nbsp;·&nbsp; <a href="mailto:K.S.Binning1-24@student.lboro.ac.uk">K.S.Binning1-24@student.lboro.ac.uk</a> &nbsp;·&nbsp; Luton / Loughborough (London-commutable) &nbsp;·&nbsp; Full UK driving licence<br>Interactive portfolio: <i>the Binning.AI estate</i> — link provided in covering email</div>
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 
-<h2>Profile</h2>
-<p class="profile">Second-year (penultimate-year) History &amp; Politics student and self-taught AI engineer. Over four months I taught myself to build and shipped a one-person, AI-native software estate — a multi-agent intelligence platform, autonomous agents running on local models across a private device fleet, a safety-critical legal-research system, and a quantitatively-validated trading engine. I work the way modern AI teams do: design the system, ground every claim in real data, verify before trusting. Seeking an applied-AI / technical internship where that builder's instinct and a humanities analyst's judgement are both useful.</p>
-
-<h2>Selected Work — Binning.AI</h2>
-<div class="role"><b>Founder &amp; Director, Binning.AI</b><span class="when">March 2026 – present</span></div>
-<p class="sub">A one-person AI-native company.</p>
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style type="text/css">@page{size:A4;margin:13mm 14mm}
+body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:9.6pt;line-height:1.36;color:#111;max-width:none;margin:0}
+h1{font-size:20pt;letter-spacing:.06em;margin:0 0 2px}
+h2{font-size:10pt;letter-spacing:.14em;color:#0b3d6e;border-bottom:1px solid #0b3d6e;padding-bottom:2px;margin:11px 0 5px}
+p{margin:3px 0}ul{margin:2px 0 6px;padding-left:16px}li{margin:1px 0}
+hr{display:none}a{color:#0b3d6e}strong{color:#000}
+</style>
+</head>
+<body>
+<h1 id="karam-binning">KARAM BINNING</h1>
+<p><strong>Final-year BA History &amp; Politics, Loughborough University
+· Independent AI builder</strong><br />
+</p>
+<p>K.S.Binning1-24@student.lboro.ac.uk · karambinning@gmail.com · 07951
+882002<br />
+Luton / Loughborough (London-commutable) · UK national · Full UK driving
+licence<br />
+Portfolio: karambinning.github.io/portfolio<br />
+<strong>Available:</strong> December 2026 – January 2027 · Summer 2027
+(planning a taught master’s in International Security, 2027–28)</p>
+<hr />
+<h2 id="profile">PROFILE</h2>
+<p>Final-year History and Politics student who builds working AI
+systems. Since March 2026, with no programming background and Claude as
+my primary instrument, I have designed and shipped autonomous flight
+software, a multi-agent infrastructure across a private fleet of
+machines, and intelligence tooling — alongside a full degree.
+Academically I work on conflict, security and the international order;
+technically, on AI systems that verify before they claim. I am looking
+for an internship where both halves are useful: applied AI, technology
+and security policy, intelligence analysis or research.</p>
+<hr />
+<h2 id="selected-work-binning.ai-independent-march-2026-present">SELECTED
+WORK — BINNING.AI <em>(independent, March 2026 – present)</em></h2>
+<p><strong>ICARUS — autonomous flight software for a DJI Mini
+2</strong></p>
 <ul>
-<li><b>KAM — a personal intelligence platform</b> (React 19 · Vite · 40+ modules, fully local). Aggregates live world, financial and OSINT data into one terminal interface with a multi-LLM &ldquo;council,&rdquo; in-browser computer vision, and a retrieval-augmented knowledge base. The flagship the rest of the estate is built around.</li>
-<li><b>An autonomous agent fleet across seven networked machines.</b> A director-orchestrator decomposes goals, assigns acceptance-bound tasks to specialist sub-agents, and — critically — <b>no agent can mark its own work done</b>: an independent verification gate, not self-reported success. All on local open models (Ollama / llama.cpp), under deterministic supervision.</li>
-<li><b>THEMIS — a safety-critical legal RAG.</b> Hybrid (dense + BM25) retrieval over a structured legal corpus with an <i>abstention gate</i> that refuses rather than hallucinate — built after studying how legal AI gets practitioners sanctioned, and implementing the mitigations. Local-only for privacy.</li>
-<li><b>A validated trading engine.</b> A multi-agent Polymarket engine (+113% on paper over 289 trades) and an in-play sports model whose edge I validated with <b>closing-line value and Brier score</b>, not just P&amp;L — the variance-resistant test of real edge.</li>
-<li><b>An automated lead-generation &amp; job-application pipeline</b> (Python, OpenStreetMap, local-LLM classification) — national-scale business intelligence feeding a postcard-website outreach product.</li>
+<li>Turned a consumer drone into an autonomous reconnaissance aircraft,
+with a 2019 Android handset as flight computer, on my own software and
+at zero cost.</li>
+<li>11,615 lines of Java across fourteen classes; 365 self-test
+assertions run on the physical handset at every launch and have
+repeatedly caught regressions before flight.</li>
+<li>The control law carries its own safety envelope because the airframe
+has no obstacle sensing. Three crashes documented with the fault each
+exposed; one feature paused on a measured physical limit (the camera
+cannot resolve a hand beyond 5.8 m) rather than shipped on a guess.</li>
 </ul>
-<p class="stack">Stack across the estate: React 19 / TypeScript / Three.js · Python / FastAPI · Ollama, llama.cpp, local LLMs · multi-agent orchestration · RAG · Tailscale-meshed distributed systems · systemd.</p>
-
-<h2>Education</h2>
-<div class="role"><b>Loughborough University — BA History &amp; Politics</b><span class="when">2024 – 2027 · penultimate year (final year from Sept 2026)</span></div>
-<p>First-class module work: African States &amp; Nations <b>70</b>, Politics of Development <b>66</b>, International Political Theory <b>66</b>, The Making &amp; Unmaking of the World Order <b>65</b>, Theories &amp; Methods in Political Research <b>65</b>.<br><b>Planned final-year dissertation:</b> an AI-assisted platform for civilian geopolitical &amp; security analysis in peace and conflict — <i>KAM built as the dissertation's analytical instrument</i>, bridging the software and the scholarship.</p>
-<div class="role"><b>Harlington Sixth Form, Luton</b><span class="when">2022 – 2024</span></div>
-<p>A-Levels: Psychology (B), Criminology (B), Media Studies (B) · <b>Head Student</b> of Sixth Form &amp; Upper School.</p>
-
-<h2>Experience</h2>
-<div class="role"><b>Buy Sell and Loan (Questar Ltd), Luton — Team Member</b><span class="when">2024 – present</span></div>
-<p>Regulated retail dealing in high-value electronics, jewellery and luxury goods. High-value item assessment and valuation; regulatory-compliant record-keeping; cash handling; trust-based repeat-customer relationships; independent operation across the store.</p>
-<div class="role"><b>Pret A Manger, Luton Airport (airside) — Team Member</b><span class="when">2022 – 2024</span></div>
-<p>One of Pret's highest-footfall UK sites. Fast, accurate high-volume service to an international clientele; <b>self-initiated barista training above grade</b>; ran the kiosk independently (sales, stock/FIFO, hygiene, closing) with no managerial assistance.</p>
-<p class="sub">~5 years of continuous customer-facing work alongside full-time education.</p>
-
-<h2>Skills</h2>
-<p class="skills"><b>AI / technical:</b> Claude &amp; Claude Code (primary) · multi-agent design &amp; orchestration · prompt &amp; context engineering · retrieval-augmented generation (hybrid, abstention) · local-model deployment (Ollama, llama.cpp) · Python (AI-assisted development) · React 19 + Vite · Linux CLI &amp; networking · calibration/eval discipline (CLV, Brier).<br>
-<b>Analytical / research:</b> OSINT methodology (multi-source verification, structured synthesis) · research design · written analysis to deadline · university-level political analysis.<br>
-<b>Operational:</b> regulated cash handling &amp; compliance · high-volume customer service · reliability under pressure.</p>
-
-<h2>Interests</h2>
-<p>AI as a structural force in geopolitics · dual-use technology &amp; access asymmetry · the emerging agent economy · post-colonial political economy · the space between peace and war (dissertation terrain).</p>
-
-<div class="foot">Karam Binning · Binning.AI · K.S.Binning1-24@student.lboro.ac.uk</div>
-</div></body></html>
+<p><strong>Agentic infrastructure — the system the work runs
+on</strong></p>
+<ul>
+<li>A private mesh of four Macs, with a single command centre and a 12
+TB canonical archive of every project, session and note.</li>
+<li>A dedicated intelligence node with collectors across open-source
+intelligence, news, geopolitical signal, market data and careers.</li>
+<li>Agents run as Claude Code sessions — director, scout, builder,
+reviewer, archivist — under a deterministic supervisor that probes every
+node every sixty seconds and restarts what has failed. One rule
+throughout: <strong>no agent may mark its own work
+complete.</strong></li>
+</ul>
+<p><strong>AI Declaration System — academic transparency
+tooling</strong></p>
+<ul>
+<li>Built in Claude Code to govern my own academic AI use: logs how AI
+was involved in a piece of work and generates a declaration page for the
+front of the submitted essay. Designed to sit inside Loughborough’s
+AI-use guidelines.</li>
+</ul>
+<p><strong>KAM — a “human operating system” (concept stage,
+pre-beta)</strong></p>
+<ul>
+<li>Around twenty-five modules behind a central hub, including WORLD, a
+layered model of the planet with a temporal slider through migration,
+empire and war, and a Council that convenes strategic, economic, legal
+and ethical perspectives on a decision while the user remains the one
+who decides.</li>
+<li>Interfaces and navigation built; intelligence and data layers still
+largely scaffolding. Hosts my dissertation’s predictive model.</li>
+</ul>
+<p><strong>Future Warfare — a civilian security curriculum inside
+KAM</strong></p>
+<ul>
+<li>Six modules (cyber security, AI defence, autonomous systems, space,
+drones, pilot training) on the premise that the modern conflict surface
+reaches civilians first. Tested on myself: paired red-team and blue-team
+drills against my own infrastructure, including brute-force attempts on
+my own SSH.</li>
+</ul>
+<p><strong>Polymarket War Room — paper-traded market engine</strong></p>
+<ul>
+<li>Three bot configurations on five-minute crypto markets. Best: $50 →
+$106.56 (+113%) over 289 trades at a 64.7% win rate — paper-traded, no
+capital at risk. I then wrote the assessment showing the result does not
+transfer to other market classes, and kept only the portable
+finding.</li>
+</ul>
+<p><em>Method across all of it: instrument before theorising, verify
+before trusting, let the measurement close the argument.</em></p>
+<hr />
+<h2 id="education">EDUCATION</h2>
+<p><strong>Loughborough University — BA (Hons) History &amp;
+Politics</strong> · 2024 – 2027, final year</p>
+<ul>
+<li>Selected marks: African States and Nations <strong>70</strong> ·
+Politics of Development <strong>66</strong> · International Political
+Theory <strong>66</strong> · British India, 1857–1947
+<strong>65</strong> · The Making and Unmaking of the World Order
+<strong>65</strong> · Theories and Methods in Political Research
+<strong>65</strong>.</li>
+<li>Final-year modules: Dissertation · The Soviet Security State · After
+Empire: South Asia · International Conflict Management · French.</li>
+<li><strong>Dissertation (in progress):</strong> <em>Great Power War as
+a Process</em> — major conflict read as a long structural process rather
+than a dated event, tested with a predictive model built for civilian
+geopolitical and security analysis.</li>
+<li>Declared AI use from the start: for British India I used Claude to
+build a reading guide, wrote the essay entirely myself, and stated the
+AI involvement on the front page.</li>
+<li>Planning a one-year taught master’s in International Security,
+2027–28.</li>
+</ul>
+<p><strong>Anthropic Academy</strong> · AI Fluency for Students · AI
+Fluency: Capabilities and Limits · AI Fluency: Framework and Foundations
+(all completed)</p>
+<p><strong>Harlington Upper School &amp; Sixth Form, Central
+Bedfordshire</strong> · A-Levels: Psychology (B) · Criminology (B) ·
+Media Studies (B) · 9 GCSEs</p>
+<hr />
+<h2 id="leadership">LEADERSHIP</h2>
+<p><strong>Head Student, Sixth Form and Upper School —
+Harlington</strong> · 2023 – 2024</p>
+<ul>
+<li>Elected by staff to lead the student leadership team; the link
+between students and senior staff.</li>
+<li>Planned and delivered the school’s major events across the year,
+including prom and leavers’ day.</li>
+<li>Represented the school publicly: open-day speeches to prospective
+students, a community residents’ tea party I hosted, and visits from
+politicians.</li>
+<li>Organised and fronted a Movember fundraiser end to end, raising
+<strong>£750 — the most any single student has raised for the
+school.</strong></li>
+</ul>
+<hr />
+<h2 id="employment">EMPLOYMENT</h2>
+<p><strong>Team Member — Bargain Booze, Loughborough</strong> · 2026 –
+present</p>
+<p>Licensed retail alongside my final year: customer service, restocking
+and store presentation.</p>
+<p><strong>Team Member — Buy Sell and Loan (Questar Ltd), Luton</strong>
+· 2024 – present</p>
+<p>Regulated retail in high-value electronics, jewellery and luxury
+goods: item valuation, compliant record-keeping, cash handling and
+independent operation across the store.</p>
+<p><strong>Team Member — Pret A Manger, Luton Airport (airside)</strong>
+· 2022 – 2024</p>
+<p>One of Pret’s highest-footfall UK sites: high-volume service under
+time pressure, barista training taken on above grade, and the kiosk run
+independently through to closing.</p>
+<hr />
+<h2 id="skills">SKILLS</h2>
+<p><strong>AI / technical:</strong> Claude and Claude Code · multi-agent
+orchestration · prompt and context engineering · retrieval-augmented
+generation · Python and Java (AI-assisted) · evaluation and self-test
+discipline · Linux, networking and self-hosted infrastructure.</p>
+<p><strong>Research / analysis:</strong> OSINT methodology and
+multi-source verification · research design · structured synthesis ·
+written analysis to deadline.</p>
+<p><strong>Languages:</strong> English (native) · French (learning,
+final-year module — not yet working proficiency)</p>
+<h2 id="interests">INTERESTS</h2>
+<p>AI as a structural force in geopolitics · AI sovereignty and the UK’s
+position · dual-use technology and access asymmetry · cybersecurity,
+intelligence and diplomacy · the Cold War · the space between peace and
+war.</p>
+</body>
+</html>
