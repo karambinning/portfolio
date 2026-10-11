@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../../_frame/frame.css">
 <style>
   :root{--ok:#00ff88;--abs:#ff8a3d;--ref:#ff3355}
-  .th{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:20px;flex:1;min-height:0}
+  .th{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:20px;flex:1;min-height:0}
   .left{display:flex;flex-direction:column;gap:12px;min-height:0}
   .pane{display:none} .pane.on{display:block}
   .pane .t-p{font-size:12.8px}
@@ -24,7 +24,7 @@
 
   /* the pipeline: each gate lights as a question passes through it */
   .pipe{display:flex;flex-direction:column;gap:3px}
-  .stg{display:grid;grid-template-columns:22px 92px minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--line);
+  .stg{display:grid;grid-template-columns:22px 92px minmax(0,1fr) auto;align-items:center;gap:8px;padding:3px 8px;border:1px solid var(--line);
     font:600 11.5px/1.25 var(--mono);color:var(--dim);transition:background .2s,border-color .2s,color .2s}
   .stg b{font-weight:800;letter-spacing:.06em;color:var(--violet)}
   .stg .n{color:var(--line);font-weight:800}
@@ -37,24 +37,24 @@
   /* right: the query terminal */
   .right{display:flex;flex-direction:column;gap:10px;min-height:0}
   /* the tally doubles as the colour legend: one line along the top of the console */
-  .tally{display:flex;flex-wrap:wrap;gap:4px 18px;padding:7px 12px 6px;border-bottom:1px solid var(--line)}
+  .tally{display:flex;flex-wrap:wrap;gap:4px 18px;padding:5px 12px 4px;border-bottom:1px solid var(--line)}
   .tally .t-stat{flex-direction:row;align-items:baseline;gap:7px}
-  .tally .t-stat strong{font-size:22px;color:var(--c)}
+  .tally .t-stat strong{font-size:20px;color:var(--c)}
   .tally .t-stat span{color:var(--c);font-size:11px}
   .tally .t-stat em{font-style:normal;color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
   .con{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:rgba(0,0,0,.35);
     box-shadow:inset 0 0 30px color-mix(in srgb,var(--a) 6%,transparent)}
-  .log{flex:1;min-height:0;overflow:auto;padding:8px 12px;font:500 12px/1.45 var(--mono);color:var(--body);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .log{flex:1;min-height:0;overflow:auto;padding:8px 12px;font:500 12px/1.4 var(--mono);color:var(--body);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .log .sys{color:var(--dim)} .log .sys b{color:var(--a);font-weight:700}
   .log .q{color:var(--text);margin-top:10px} .log .q:first-child{margin-top:0} .log .q::before{content:"> ";color:var(--a)}
   .log .step{color:var(--dim);font-size:11.5px} .log .step::before{content:"  · "}
   .log .step.ok::after{content:" ✓";color:var(--ok)}
-  .res{margin:6px 0 4px;border-left:3px solid var(--c);padding:6px 0 4px 10px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,transparent),transparent 70%)}
+  .res{margin:4px 0 2px;border-left:3px solid var(--c);padding:6px 0 4px 10px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,transparent),transparent 70%)}
   .res .tag{font:800 11px/1 var(--mono);letter-spacing:.14em;color:var(--c)}
   .res .tag i{display:inline-block;width:8px;height:8px;background:var(--c);margin-right:7px;box-shadow:0 0 8px var(--c)}
   .res .why{font-size:11px;color:var(--dim);margin-top:3px}
   .res .head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px} .res .head .conf{flex:1;min-width:220px;margin:0}
-  .log .step.sum{white-space:normal}
+  .log .q{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px} .log .q .sum{margin-left:auto;color:var(--dim);font-size:11px}
   .conf{display:flex;align-items:center;gap:8px;margin:7px 0 2px;font:700 11px/1 var(--mono);color:var(--violet)}
   .conf .fill{position:relative;flex:1;height:12px;background:repeating-linear-gradient(90deg,var(--line) 0 5px,transparent 5px 8px)}
   .conf .fill i{position:absolute;inset:0;width:var(--p);background:var(--c);box-shadow:0 0 8px color-mix(in srgb,var(--c) 50%,transparent)}
@@ -70,11 +70,11 @@
   .cite{color:var(--b);font-weight:700}
   .decl{margin-top:6px;font-size:10px;letter-spacing:.04em;color:var(--dim)}
   .decl b{color:var(--violet)}
-  .presets{display:flex;flex-wrap:wrap;gap:5px 6px;padding:8px 10px 0;border-top:1px solid var(--line)}
-  .pre{all:unset;cursor:pointer;font:700 10.5px/1 var(--mono);padding:5px 7px;border:1px solid var(--line);color:var(--body);white-space:nowrap}
+  .presets{display:flex;flex-wrap:wrap;gap:5px 6px;padding:6px 10px 0;border-top:1px solid var(--line)}
+  .pre{all:unset;cursor:pointer;font:700 10.5px/1 var(--mono);padding:4px 7px;border:1px solid var(--line);color:var(--body);white-space:nowrap}
   .pre::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;background:var(--c);vertical-align:1px}
   .pre:hover,.pre:focus-visible{border-color:var(--c);color:var(--text);box-shadow:0 0 10px color-mix(in srgb,var(--c) 35%,transparent)}
-  .ask{display:flex;align-items:center;gap:8px;padding:8px 10px 9px}
+  .ask{display:flex;align-items:center;gap:8px;padding:6px 10px 7px}
   .ask label{font:800 14px/1 var(--mono);color:var(--a)}
   .ask input{all:unset;flex:1;min-width:0;font:500 13px/1.4 var(--mono);color:var(--text);caret-color:var(--a);border-bottom:1px dashed var(--line);padding:3px 0}
   .ask input::placeholder{color:var(--dim)}
@@ -271,7 +271,8 @@
     const steps = [...log.querySelectorAll('.step')];
     if (steps.length > 1){
       const sum = steps.map(x => x.textContent.split(' · ')[0] + (x.classList.contains('ok') ? ' ✓' : '')).join(' · ');
-      steps.slice(1).forEach(x => x.remove()); steps[0].className = 'step sum'; steps[0].textContent = sum;
+      steps.forEach(x => x.remove());
+      const qEl = log.querySelector('.q'), sp = document.createElement('span'); sp.className = 'sum'; sp.textContent = sum; qEl.appendChild(sp);
     }
     // result
     let h = `<div class="head"><div class="tag"><i></i>${tag}</div>${ans.conf != null ? confBar(ans.conf, c) : ''}</div>`;
