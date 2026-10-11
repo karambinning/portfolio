@@ -1,9 +1,10 @@
 /* Quantitative — War Room + Krabs.
-   Every number drawn here comes from assets/data.json (a trimmed copy of demo/markets/assets/data.json,
-   itself extracted from the v91_final PAPER run and the Krabs estate record). Nothing is invented:
-   the equity curve is the cumulative P&L of the 289 recorded trades; the fill grid is the recorded
-   2-of-304 count (which cells light is illustrative); Krabs shows only its three reported Brier
-   checkpoints and summary CLV figures, because the per-match ledger was not archived. */
+   Every number drawn here comes from assets/data.json. Nothing is invented:
+   - the equity curve is the cumulative P&L of the 289 recorded v91_final PAPER trades. That run used a
+     simulated price model (every entry at $0.52, losing exits floored at $0.45), so it is drawn as invalid;
+   - the fill grid is the recorded 2-of-304 count from the 2 April order-book check (which cells light is illustrative);
+   - the Krabs Brier lines are recomputed per match from the archived paper journal (58 settled bets, 26 matches);
+     the closing-line-value figures are as reported on 20 June and were not re-derived. */
 (() => {
   const $ = id => document.getElementById(id);
   const css = getComputedStyle(document.body);
@@ -75,14 +76,8 @@
     ctx.font = FONT(700, 10); ctx.fillStyle = C.text; ctx.textAlign = 'right';
     ctx.fillText('$' + last.b.toFixed(2) + ' · ' + n + ' trades', W - padR - 2, W < 480 ? Y(w.start_balance) - 4 : padT + 10);
     if (!S.eqDone) return;
-    // drawdown bracket (largest peak-to-trough fall in the recorded trades)
-    const p = series[ddPeak], t = series[ddTrough];
-    ctx.strokeStyle = C.b; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
-    ctx.beginPath(); ctx.moveTo(X(p.m), Y(p.b)); ctx.lineTo(X(p.m), Y(t.b)); ctx.lineTo(X(t.m), Y(t.b)); ctx.stroke(); ctx.setLineDash([]);
-    ctx.font = FONT(700, 9); ctx.fillStyle = C.b; ctx.textAlign = 'right';
-    ctx.fillText('MAX DD −' + S.ddPct.toFixed(2) + '%', X(p.m) - 4, Y(t.b) + 12);
     // the invalidation overlay
-    const bx = padL + 8, by = padT + 4, label = 'P&L INVALID', sub = 'every fill assumed at $0.52';
+    const bx = padL + 8, by = padT + 4, label = 'P&L INVALID', sub = W < 420 ? 'simulated prices' : 'simulated prices · entry fixed at $0.52';
     ctx.font = FONT(800, 12); const w1 = ctx.measureText(label).width; ctx.font = FONT(600, 9); const w2 = ctx.measureText(sub).width;
     const bw = Math.max(w1, w2) + 16, bh = 32;
     ctx.save(); ctx.globalAlpha = .55; ctx.strokeStyle = C.a; ctx.lineWidth = 1;
@@ -109,7 +104,7 @@
     const gw = stacked ? W - 12 : (W - gap - 12) / 2, top = 15, blockH = stacked ? H / 2 : H;
     const cell = Math.min(gw / cols, (blockH - top - 3) / rows);
     const i = S.fillI;
-    [['MIDPOINT ENGINE · ASSUMED', 0], ['ORDER BOOK · CHECKED', 1]].forEach(([lab, k]) => {
+    [['$0.52 RULE · ASSUMED', 0], ['LIVE ORDER BOOK · 2 APR', 1]].forEach(([lab, k]) => {
       const ox = stacked ? 6 : 6 + k * (gw + gap), oy = stacked ? k * blockH : 0;
       const filled = k ? [...HIT].filter(h => h < i).length : Math.min(i, N);
       ctx.font = FONT(700, 9); ctx.textAlign = 'left'; ctx.fillStyle = C.dim; ctx.fillText(lab, ox, oy + 10);
@@ -132,29 +127,31 @@
     });
   }
 
-  /* ---------------- KRABS: Brier checkpoints ---------------- */
+  /* ---------------- KRABS: Brier, match by match ---------------- */
+  // cumulative Brier over every settled bet so far: Krabs' own probability vs the price it paid
   function drawBrier(){
-    const cv = $('brier'), { ctx, W, H } = setup(cv), k = D.krabs, pts = k.brier_path;
-    const padL = 34, padR = 22, padT = 14, padB = 16, pw = W - padL - padR, ph = H - padT - padB;
-    const Y = b => padT + ph - (b / 0.3) * ph, X = i => padL + 18 + (i / (pts.length - 1)) * (pw - 36);
+    const cv = $('brier'), { ctx, W, H } = setup(cv), k = D.krabs, pts = k.brier_cum, N = pts.length;
+    const padL = 30, padR = 12, padT = 16, padB = 15, pw = W - padL - padR, ph = H - padT - padB;
+    const Y = b => padT + ph - (b / 0.3) * ph, X = i => padL + 6 + (i / (N - 1)) * (pw - 12);
     ctx.font = FONT(600, 9.5); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.fillStyle = C.dim; ctx.textAlign = 'right';
     [0, 0.1, 0.2].forEach(b => { ctx.beginPath(); ctx.moveTo(padL, Y(b) + .5); ctx.lineTo(W - padR, Y(b) + .5); ctx.stroke(); ctx.fillText(b.toFixed(1), padL - 4, Y(b) + 3); });
-    // coin-flip line
-    ctx.strokeStyle = C.b; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(padL, Y(.25)); ctx.lineTo(W - padR, Y(.25)); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = C.b; ctx.textAlign = 'right'; ctx.font = FONT(700, 9); ctx.fillText('0.25 = COIN FLIP', W - padR, Y(.25) - 4);
-    const labels = ['START', 'MIDWAY', `${k.brier_matches} MATCHES`];
-    const shown = S.kr * pts.length;
-    // dotted connectors: only three checkpoints were recorded, so nothing is interpolated as data
-    ctx.strokeStyle = hexA(C.a, .7); ctx.setLineDash([1.5, 3]); ctx.lineWidth = 1.4; ctx.beginPath();
-    pts.forEach((b, i) => { if (i > shown - 0.5) return; i ? ctx.lineTo(X(i), Y(b)) : ctx.moveTo(X(i), Y(b)); }); ctx.stroke(); ctx.setLineDash([]);
-    pts.forEach((b, i) => {
-      ctx.textAlign = 'center'; ctx.fillStyle = C.dim; ctx.font = FONT(700, 9); ctx.fillText(labels[i], X(i), H - 4);
-      if (i > shown - 0.5) return;
-      ctx.beginPath(); ctx.arc(X(i), Y(b), 4, 0, 7); ctx.fillStyle = C.a; ctx.shadowColor = C.a; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
-      ctx.fillStyle = C.text; ctx.font = FONT(800, 11); ctx.fillText(b.toFixed(i === pts.length - 1 ? 3 : 2), X(i), Y(b) + (i ? -9 : 16));
-    });
+    ctx.strokeStyle = C.dim; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(padL, Y(.25)); ctx.lineTo(W - padR, Y(.25)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = C.dim; ctx.font = FONT(700, 8.5); ctx.textAlign = 'right'; ctx.fillText('0.25 = COIN FLIP', W - padR, Y(.25) - 3);
+    ctx.textAlign = 'center'; ctx.font = FONT(700, 8.5);
+    [1, 7, 13, 19, 26].forEach(m => { if (m <= N) ctx.fillText(m === 1 ? 'MATCH 1' : String(m), X(m - 1), H - 3); });
+    const shown = Math.max(1, Math.round(S.kr * N));
+    const line = (col, c, w, dash) => { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.setLineDash(dash); ctx.beginPath();
+      for (let i = 0; i < shown; i++){ const y = Y(pts[i][col]); i ? ctx.lineTo(X(i), y) : ctx.moveTo(X(i), y); } ctx.stroke(); ctx.setLineDash([]); };
+    line(2, C.b, 1.4, [3, 2]);
+    ctx.shadowColor = C.a; ctx.shadowBlur = 8; line(1, C.a, 1.8, []); ctx.shadowBlur = 0;
+    const L = pts[shown - 1], xe = X(shown - 1);
+    ctx.beginPath(); ctx.arc(xe, Y(L[1]), 3, 0, 7); ctx.fillStyle = C.a; ctx.fill();
+    ctx.beginPath(); ctx.arc(xe, Y(L[2]), 2.5, 0, 7); ctx.fillStyle = C.b; ctx.fill();
+    ctx.font = FONT(800, 10); ctx.textAlign = 'right';
+    ctx.fillStyle = C.a; ctx.fillText('KRABS ' + L[1].toFixed(3), xe - 6, Y(L[1]) + 13);
+    ctx.fillStyle = C.b; ctx.fillText('PRICE ' + L[2].toFixed(3), xe - 6, Y(L[2]) - 6);
     ctx.textAlign = 'left'; ctx.fillStyle = C.dim; ctx.font = FONT(600, 9);
-    ctx.fillText(W < 420 ? 'BRIER · 3 reported checkpoints' : 'BRIER · 3 reported checkpoints · per-match ledger not archived', padL, 10);
+    ctx.fillText(W < 430 ? 'BRIER · ' + L[0] + ' settled bets' : 'BRIER · cumulative over ' + L[0] + ' settled bets · lower is better', padL, 10);
   }
   /* ---------------- KRABS: closing-line value ---------------- */
   function drawClv(){
