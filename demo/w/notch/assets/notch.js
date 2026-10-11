@@ -1163,7 +1163,7 @@ function renderTicker(L) {
   const sep = `<i style="width:1px;align-self:stretch;background:${rgba(t.label, .35)};flex:none"></i>`;
   const row = TICKER.map(([sec, text, hot]) => `<span class="tk-it"><span style="letter-spacing:1.5px;color:${hot ? t.accent : t.label}">${esc(sec)}</span>` +
     `<span style="font-size:7px;color:${rgba(t.accent, .8)}">◆</span><span style="color:${hot ? t.accent : t.ink}">${esc(text)}</span></span>`).join("") +
-    `<span class="tk-it" style="color:${rgba(t.label, .6)}">AS OF <span data-tasof></span> · DEMO FEED</span>`;
+    `<span class="tk-it" style="color:${rgba(t.label, .8)}">AS OF <span data-tasof></span> · DEMO FEED</span>`;
   tickerEl.style.cssText = `${font}background:${ground};box-shadow:inset 0 -1px ${rgba(t.label, .3)};`;
   tickerEl.innerHTML = `<div class="tk-live" style="background:${ground}"><i data-tdot style="background:${L.isKAM ? L.house.green : t.ink2}"></i><span style="letter-spacing:2px;color:${t.label}">LIVE</span></div>${sep}
     <div class="tk-win" title="Hover pauses the ticker"><div class="tk-run"><div class="tk-row">${row}</div><div class="tk-row" aria-hidden="true">${row}</div></div></div>${sep}
