@@ -1514,6 +1514,10 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     NODES.delete(sc);
   }
   document.querySelectorAll('.tl-stop').forEach(b => b.addEventListener('click', () => tlTo(+b.dataset.i)));
+  /* TRANSITIONS ARE LOCKED — see BRIEF.md "Transitions — LOCKED". In and out differ per channel:
+     estate IN = ssh build (data-warp) · agents IN/OUT = hologram (data-holo) · dissertation IN = red-team
+     attack, OUT = blue-team defence (data-attack) · timeline = continuous scroll (data-steps) · else glitch.
+     After any edit here run: node tools/transitions.cjs */
   async function go(n, force){
     if (typeof n === 'string') n = scenes.findIndex(s => s.id === n);
     const here = scenes[cur];
