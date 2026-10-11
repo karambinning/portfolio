@@ -1309,6 +1309,13 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
   /* ---------- the hostile takeover into the dissertation (all fictional, a piece of theatre) ---------- */
+  // send a deconstruct / reconstruct to a channel: embedded pages handle it themselves, others use our own text decay/decode
+  function chanText(scene, mode, ms, color){
+    const fr = scene.querySelector('.chan-app');
+    if (fr && fr.contentWindow){ fr.contentWindow.postMessage(mode === 'out' ? { kbDecon: ms, color } : { kbRecon: ms, color }, '*'); return; }
+    if (mode === 'in') textNodes(scene).forEach(t => t.nodeValue = '');
+    animateText(scene, ms, mode).then(() => { if (mode === 'in') restore(scene); });
+  }
   // a staged red-team exercise: alert windows flood the screen, it turns from blue to red, then the dissertation broadcasts
   const ATK_MSG = ['RED TEAM ACTIVE', 'CHANNEL 08 BREACHED', 'DISPLAY CONTROL LOST', 'SIGNAL SEIZED', 'DEFENCES OFFLINE', 'ROUTING TO WAR.SYS', 'BLUE TEAM NOT RESPONDING', 'ALL CHANNELS RED'];
   function atkWin(layer, i){
@@ -1339,7 +1346,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }
   // leaving the dissertation: the blue team recovers, windows close one by one, red fades back to blue
   const DEF_MSG = ['blue team online', 'threat isolated', 'channel 08 recovered', 'display control restored', 'signal secured', 'defences back up', 'routing restored', 'all channels blue'];
-  function attackOut(){
+  function attackOut(onSwap){
     // mirror of the attack: blue-team windows spread, each quarantining a red one; red turns to blue; one phrase; shutters open
     return new Promise(res => {
       const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
@@ -1363,7 +1370,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
           for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
             d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28).toFixed(0) + 'ms';
             d.innerHTML = `<span style="top:${(-k * 100).toFixed(2)}%"><em style="color:#00d4ff;font-style:normal">[&nbsp;</em>THREAT CONTAINED<em style="color:#00d4ff;font-style:normal">&nbsp;]_</em></span>`; sh.appendChild(d); }
-          sh.hidden = false; sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
+          sh.hidden = false; onSwap && onSwap(); sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
           big.className = 'atk-big'; big.textContent = 'SYSTEM COMPROMISED';
           layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.opacity = '0'; tint.style.background = '';
           document.body.classList.remove('under-defence');
@@ -1534,9 +1541,12 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
     if (b.dataset.attack !== undefined){ // into the dissertation: blue to red
+      chanText(a, 'out', 1500, 'rgba(255,48,72,.9)');            // the old page falls apart under the attack
       await attackIn();
-      a.classList.remove('active'); restore(a);
+      // the single swap point: the screen is fully red here
+      a.classList.remove('active'); restore(a); const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
       b.scrollTop = 0; b.classList.add('active'); cur = n; update();
+      chanText(b, 'in', 1100, 'rgba(255,48,72,.9)');             // the dissertation builds itself back as the shutters open
       // the arrival: red shutter slices rip apart, carrying the title with them, and reveal the dissertation booting in red
       const sh = $('#atkShut'), N = 12; sh.innerHTML = '';
       for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
@@ -1553,10 +1563,12 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       const layer = $('#atkLayer'), tint = $('#atkTint');
       layer.innerHTML = ''; layer.hidden = false; for (let k = 0; k < 12; k++) atkWin(layer, k);
       tint.className = 'atk-tint full'; tint.style.opacity = '';
-      await new Promise(r => setTimeout(r, 120));
-      const atkOutP = attackOut();
-      setTimeout(() => { a.classList.remove('active'); restore(a); b.scrollTop = 0; b.classList.add('active'); cur = n; update(); }, 900);
-      await atkOutP;
+      chanText(a, 'out', 1300, 'rgba(0,212,255,.9)');            // the dissertation falls apart under the defence
+      await attackOut(() => {                                    // the single swap point: fully covered, shutters about to open
+        a.classList.remove('active'); const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
+        b.scrollTop = 0; b.classList.add('active'); cur = n; update();
+        chanText(b, 'in', 1000, 'rgba(0,212,255,.9)');
+      });
       busy = false; lockUntil = performance.now() + 300; return;
     }
     if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && !b.dataset.warp && !b.dataset.attack)){ // hologram projection: close to a line, then project open between two scan lines

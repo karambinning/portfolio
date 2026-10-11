@@ -49,6 +49,38 @@
       if (Math.abs(dy) > 60 && !canScroll(e.target, Math.sign(dy))) parent.postMessage({ kbStep: Math.sign(dy) }, '*'); }, { passive:true });
   }
 
+  /* deconstruct / reconstruct on request from the portfolio (used by the dissertation attack transitions) */
+  (function(){
+    if (parent === window) return;
+    const G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>§%&';
+    const ORIG = new WeakMap(); let nodes = null, job = 0;
+    const collect = () => { if (nodes) return nodes; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n =>
+      n.nodeValue.trim() && !n.parentElement.closest('script,style,noscript') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+      nodes = []; let n; while ((n = w.nextNode())) { ORIG.set(n, n.nodeValue); nodes.push(n); } return nodes; };
+    function beam(color, dir){
+      const b = document.createElement('div');
+      b.style.cssText = `position:fixed;left:0;right:0;height:3px;z-index:99999;pointer-events:none;background:#fff;box-shadow:0 0 22px 6px ${color};top:${dir > 0 ? 0 : 100}%;transition:top var(--d) linear,opacity .2s`;
+      document.body.appendChild(b); return b;
+    }
+    function run(mode, ms, color){
+      const my = ++job, list = collect(), t0 = performance.now(), bm = beam(color || '#00d4ff', mode === 'in' ? 1 : -1);
+      bm.style.setProperty('--d', ms + 'ms'); requestAnimationFrame(() => { bm.style.top = mode === 'in' ? '100%' : '0%'; });
+      if (mode === 'in') list.forEach(n => n.nodeValue = '');
+      (function f(now){
+        if (my !== job) return;
+        const p = Math.min(1, (now - t0) / ms);
+        list.forEach((n, i) => {
+          const o = ORIG.get(n), L = o.length;
+          const q = Math.min(1, Math.max(0, p * 1.35 - (i / list.length) * .35));
+          if (mode === 'in'){ const k = Math.floor(L * q); n.nodeValue = k >= L ? o : o.slice(0, k) + o.slice(k, k + Math.min(5, L - k)).replace(/\S/g, () => G[(Math.random() * G.length) | 0]); }
+          else { const k = Math.floor(L * (1 - q)); n.nodeValue = k <= 0 ? '' : o.slice(0, k) + o.slice(k, k + Math.min(4, L - k)).replace(/\S/g, () => G[(Math.random() * G.length) | 0]); }
+        });
+        if (p < 1) requestAnimationFrame(f); else { setTimeout(() => bm.remove(), 250); if (mode === 'in') list.forEach(n => n.nodeValue = ORIG.get(n)); }
+      })(t0);
+    }
+    addEventListener('message', e => { const m = e.data || {}; if (m.kbDecon) run('out', m.kbDecon, m.color); else if (m.kbRecon) run('in', m.kbRecon, m.color); else if (m.kbRestore){ job++; collect().forEach(n => n.nodeValue = ORIG.get(n)); } });
+  })();
+
   /* helpers each window can use */
   const KB = window.KB = {
     reduce,
