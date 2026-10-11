@@ -726,7 +726,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
 <script src="demo/_frame/dismantle.js?v=10111540"></script>
-<link rel="stylesheet" href="assets/tl-fly.css?v=1">
+<link rel="stylesheet" href="assets/tl-fly.css?v=3">
 </head>
 <body>
 
@@ -792,7 +792,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
           <li>First build: an in-browser AI analyst for live Polymarket data</li>
           <li data-at="2026-03-09">9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
           <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
-          <li>The War Room conceived: a seven-agent trading team, run on paper</li>
+          <li>The War Room conceived: a seven-agent trading team, tested on paper and with small live stakes</li>
         </ul>
       </li>
       <li class="tl-m" data-term="apr" data-from="2026-04-01" data-to="2026-05-01">
@@ -1020,12 +1020,12 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
             'It went through a deliberate narrowing, from a nine-layer architecture to one small, cautious agent.'],
       points:['Abstains when retrieval confidence is low, and refuses advice and prediction questions outright','Quotes the source verbatim before every point, or says the answer is not in its documents','Hybrid retrieval (dense and keyword) that cites the paragraph, not just the page','Only official legislation sources can add law; each document is hashed into an append-only chain of custody'],
       proof:'1,289 chunks across 612 pages of statute and guidance' },
-    { acc:'#ff3355', name:'Quant Trading', win:'quant', app:'markets', kind:'Market models, paper-traded', flag:'paper only',
-      line:'Two trading models, and the fill check that invalidated my own best result.',
-      body:['War Room: a multi-agent engine for five-minute crypto prediction markets, iterated against fixed baselines over 10,023 strategy cycles. Its best paper run went from $50 to $106.56 over 289 trades at a 64.7% win rate.',
-            'Then I built an honest fill engine that checks every paper trade against the real order book. At the price that run had assumed, an order filled 2 times in 304. The profit was phantom, so I marked the result invalid and kept only what survived: the direction calls. Krabs, an in-play World Cup football model with a computable fair value, was then scored against the market instead: closing-line value and Brier score.'],
-      points:['$50 to $106.56 (+113%) on paper, then invalidated by my own order-book check: 2 fills in 304 at the assumed price','Krabs Brier score improved from 0.24 to about 0.12 across 7 World Cup matches, paper-traded','Closing-line value: the market moved +2.24 points toward Krabs\u2019 prices on average','The lasting output is a ~46.8M-print market-microstructure dataset'],
-      proof:'No capital was ever at risk · the invalidation is in the project\u2019s own record' },
+    { acc:'#ff3355', name:'Quant Trading', win:'quant', app:'markets', kind:'Market models, paper and live-tested', flag:'mostly paper',
+      line:'Two trading models, and the checks that showed my best result was not real.',
+      body:['War Room (Mar\u2013Apr 2026): a self-tuning bot for five-minute crypto prediction markets, built with Claude Code. Its best paper run went from $50 to $106.56 over 289 trades, but its simulator priced every entry at $0.52 and capped every loss.',
+            'When my first real-money order went wrong, every paper trade had to clear the live order book: at $0.52, 2 of 304 entries could fill, so I voided every earlier result. Live tests with about $55 found no edge that survived real fills, for a small loss. Krabs (Jun 2026), an in-play World Cup agent, then paper-traded 26 matches and was scored against the market rather than on profit.'],
+      points:['$50 to $106.56 (+113%) on simulated prices, voided by my own order-book check: 2 fills in 304','About $55 of real money over 162 live trades in April: a small net loss','Krabs: Brier 0.106 vs 0.136 for the market over 58 settled bets in 26 matches; paper only, never tested out of sample','The lasting output is a 46.8M-print market-microstructure dataset'],
+      proof:'The invalidation and the live losses are in the project\u2019s own record' },
     { acc:'#c084fc', name:'AI Declaration', win:'declaration', app:'declaration', demo:'declaration', kind:'Academic integrity tool',
       line:'A tool that states how AI was used in a piece of academic work, on its front page.',
       body:['Built in Claude Code to govern my own academic AI use. It logs how AI was involved in a piece of work and generates a declaration page for the front of the submission, written to sit inside Loughborough’s AI-use guidelines.',
@@ -1058,7 +1058,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     apr:'> false alarm · curriculum written · drills logged',
     jun:'> semi-autonomous fleet · reviewer checks every task',
     now:'> estate online · vault mounted · final year',
-    timeline:'> march to now · one track · hover to hold it',
+    timeline:'> march to now · fly through four moments',
     work:'> eight terminals · open any to use it',
     estate:'> four macs · one vault · select a machine',
     agents:'> director · builder · reviewer · no self-grading',
@@ -1801,6 +1801,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }
 })();
 </script>
-<script src="assets/tl-fly.js?v=2"></script>
+<script src="assets/tl-fly.js?v=3"></script>
 </body>
 </html>

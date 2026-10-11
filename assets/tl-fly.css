@@ -15,7 +15,7 @@
 @keyframes tfStreak{from{transform:rotate(var(--r)) translateY(40px) scaleY(.2);opacity:0}30%{opacity:.8}to{transform:rotate(var(--r)) translateY(70vh) scaleY(1.6);opacity:0}}
 
 /* one moment: a KAM terminal panel in depth */
-.tf-m{position:absolute;left:50%;top:46%;width:min(760px,86%);transform:translate(-50%,-50%) translateZ(-2400px);opacity:0;
+.tf-m{position:absolute;left:50%;top:47%;width:min(1000px,90%);transform:translate(-50%,-50%) translateZ(-2400px);opacity:0;
   border:1px solid color-mix(in srgb,var(--c) 60%,transparent);background:rgba(3,8,15,.9);
   box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 60px color-mix(in srgb,var(--c) 22%,transparent),inset 0 0 40px color-mix(in srgb,var(--c) 7%,transparent);
   will-change:transform,opacity;pointer-events:none}
@@ -23,16 +23,17 @@
 .tf-bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid color-mix(in srgb,var(--c) 35%,transparent);font:500 11px/1 var(--mono);letter-spacing:.1em;color:#9fb6cf}
 .tf-bar i{width:8px;height:8px;border-radius:50%;background:#16273a}.tf-bar i:first-child{background:var(--c)}
 .tf-bar em{margin-left:auto;font-style:normal;color:var(--c)}
-.tf-in{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;padding:18px 22px 22px;align-items:center}
-.tf-date{font:400 clamp(54px,7vw,104px)/.9 var(--display);color:var(--c);letter-spacing:.02em;text-shadow:0 0 28px color-mix(in srgb,var(--c) 60%,transparent)}
-.tf-ttl{font:600 clamp(15px,1.5vw,19px)/1.35 var(--mono);color:#fff;margin-top:10px}
+.tf-in{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:28px;padding:24px 28px 28px;align-items:center}
+.tf-date{font:400 clamp(64px,8.5vw,130px)/.9 var(--display);color:var(--c);letter-spacing:.02em;text-shadow:0 0 28px color-mix(in srgb,var(--c) 60%,transparent)}
+.tf-ttl{font:600 clamp(16px,1.7vw,22px)/1.35 var(--mono);color:#fff;margin-top:12px}
 .tf-pts{list-style:none;margin:0;padding:0}
-.tf-pts li{position:relative;padding:8px 0 8px 20px;border-bottom:1px solid rgba(255,255,255,.07);font:400 clamp(13px,1.15vw,15px)/1.5 var(--mono);color:var(--text)}
+.tf-pts li{position:relative;padding:9px 0 9px 22px;border-bottom:1px solid rgba(255,255,255,.07);font:400 clamp(13px,1.3vw,17px)/1.5 var(--mono);color:var(--text)}
 .tf-pts li::before{content:"›";position:absolute;left:3px;color:var(--c)}
 
 /* summary: all four, then any one in full */
 .tf-sum{position:absolute;inset:6% 0 4%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
 .tf.done .tf-sum{opacity:1;pointer-events:auto}
+.tf-full.on ~ .tf-sum,.tf.open .tf-sum{opacity:0;pointer-events:none}
 .tf-card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:16px 16px 18px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);
   background:rgba(3,8,15,.88);box-shadow:0 0 30px color-mix(in srgb,var(--c) 12%,transparent);transition:transform .2s,box-shadow .2s,border-color .2s}
 .tf-card:hover,.tf-card:focus-visible{transform:translateY(-4px);border-color:var(--c);box-shadow:0 0 40px color-mix(in srgb,var(--c) 35%,transparent)}
@@ -42,7 +43,7 @@
 .tf-card em{margin-top:auto;font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--c);font-style:normal}
 .tf-hint{grid-column:1/-1;font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--dim);text-align:center}
 
-.tf-full{position:absolute;inset:3% 4% 4%;display:none;flex-direction:column;border:1px solid color-mix(in srgb,var(--c) 60%,transparent);background:rgba(3,8,15,.96);
+.tf-full{position:absolute;inset:3% 4% 4%;display:none;flex-direction:column;border:1px solid color-mix(in srgb,var(--c) 60%,transparent);background:#03080f;
   box-shadow:0 0 60px color-mix(in srgb,var(--c) 20%,transparent);z-index:3}
 .tf-full.on{display:flex;animation:tfOpen .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes tfOpen{from{transform:scale(.6) translateZ(0);opacity:0}}

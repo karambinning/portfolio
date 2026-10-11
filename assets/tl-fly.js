@@ -48,7 +48,7 @@
   const S = { on: false, k: 0, phase: '', t0: 0, held: false, raf: 0, left: 0 };
   const ease = x => 1 - Math.pow(1 - x, 3), easeIn = x => x * x * x;
   function place(k, z, o, blur){ const p = panels[k]; p.style.transform = `translate(-50%,-50%) translateZ(${z}px)`; p.style.opacity = o; p.style.filter = blur ? `blur(${blur}px)` : ''; }
-  function reset(){ panels.forEach((p, k) => place(k, -2400, 0)); tf.classList.remove('done', 'warp'); full.classList.remove('on'); tf.setAttribute('aria-hidden', 'true'); }
+  function reset(){ panels.forEach((p, k) => place(k, -2400, 0)); tf.classList.remove('done', 'warp', 'open'); full.classList.remove('on'); tf.setAttribute('aria-hidden', 'true'); }
   function tick(now){
     if (!S.on) return;
     if (S.held){ S.t0 += now - S.last; S.last = now; S.raf = requestAnimationFrame(tick); return; }
@@ -83,11 +83,11 @@
       ${i > 0 ? '<button type="button" data-go="-1">‹ PREV</button>' : ''}${i < M.length - 1 ? '<button type="button" data-go="1">NEXT ›</button>' : ''}<button type="button" data-go="x">✕ ALL FOUR</button></span></div>
       <div class="tf-in"><div><div class="tf-date">${esc(m.date)}</div><div class="tf-ttl">${esc(m.title)}</div><p class="tf-copy">${esc(m.copy)}</p></div>
       <ul class="tf-pts">${m.pts.map(p => `<li${p.minor ? ' class="minor"' : ''}>${esc(p.t)}</li>`).join('')}</ul></div>`;
-    full.classList.remove('on'); void full.offsetWidth; full.classList.add('on'); full.dataset.i = i;
+    full.classList.remove('on'); void full.offsetWidth; full.classList.add('on'); full.dataset.i = i; tf.classList.add('open');
   }
   tf.querySelector('.tf-sum').addEventListener('click', e => { const b = e.target.closest('.tf-card'); if (b) open(+b.dataset.i); });
   full.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (!b) return; const g = b.dataset.go;
-    if (g === 'x') full.classList.remove('on'); else open(+full.dataset.i + +g); });
+    if (g === 'x'){ full.classList.remove('on'); tf.classList.remove('open'); } else open(+full.dataset.i + +g); });
   // the full view and summary are real controls, so the stage is only hidden from screen readers while it is flying
   const rp = document.getElementById('tlReplay'); if (rp) rp.addEventListener('click', start);
 
