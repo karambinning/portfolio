@@ -65,5 +65,10 @@
   .tf-card{padding:12px}
   .tf-card span{display:none}
   .tf-full{inset:0}
+  #timeline .tl-chip{display:none}
+  .tf-full .tf-bar span:first-of-type{display:none}
+  .tf-nav{margin-left:0;width:100%;justify-content:space-between}
+  .tf-nav button{padding:10px 10px;white-space:nowrap}
+  .tf-full .tf-copy{font-size:14px}
 }
 @media (prefers-reduced-motion:reduce){ .tf-grid,.tf-streaks i{animation:none} }
