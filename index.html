@@ -376,23 +376,24 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 .sh-out{min-height:1.4em;margin-top:8px;font-size:11px;color:#00ff88}
 
 /* ---------- the takeover into the dissertation ---------- */
-.atk-tear[hidden]{display:none}
-.atk-tear{position:fixed;inset:0;z-index:48;pointer-events:none;background:rgba(40,0,6,.35)}
-.atk-tear i{position:absolute;left:-10%;width:120%;background:linear-gradient(90deg,transparent,rgba(255,0,51,.55) 20%,rgba(255,80,80,.25) 60%,transparent);will-change:transform;animation:tear .18s steps(3) infinite alternate}
-.atk-tear i:nth-child(1){top:12%;height:6%} .atk-tear i:nth-child(2){top:31%;height:3%;animation-duration:.13s}
-.atk-tear i:nth-child(3){top:48%;height:9%;animation-duration:.21s} .atk-tear i:nth-child(4){top:67%;height:4%;animation-duration:.16s} .atk-tear i:nth-child(5){top:82%;height:7%;animation-duration:.11s}
-@keyframes tear{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(6%,0,0)}}
-.atk[hidden]{display:none}
-.atk{position:fixed;inset:0;z-index:49;display:flex;flex-direction:column;background:rgba(10,0,2,.82);font:500 13px/1.45 var(--mono);color:#ff4d4d;animation:atkIn .12s steps(2) both}
-@keyframes atkIn{from{opacity:0}to{opacity:1}}
-.atk-bar{display:flex;justify-content:space-between;padding:10px 18px;background:#ff0033;color:#120003;font-weight:700;letter-spacing:.2em;animation:blink .35s steps(1) infinite}
-.atk pre{flex:1;margin:0;padding:14px 18px;white-space:pre-wrap;overflow:hidden}
-.atk-big{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;font:400 clamp(44px,9vw,120px)/1 var(--display);letter-spacing:.06em;color:#ff0033;text-shadow:4px 0 #600,-4px 0 #ff9090,0 0 40px rgba(255,0,51,.8);white-space:nowrap}
+#atkLayer[hidden]{display:none}
+#atkLayer{position:fixed;inset:0;z-index:50;pointer-events:none}
+#atkLayer.dim{transition:opacity .45s;opacity:0}
+.atkw{position:absolute;width:min(260px,62vw);background:#140003;border:1px solid #ff2a3d;box-shadow:0 0 22px rgba(255,0,51,.45);font:600 12px/1.4 var(--mono);color:#ff5a5a;animation:atkPop .14s steps(2) both;will-change:transform}
+@keyframes atkPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.atkw-bar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:#ff0033;color:#140003;font-size:10px;letter-spacing:.14em}
+.atkw-bar i{width:6px;height:6px;border-radius:50%;background:#140003}
+.atkw-bar span{margin-left:6px}
+.atkw-b{padding:10px 10px 12px;letter-spacing:.08em}
+.atkw-b b{animation:blink .5s steps(1) infinite}
+.atkw.close{transition:transform .18s ease-in,opacity .18s;transform:scaleY(.02);opacity:0}
+.atk-tint{position:fixed;inset:0;z-index:49;pointer-events:none;background:#b0001c;mix-blend-mode:multiply;opacity:0;transition:opacity .12s}
+.atk-tint.full{opacity:.9}
+.atk-tint.lift{transition:opacity .5s;opacity:0 !important}
+.atk-tint.recover{transition:opacity .6s,background-color .35s;background:#00d4ff;opacity:0 !important}
+.atk-big{position:fixed;left:50%;top:50%;z-index:51;transform:translate(-50%,-50%) scale(.7);opacity:0;pointer-events:none;font:400 clamp(44px,9vw,120px)/1 var(--display);letter-spacing:.06em;color:#ff0033;text-shadow:4px 0 #600,-4px 0 #ff9090,0 0 40px rgba(255,0,51,.8);white-space:nowrap}
 .atk-big.on{opacity:1;transform:translate(-50%,-50%) scale(1);transition:transform .12s steps(3),opacity .1s}
-.atk.red{background:#a00018}
-.atk.red pre{color:#ffd0d0}
-.atk.out{animation:atkOut .26s cubic-bezier(.6,0,.9,.4) forwards}
-@keyframes atkOut{60%{transform:scaleY(.01);filter:brightness(3)}100%{transform:scale(0,0);opacity:0}}
+.atk-big.blue{color:#00d4ff;text-shadow:3px 0 #003a4a,-3px 0 #9ff3ff,0 0 40px rgba(0,212,255,.7)}
 /* ---------- the ssh terminal that opens into the vault ---------- */
 .sshw{position:fixed;z-index:49;left:50%;top:50%;width:min(620px,calc(100% - 32px));transform:translate(-50%,-50%);background:#03070d;border:1px solid rgba(0,212,255,.55);box-shadow:0 0 40px rgba(0,212,255,.18);font:500 13px/1.55 var(--mono);animation:stOpen .22s cubic-bezier(.2,.8,.2,1)}
 @keyframes stOpen{from{transform:translate(-50%,-50%) scale(.9);opacity:0}}
@@ -534,8 +535,9 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 <div class="scan" aria-hidden="true"></div>
 <div class="roll" aria-hidden="true"></div>
 <div class="beam" id="beam" aria-hidden="true"></div>
-<div class="atk-tear" id="atkTear" hidden aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-<div class="atk" id="atk" hidden aria-hidden="true"><div class="atk-bar"><span>⚠ INTRUSION DETECTED</span><span id="atkT">00.00</span></div><pre id="atkLog"></pre><div class="atk-big" id="atkBig">SYSTEM COMPROMISED</div></div>
+<div class="atk-tint" id="atkTint" aria-hidden="true"></div>
+<div id="atkLayer" hidden aria-hidden="true"></div>
+<div class="atk-big" id="atkBig" aria-hidden="true">SYSTEM COMPROMISED</div>
 <div class="sshw" id="sshTerm" hidden aria-hidden="true"><div class="ssh-bar"><i></i><i></i><i></i><span>visitor@portfolio — ssh — 80×20</span></div><div class="ssh-body"></div></div>
 
 <a class="mark" href="#signal" data-go="0" aria-label="Back to the start">K·B</a>
@@ -819,7 +821,7 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
             'It went through a deliberate narrowing, from a nine-layer architecture to one small, cautious agent.'],
       points:['Abstains when retrieval confidence is low, and refuses advice and prediction questions outright','Quotes the source verbatim before every point, or says the answer is not in its documents','Hybrid retrieval (dense and keyword) that cites the paragraph, not just the page','Only official legislation sources can add law; each document is hashed into an append-only chain of custody'],
       proof:'1,289 chunks across 612 pages of statute and guidance' },
-    { acc:'#ff3355', name:'Quantitative work', win:'quant', app:'markets', kind:'Market models, paper-traded', flag:'paper only',
+    { acc:'#ff3355', name:'Quantitative', win:'quant', app:'markets', kind:'Market models, paper-traded', flag:'paper only',
       line:'Two trading models, and the fill check that invalidated my own best result.',
       body:['War Room: a multi-agent engine for five-minute crypto prediction markets, iterated against fixed baselines over 10,023 strategy cycles. Its best paper run went from $50 to $106.56 over 289 trades at a 64.7% win rate.',
             'Then I built an honest fill engine that checks every paper trade against the real order book. At the price that run had assumed, an order filled 2 times in 304. The profit was phantom, so I marked the result invalid and kept only what survived: the direction calls. Krabs, an in-play World Cup football model with a computable fair value, was then scored against the market instead: closing-line value and Brier score.'],
@@ -1230,34 +1232,39 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 
 
   /* ---------- the hostile takeover into the dissertation (all fictional, a piece of theatre) ---------- */
-  function attackIn(from){
+  // a staged red-team exercise: alert windows flood the screen, it turns from blue to red, then the dissertation broadcasts
+  const ATK_MSG = ['RED TEAM ACTIVE', 'CHANNEL 08 BREACHED', 'DISPLAY CONTROL LOST', 'SIGNAL SEIZED', 'DEFENCES OFFLINE', 'ROUTING TO WAR.SYS', 'BLUE TEAM NOT RESPONDING', 'ALL CHANNELS RED'];
+  function atkWin(layer, i){
+    const w = document.createElement('div'); w.className = 'atkw';
+    w.style.left = (4 + Math.random() * 72) + '%'; w.style.top = (6 + Math.random() * 74) + '%';
+    w.innerHTML = `<div class="atkw-bar"><i></i><i></i><i></i><span>⚠ RED TEAM · ${String(i + 1).padStart(2, '0')}</span></div><div class="atkw-b">${ATK_MSG[i % ATK_MSG.length]}<b>_</b></div>`;
+    layer.appendChild(w); return w;
+  }
+  function attackIn(){
     return new Promise(res => {
-      const box = $('#atk'), log = $('#atkLog'), big = $('#atkBig'), T = $('#atkT');
+      const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
       if (reduce){ return res(); }
-      log.textContent = ''; big.classList.remove('on'); box.hidden = false; box.className = 'atk';
-      const H = () => Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0');
-      const LINES = [
-        '[!] anomaly on channel 08 · unknown process spawned',
-        '[!] privilege escalation · uid 0 obtained',
-        '[!] firewall rules flushed · 0 remaining',
-        '[!] display bus hijacked · rendering under foreign control',
-        '[!] injecting payload ' + H() + H(),
-        '[!] overwriting framebuffer · red channel locked',
-        '[!] all channels redirected → WAR.SYS',
-      ];
-      let i = 0; const t0 = performance.now();
-      const clock = setInterval(() => T.textContent = ((performance.now() - t0) / 1000).toFixed(2), 40);
-      // corruption is drawn over the old screen with cheap, GPU-only tear bands (no filters on the page itself)
-      const tear = $('#atkTear'); tear.hidden = false;
-      (function line(){
-        if (i < LINES.length){ log.textContent += LINES[i++] + '\n    ' + H() + ' ' + H() + ' ' + H() + ' ' + H() + '\n'; return setTimeout(line, 85); }
-        box.classList.add('red'); big.classList.add('on');
-        setTimeout(() => { tear.hidden = true; box.classList.add('out');
-          setTimeout(() => { clearInterval(clock); box.hidden = true; box.className = 'atk'; res(); }, 260); }, 420);
+      layer.innerHTML = ''; layer.hidden = false; tint.className = 'atk-tint'; big.classList.remove('on');
+      let i = 0; const total = 18;
+      (function spawn(){
+        if (i < total){ atkWin(layer, i++); tint.style.opacity = (i / total * .82).toFixed(3); return setTimeout(spawn, Math.max(35, 120 - i * 6)); }
+        tint.classList.add('full'); big.classList.add('on');
+        setTimeout(() => res(), 380);                         // the dissertation takes over under the red screen
       })();
     });
   }
-
+  // leaving the dissertation: the blue team recovers, windows close one by one, red fades back to blue
+  function attackOut(){
+    return new Promise(res => {
+      const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
+      if (reduce || layer.hidden){ layer.hidden = true; return res(); }
+      big.textContent = 'THREAT CONTAINED'; big.classList.add('on', 'blue');
+      const wins = [...layer.querySelectorAll('.atkw')];
+      wins.forEach((w, k) => setTimeout(() => w.classList.add('close'), 20 + k * 22));
+      tint.classList.add('recover');
+      setTimeout(() => { layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.opacity = '0'; big.className = 'atk-big'; big.textContent = 'SYSTEM COMPROMISED'; res(); }, 700);
+    });
+  }
   /* ---------- hack to top: a quick fake intrusion in green, then straight back to channel 1 ---------- */
   $('#hackTop').addEventListener('click', () => {
     if (busy) return;
@@ -1413,12 +1420,22 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
     const a = scenes[cur], b = scenes[n];
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
-    if (b.dataset.attack !== undefined){ // into the dissertation: a hostile takeover of the screen
-      a.classList.add('seized');
-      await attackIn(a);
-      a.classList.remove('active', 'seized'); restore(a);
-      b.scrollTop = 0; b.classList.add('active', 'in'); cur = n; update();
-      setTimeout(() => b.classList.remove('in'), 650);
+    if (b.dataset.attack !== undefined){ // into the dissertation: blue to red
+      await attackIn();
+      a.classList.remove('active'); restore(a);
+      b.scrollTop = 0; b.classList.add('active'); cur = n; update();
+      $('#atkTint').classList.add('lift'); $('#atkBig').classList.remove('on');
+      $('#atkLayer').classList.add('dim');
+      setTimeout(() => { $('#atkLayer').hidden = true; $('#atkLayer').classList.remove('dim'); $('#atkTint').className = 'atk-tint'; $('#atkTint').style.opacity = '0'; }, 500);
+      busy = false; lockUntil = performance.now() + 300; return;
+    }
+    if (a.dataset.attack !== undefined){ // leaving the dissertation: red to blue
+      const layer = $('#atkLayer'), tint = $('#atkTint');
+      layer.innerHTML = ''; layer.hidden = false; for (let k = 0; k < 12; k++) atkWin(layer, k);
+      tint.className = 'atk-tint full'; tint.style.opacity = '';
+      a.classList.remove('active'); restore(a);
+      b.scrollTop = 0; b.classList.add('active'); cur = n; update();
+      await attackOut();
       busy = false; lockUntil = performance.now() + 300; return;
     }
     if (b.dataset.warp !== undefined){ // into the second brain: one continuous dive through an ssh terminal

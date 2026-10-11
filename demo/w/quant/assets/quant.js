@@ -1,4 +1,4 @@
-/* Quantitative work — War Room + Krabs.
+/* Quantitative — War Room + Krabs.
    Every number drawn here comes from assets/data.json (a trimmed copy of demo/markets/assets/data.json,
    itself extracted from the v91_final PAPER run and the Krabs estate record). Nothing is invented:
    the equity curve is the cumulative P&L of the 289 recorded trades; the fill grid is the recorded
