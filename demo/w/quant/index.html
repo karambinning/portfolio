@@ -115,15 +115,16 @@
       <!-- ============ WAR ROOM ============ -->
       <section class="half" aria-labelledby="wr-h">
         <div class="hd"><b id="wr-h">WAR ROOM</b><span class="k">RUN BY KRABS · 5-MIN CRYPTO · MAR–APR</span><span class="paper">PAPER + LIVE</span></div>
-        <p class="t-p">A self-tuning bot that bet on whether SOL, ETH, XRP, BTC or DOGE would be <b>up or down five minutes later</b>. Its best paper run turned <b>$50 into $106.56</b> over 289 trades, but its simulator priced every entry at $0.52 and capped every loss.</p>
-        <div class="viz eq"><canvas id="eq" role="img" aria-label="Equity curve of the v91_final paper run, 30 to 31 March: $50 to $106.56 over 289 trades in about ten hours. Marked invalid: it ran on simulated prices, with every entry at $0.52 and losing exits capped."></canvas></div>
-        <div class="viz grid"><canvas id="fill" role="img" aria-label="Fill check on 2 April: the $0.52 entry rule assumed all 304 orders filled; checked against the live order book, 2 of 304 could."></canvas></div>
-        <div class="verdict" id="wr-verdict">On 2 April, after my first real-money order went wrong, every paper trade had to clear the live order book. At $0.52, <b>2 of 304</b> entries could fill, so I voided every earlier result.</div>
-        <div class="verdict live"><b>Real money:</b> about $55 over 162 live trades, 2–8 April. Sniping and market-making both failed on real fills: a small net loss, and I stopped in mid-April.</div>
+        <p class="t-p">A self-tuning bot that bet on whether SOL, ETH, XRP, BTC or DOGE would be <b>up or down five minutes later</b>, taken through <b>more than 100 versions in 14 days</b>.</p>
+        <div class="viz eq"><canvas id="eq" role="img" aria-label="Equity curve of the best paper run, 30 to 31 March: $50 to $106.56 over 289 trades in about ten hours. Marked invalid: it ran on simulated prices, and an order-book check showed only 2 of 304 entries could fill."></canvas></div>
+        <div class="viz grid"><canvas id="fill" role="img" aria-label="Fill check: the entry rule assumed all 304 orders filled; checked against the live order book, 2 of 304 could."></canvas></div>
+        <div class="verdict"><b>Method:</b> three servers. One collected market data, one ran a long-running, controlled contest between bot strategies, and one tested new experiments. Many strategies went through it, from sniping to market-making.</div>
+        <div class="verdict" id="wr-verdict"><b>Finding:</b> sniping reached about <b>97.5% accuracy</b>, but with small capital each win was tiny, and a single loss, even of only 3%, wiped out the profits. The best paper run ($50 to $106.56) was voided too: against the live order book, only <b>2 of 304</b> of its entries could fill.</div>
+        <div class="verdict live"><b>What it shows:</b> building and testing at speed, running controlled experiments, and treating my own best result with suspicion until it survives real conditions.</div>
         <div class="stats">
-          <div class="st"><strong><s>+113%</s></strong><span>$50 → $106.56 · simulated</span></div>
-          <div class="st"><strong>2/304</strong><span>entries fillable at $0.52</span></div>
-          <div class="st"><strong>~$55</strong><span>real money tested · lost</span></div>
+          <div class="st"><strong>100+</strong><span>versions in 14 days</span></div>
+          <div class="st"><strong>97.5%</strong><span>sniping accuracy</span></div>
+          <div class="st"><strong>2/304</strong><span>entries fillable · run voided</span></div>
           <div class="st"><strong>46.8M</strong><span>trade prints, Apr–Jun</span></div>
         </div>
       </section>
