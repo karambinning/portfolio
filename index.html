@@ -320,37 +320,34 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 /* the message terminal: a K·A·M-style ssh session into the inbox */
 .tx{position:relative;border:1px solid color-mix(in srgb,var(--phos) 55%,var(--rule));background:#02060c;font:500 13px/1.6 var(--mono);
   box-shadow:0 0 0 1px rgba(0,212,255,.08),0 0 46px rgba(0,212,255,.10),inset 0 0 60px rgba(0,212,255,.05);overflow:hidden}
-.tx::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+.tx::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.1) 0 1px,transparent 1px 3px)}
 .tx-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;background:linear-gradient(#0b1828,#071120);border-bottom:1px solid color-mix(in srgb,var(--phos) 40%,var(--rule));font-size:11px;letter-spacing:.1em;color:var(--dim)}
 .tx-dots{display:flex;gap:6px}.tx-dots i{width:9px;height:9px;border-radius:50%;background:#16273a}.tx-dots i:first-child{background:#ff3355}.tx-dots i:nth-child(2){background:#ffcc00}.tx-dots i:nth-child(3){background:#00ff88}
 .tx-title{flex:1;text-align:center;color:var(--text);letter-spacing:.06em}
 .tx-live{color:#00ff88;white-space:nowrap} .tx-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;margin-right:5px;animation:blink 1.6s steps(1) infinite}
-.tx-unit{display:flex;justify-content:space-between;gap:12px;padding:5px 14px;font-size:10.5px;letter-spacing:.16em;color:var(--phos);border-bottom:1px dashed var(--rule)}
-.tx-unit span:last-child{color:var(--dim)}
 .tx-body{padding:12px 16px 14px}
-.tx-boot{min-height:4.8em;color:var(--text);white-space:pre-wrap}
+.tx-boot{min-height:1.6em;color:var(--phos);white-space:pre-wrap;font-size:12px}
+.tx-lead{margin:2px 0 12px;color:var(--text);font-size:13px;line-height:1.5}
 .tx-boot .k{color:var(--phos)} .tx-boot .ok{color:#00ff88} .tx-boot .d{color:var(--dim)}
-.tx-line{color:var(--text)} .tx-line.dim{color:var(--dim);margin:6px 0 8px;font-size:12px}
-.tx-f{display:flex;gap:10px;align-items:baseline;padding:4px 0}
-.tx-f span{white-space:nowrap;color:var(--dim)} .tx-f span b{color:#00ff88;font-weight:600} .tx-f span em{color:var(--phos);font-style:normal}
-.tx-f input,.tx-f textarea{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px dashed var(--rule);color:#fff;font:inherit;padding:2px 0;caret-color:var(--phos);caret-shape:block;resize:none}
+.tx-f{display:flex;flex-direction:column;gap:3px;padding:5px 0}
+.tx-f span{white-space:nowrap;color:var(--phos);font-size:11.5px;letter-spacing:.06em}
+.tx-f input,.tx-f textarea{flex:1;min-width:0;background:rgba(0,212,255,.04);border:1px solid var(--rule);color:#fff;font:inherit;padding:7px 9px;caret-color:var(--phos);caret-shape:block;resize:none}
 .tx-f input::placeholder,.tx-f textarea::placeholder{color:#3b5568}
-.tx-f input:focus,.tx-f textarea:focus{outline:none;border-bottom-color:var(--phos);box-shadow:0 1px 0 var(--phos)}
-.tx-f:focus-within span em{text-shadow:0 0 8px var(--phos)}
+.tx-f input:focus,.tx-f textarea:focus{outline:none;border-color:var(--phos);box-shadow:0 0 0 1px var(--phos),0 0 14px rgba(0,212,255,.2)}
 .tx-m{flex-direction:column;gap:4px}
-.tx-m textarea{width:100%;border:1px dashed var(--rule);padding:6px 8px}
-.tx-m textarea:focus{border-color:var(--phos)}
+.tx-m textarea{width:100%}
 .tx-hp{position:absolute;left:-9999px}
 .tx-ctl{display:flex;gap:10px;align-items:center;margin-top:12px}
 .tx-btn{all:unset;cursor:pointer;font:700 12px/1 var(--mono);letter-spacing:.12em;padding:8px 14px;border:1px solid var(--rule);color:var(--dim)}
-.tx-btn.go{border-color:var(--phos);color:var(--phos);box-shadow:0 0 14px rgba(0,212,255,.18)}
+.tx-btn.go{border-color:var(--phos);background:var(--phos);color:#02060c;padding:10px 18px;box-shadow:0 0 18px rgba(0,212,255,.3)}
+.tx-btn.go:hover,.tx-btn.go:focus-visible{background:#fff;border-color:#fff}
 .tx-btn:hover,.tx-btn:focus-visible{color:#02060c;background:var(--phos);border-color:var(--phos)}
 .tx-btn:focus-visible{outline:1px dashed var(--phos);outline-offset:3px}
 .tx-count{margin-left:auto;font-size:11px;color:var(--dim);letter-spacing:.08em}
 .tx-out{min-height:1.6em;margin-top:10px;color:var(--dim);white-space:pre-wrap}
 .tx-out .ok{color:#00ff88} .tx-out .err{color:var(--red)} .tx-out .k{color:var(--phos)}
 @media (prefers-reduced-motion:reduce){ .tx-live i{animation:none} }
-@media (max-width:560px){ .tx-title{display:none} .tx-live{margin-left:auto} .tx-unit span:last-child{display:none} .tx-f span b{display:none} .tx-body{padding:10px 12px 12px} .tx-line.dim{font-size:11px} }
+@media (max-width:560px){ .tx-body{padding:10px 12px 12px} .tx-btn{white-space:nowrap} .tx-count{display:none} }
 .ct .mail{font-size:clamp(20px,2.5vw,34px)}
 .share-note{margin-top:10px;font-size:12px;color:var(--dim);min-height:1.2em}
 /* ---------- the quick channel: a cyan CRT scan-in (no glitch, no static) ---------- */
@@ -858,17 +855,16 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         <div class="sh-out" id="shareNote" aria-live="polite"></div>
       </div>
     </div>
-    <form class="tx" id="tx" novalidate>
-      <div class="tx-bar"><span class="tx-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tx-title">visitor@karam — ssh — inbox</span><span class="tx-live"><i></i> SSH CONNECTED</span></div>
-      <div class="tx-unit"><span>[K·B] TRANSMIT · UNIT 08</span><span>TO: UNIVERSITY INBOX</span></div>
+    <form class="tx" id="tx" novalidate aria-label="Send me a message">
+      <div class="tx-bar"><span class="tx-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tx-title">ssh karam@inbox</span><span class="tx-live"><i></i> CONNECTED</span></div>
       <div class="tx-body">
         <div class="tx-boot" id="txBoot" aria-hidden="true"></div>
-        <div class="tx-line dim">fill in the fields · enter moves on · ⌘/ctrl + enter sends</div>
-        <label class="tx-f"><span><b>visitor@karam:</b><em>~</em>$ from</span><input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
-        <label class="tx-f"><span><b>visitor@karam:</b><em>~</em>$ subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
-        <label class="tx-f tx-m"><span><b>visitor@karam:</b><em>~</em>$ message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
+        <p class="tx-lead">Write to me here. It goes straight to my university inbox and I reply from there.</p>
+        <label class="tx-f"><span>&gt; your email</span><input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
+        <label class="tx-f"><span>&gt; subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
+        <label class="tx-f tx-m"><span>&gt; message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
         <input type="checkbox" name="botcheck" class="tx-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <div class="tx-ctl"><button class="tx-btn go" type="submit"><span>SEND ⏎</span></button><button class="tx-btn" type="reset"><span>CLEAR</span></button><span class="tx-count" id="txCount">0 / 4000</span></div>
+        <div class="tx-ctl"><button class="tx-btn go" type="submit">SEND MESSAGE ⏎</button><button class="tx-btn" type="reset">CLEAR</button><span class="tx-count" id="txCount">0 / 4000</span></div>
         <div class="tx-out" id="txOut" aria-live="polite"></div>
       </div>
     </form>
@@ -1206,7 +1202,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   let txBooted = false;
   window.txBoot = async () => {
     if (txBooted) return; txBooted = true;
-    const box = $('#txBoot'), L = [['k', '$ ssh visitor@karam.inbox'], ['d', 'authenticating · key exchange ok'], ['ok', 'ACCESS GRANTED · session open'], ['d', 'messages land in my university inbox']];
+    const box = $('#txBoot'), L = [['k', '$ ssh karam@inbox · connected ✓']];
     box.textContent = '';
     for (const [c, t] of L){ const d = document.createElement('div'); d.className = c; box.appendChild(d);
       if (reduce){ d.textContent = t; continue; }
