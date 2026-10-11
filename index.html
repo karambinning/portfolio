@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script>if(matchMedia('(max-width: 600px) and (pointer: coarse)').matches&&!/[?&]full=1(&|$)/.test(location.search))location.replace('mobile.html'+location.hash)</script>
+<script>if(matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=600&&!/[?&]full=1(&|$)/.test(location.search))location.replace('mobile.html'+location.hash)</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Karam Binning — Portfolio</title>
