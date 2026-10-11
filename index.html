@@ -579,6 +579,17 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
 @media (max-width:900px){ .tl-step{grid-template-columns:1fr} .tl-stop span{font-size:9px;letter-spacing:.04em} }
+.tl-stop .yr{font-style:normal}
+/* phones: each moment fits the screen; its list scrolls inside its own panel */
+@media (max-width:600px){
+  #timeline .tl-wrap{height:100%;margin:0}
+  .tl-stop .yr{display:none}
+  .tl-stage{flex:1;min-height:0;position:relative}
+  .tl-step.on{display:flex;flex-direction:column;height:100%;gap:10px}
+  .tl-step .date{font-size:clamp(40px,12vw,56px)}
+  .tl-step .pts{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-mask:linear-gradient(#000 85%,transparent)}
+  .tl-step .pts li{padding:8px 0 8px 20px;font-size:13px}
+}
 
 @media (max-width:900px){ .ct{grid-template-columns:1fr} }
 
@@ -661,10 +672,10 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   <div class="in-wrap tl-wrap">
     <div class="tl-rail" role="tablist" aria-label="Timeline">
       <div class="tl-line"><i id="tlFill"></i></div>
-      <button type="button" role="tab" class="tl-stop on" data-i="0" style="left:0.0000%"><i></i><span>Mar 2026</span></button>
-      <button type="button" role="tab" class="tl-stop" data-i="1" style="left:33.3333%"><i></i><span>Apr 2026</span></button>
-      <button type="button" role="tab" class="tl-stop" data-i="2" style="left:66.6667%"><i></i><span>May–Jun 2026</span></button>
-      <button type="button" role="tab" class="tl-stop" data-i="3" style="left:100.0000%"><i></i><span>Jul 2026 – now</span></button>
+      <button type="button" role="tab" class="tl-stop on" data-i="0" style="left:0.0000%"><i></i><span>Mar<em class="yr"> 2026</em></span></button>
+      <button type="button" role="tab" class="tl-stop" data-i="1" style="left:33.3333%"><i></i><span>Apr<em class="yr"> 2026</em></span></button>
+      <button type="button" role="tab" class="tl-stop" data-i="2" style="left:66.6667%"><i></i><span>May–Jun<em class="yr"> 2026</em></span></button>
+      <button type="button" role="tab" class="tl-stop" data-i="3" style="left:100.0000%"><i></i><span>Jul<em class="yr"> 2026</em> – now</span></button>
     </div>
     <div class="tl-stage">
       <div class="tl-step on" data-i="0" data-term="mar">
@@ -1676,7 +1687,11 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   });
   let ty = null, tTop = false, tBot = false;
   addEventListener('touchstart', e => { const s = scenes[cur]; ty = e.touches[0].clientY; tTop = !canScroll(s, -1); tBot = !canScroll(s, 1); }, { passive:true });
-  let tlTy = null; addEventListener('touchmove', e => { if (scenes[cur].dataset.steps === undefined || busy) return; const y = e.touches[0].clientY; if (tlTy !== null) tlScroll((tlTy - y) * 2.2); tlTy = y; }, { passive:true });
+  // on the timeline a swipe moves along it, except inside a moment's list that still has more to scroll (phones)
+  let tlTy = null; addEventListener('touchmove', e => { if (scenes[cur].dataset.steps === undefined || busy) return; const y = e.touches[0].clientY;
+    const list = e.target.closest && e.target.closest('.tl-step .pts');
+    if (list && tlTy !== null && list.scrollHeight > list.clientHeight + 2){ const dir = Math.sign(tlTy - y); const can = dir > 0 ? list.scrollTop + list.clientHeight < list.scrollHeight - 2 : list.scrollTop > 2; if (can){ tlTy = y; return; } }
+    if (tlTy !== null) tlScroll((tlTy - y) * 2.2); tlTy = y; }, { passive:true });
   addEventListener('touchend', () => { tlTy = null; }, { passive:true });
   addEventListener('touchend', e => {
     if (ty === null || dv.open) return;
@@ -1721,6 +1736,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   const start = scenes.findIndex(s => '#' + s.id === location.hash);
   if (start > 0){ scenes[0].classList.remove('active'); scenes[start].classList.add('active'); cur = start; }
   update();
+  // opened straight onto the estate (a shared link): there was no ssh hand-over, so tell it to build once it has loaded
+  if (scenes[cur].dataset.warp !== undefined){ const fr = scenes[cur].querySelector('iframe');
+    if (fr) fr.addEventListener('load', () => setTimeout(() => fr.contentWindow && fr.contentWindow.postMessage({ kbArrive: 1 }, '*'), 300)); }
   const boot = $('#boot'), bootText = $('#bootText');
   const LINES = ['binning.ai // portfolio','> tuning signal ............ ok','> archive mounted .......... ok','> real data only ........... true'];
   let seen = null; try { seen = sessionStorage.getItem('booted'); } catch(e){}
