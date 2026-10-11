@@ -558,6 +558,21 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 .tl-stop.on span{color:var(--phos)}
 .tl-stop:first-of-type{transform:none;align-items:flex-start} .tl-stop:last-of-type{transform:translateX(-100%);align-items:flex-end}
 .tl-stop:focus-visible{outline:2px solid var(--phos);outline-offset:6px}
+/* the timeline plays itself: the rail is four summary cards, each filling as its moment plays */
+#timeline .tl-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;height:auto;margin:0}
+#timeline .tl-line{display:none}
+#timeline .tl-stop{position:relative;left:auto!important;transform:none!important;align-items:flex-start!important;text-align:left;gap:5px;
+  padding:11px 13px 14px;border:1px solid var(--rule);background:rgba(0,212,255,.025);transition:border-color .3s,background .3s}
+#timeline .tl-stop i{position:absolute;left:0;bottom:0;height:2px;width:0;margin:0;border:0;background:var(--phos);box-shadow:0 0 8px var(--phos);transform:none!important}
+#timeline .tl-stop.done i{width:100%;opacity:.45}
+#timeline .tl-stop span{font-size:11px;letter-spacing:.14em}
+#timeline .tl-stop .tl-ttl{font:500 13px/1.35 var(--mono);color:var(--body);white-space:normal;letter-spacing:.01em}
+#timeline .tl-stop.on{border-color:color-mix(in srgb,var(--phos) 60%,var(--rule));background:rgba(0,212,255,.07)}
+#timeline .tl-stop.on .tl-ttl{color:#fff}
+#timeline .tl-stop:hover{border-color:color-mix(in srgb,var(--phos) 40%,var(--rule))}
+#timeline .tl-step.play .pts li{animation:tlLi .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.5s + var(--n) * .75s)}
+@keyframes tlLi{from{opacity:0;transform:translateX(-10px)}}
+@media (prefers-reduced-motion:reduce){ #timeline .tl-step.play .pts li{animation:none} }
 .tl-step{display:none;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(28px,5vw,72px);align-items:center}
 .tl-step.on{display:grid}
 .tl-step .date{font-size:clamp(64px,min(9vw,18vh),170px)}
@@ -672,7 +687,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   </div>
 </section>
 
-<section class="scene" id="timeline" data-steps data-name="MARCH TO NOW" aria-label="March 2026 to now">
+<section class="scene" id="timeline" data-name="MARCH TO NOW" aria-label="March 2026 to now">
   <div class="in-wrap tl-wrap">
     <div class="tl-rail" role="tablist" aria-label="Timeline">
       <div class="tl-line"><i id="tlFill"></i></div>
@@ -744,7 +759,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     </ul>
   </div>
     </div>
-    <div class="tl-hint">scroll to move along the timeline · <b id="tlPos">1 / 4</b></div>
+    <div class="tl-hint">plays on its own · hover to pause · click a moment to jump · <b id="tlPos">1 / 4</b></div>
   </div>
 </section>
 
@@ -1525,6 +1540,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (history.replaceState) history.replaceState(null, '', '#' + s.id);
     typeTerm(TERM[s.id] || '');
     if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
+    if (window.tlStart){ if (s.id === 'timeline') window.tlStart(); else window.tlStop(); }   // the timeline plays itself while it is on screen
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
   }
   /* ---------- the timeline as one continuous scroll: position p runs 0 → steps-1 along the rail ---------- */
@@ -1575,7 +1591,41 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     typeTerm(TERM[st.dataset.term] || '');
     NODES.delete(sc);
   }
-  document.querySelectorAll('.tl-stop').forEach(b => b.addEventListener('click', () => tlTo(+b.dataset.i)));
+  /* the timeline plays itself: each moment for TL_DUR, its points arriving one by one; hover pauses, a card jumps */
+  const TL_DUR = 8000;
+  const tlSc = $('#timeline'), tlSteps = [...tlSc.querySelectorAll('.tl-step')], tlStops = [...tlSc.querySelectorAll('.tl-stop')];
+  tlStops.forEach((b, i) => { const t = document.createElement('b'); t.className = 'tl-ttl'; t.textContent = tlSteps[i].querySelector('h3').textContent; b.appendChild(t); });
+  const TLP = { i: 0, timer: 0, left: TL_DUR, start: 0, paused: false, on: false };
+  function tlShow(i){
+    clearTimeout(TLP.timer); TLP.i = i; TLP.left = TL_DUR;
+    tlSteps.forEach((st, k) => { st.classList.toggle('on', k === i); st.classList.remove('play', 'enter', 'back'); st.style.opacity = ''; st.style.transform = ''; });
+    tlStops.forEach((b, k) => { b.classList.toggle('on', k === i); b.classList.toggle('done', k < i); b.setAttribute('aria-selected', k === i);
+      const bar = b.querySelector('i'); bar.style.transition = 'none'; bar.style.width = k < i ? '100%' : '0'; });
+    $('#tlPos').textContent = `${i + 1} / ${tlSteps.length}`;
+    const st = tlSteps[i]; st.querySelectorAll('.pts li').forEach((li, n) => li.style.setProperty('--n', n));
+    void st.offsetWidth; st.classList.add('play', 'enter');
+    if (!reduce){ animateText(st, 520, 'in').then(() => restore(st)); }
+    typeTerm(TERM[st.dataset.term] || '');
+    tlRun();
+  }
+  function tlRun(){
+    if (!TLP.on || TLP.paused) return;
+    const bar = tlStops[TLP.i].querySelector('i'); void bar.offsetWidth;
+    bar.style.transition = `width ${TLP.left}ms linear`; bar.style.width = '100%';
+    TLP.start = performance.now();
+    TLP.timer = setTimeout(() => { if (TLP.i < tlSteps.length - 1) tlShow(TLP.i + 1); else { tlStops[TLP.i].classList.add('done'); $('#tlPos').textContent = 'played · click any moment to revisit'; } }, TLP.left);
+  }
+  function tlPause(p){
+    if (!TLP.on || p === TLP.paused) return; TLP.paused = p;
+    const bar = tlStops[TLP.i].querySelector('i');
+    if (p){ clearTimeout(TLP.timer); TLP.left = Math.max(0, TLP.left - (performance.now() - TLP.start)); bar.style.width = getComputedStyle(bar).width; bar.style.transition = 'none'; }
+    else tlRun();
+  }
+  window.tlStart = () => { TLP.on = true; TLP.paused = false; tlShow(0); };
+  window.tlStop = () => { TLP.on = false; clearTimeout(TLP.timer); };
+  tlSc.querySelector('.tl-stage').addEventListener('mouseenter', () => tlPause(true));
+  tlSc.querySelector('.tl-stage').addEventListener('mouseleave', () => tlPause(false));
+  tlStops.forEach(b => b.addEventListener('click', () => { TLP.paused = false; tlShow(+b.dataset.i); }));
   /* TRANSITIONS ARE LOCKED — see BRIEF.md "Transitions — LOCKED". In and out differ per channel:
      estate IN = ssh build (data-warp) · agents IN/OUT = hologram (data-holo) · dissertation IN = red-team
      attack, OUT = blue-team defence, each then deconstructs old / shutters / reconstructs new, no words (data-attack) · timeline = continuous scroll (data-steps) · else glitch.
