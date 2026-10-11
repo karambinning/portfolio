@@ -781,8 +781,17 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   #signal .kb-status span{font-size:11px;letter-spacing:.14em}
   #signal .kb-status b{font-size:12.5px}
   #signal .lede{font-size:13.5px;line-height:1.5}
-  #signal .actions{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #signal .actions{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;align-items:stretch;gap:10px}
+  #signal .actions .btn{white-space:nowrap;padding:11px 6px;font-size:13.5px}
   #signal .howto{display:none}
+  @media (max-height:620px){
+    #signal .name{font-size:clamp(46px,15vw,60px)}
+    #signal .kb-logo{margin-bottom:10px} #signal .kb-net{margin-top:6px}
+    #signal .kb-status{margin-bottom:10px}
+    #signal .kb-status div{padding:4px 8px;gap:1px} #signal .kb-status b{font-size:12px;letter-spacing:.02em}
+    #signal .lede{font-size:13px;line-height:1.45}
+    #signal .actions{margin-top:12px}
+  }
   #signal .actions::after{content:"↑  swipe up to change channel";grid-column:1/-1;text-align:center;font-size:12px;letter-spacing:.06em;color:var(--dim);margin-top:4px}
 
   /* CH03 the work: the eight terminals as a swipeable deck, then "also built" as a row of chips */
@@ -803,7 +812,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   .wk-dots{display:flex;justify-content:center;gap:6px;margin:8px 0 2px}
   .wk-dots i{width:6px;height:6px;background:#1e3a5f;transition:width .25s,background .2s}
   .wk-dots i.on{width:18px;background:var(--phos);box-shadow:0 0 8px var(--phos)}
-  .also{display:grid;grid-auto-flow:column;grid-template-rows:44px 44px;grid-auto-columns:max-content;justify-content:start;position:relative;overflow-x:auto;overscroll-behavior-x:contain;margin:6px -16px 0;padding:24px 16px 0;gap:8px;scrollbar-width:none;scroll-snap-type:x proximity;
+  .also{display:grid;grid-auto-flow:column;grid-template-rows:44px 44px;grid-auto-columns:max-content;justify-content:start;position:relative;overflow-x:auto;overscroll-behavior-x:contain;margin:6px -16px 0;padding:24px 16px 0;scroll-padding:0 16px;gap:8px;scrollbar-width:none;scroll-snap-type:x proximity;
     -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
   .also::-webkit-scrollbar{display:none}
   .also-k{position:absolute;top:2px;left:16px;font-size:12px}
