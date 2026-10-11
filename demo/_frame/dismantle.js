@@ -18,6 +18,7 @@
     if (parseFloat(cs.borderTopWidth) || parseFloat(cs.borderLeftWidth) || parseFloat(cs.borderBottomWidth) || parseFloat(cs.borderRightWidth)) return true;
     if (cs.boxShadow !== 'none' || cs.outlineStyle !== 'none') return true;
     for (const n of c.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return true;
+    for (const ps of ['::before', '::after']){ const q = getComputedStyle(c, ps); if (q.content && q.content !== 'none' && q.content !== 'normal' && q.display !== 'none') return true; }   // corner marks and other drawn details
     return false;
   }
   function collect(root){

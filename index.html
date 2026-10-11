@@ -1565,8 +1565,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         tint.className = 'atk-tint full'; tint.style.opacity = '';
         await attackOut();
       }
-      await atkSettle(col);                                         // the attack / defence clears completely: nothing covers what follows
-      await chanText(a, 'out', 2600, col);                       // every element, timed to the scan line; the swap lands the moment it is gone
+      const settled = atkSettle(col);                            // the attack / defence windows come apart detail by detail
+      await new Promise(r => setTimeout(r, 420));                // as they go, the page underneath starts to come apart too
+      await Promise.all([settled, chanText(a, 'out', 2600, col)]);   // every element, timed to the scan line; the swap lands the moment it is gone
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
       const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
