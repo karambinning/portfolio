@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
-  --void:#04080f; --glass:#070e1c; --rule:#142338; --dim:#5f7d99; --text:#d8ecff;
+  --void:#04080f; --glass:#070e1c; --rule:#142338; --dim:#8ba7c2; --text:#d8ecff;
   --body:#b4cbe2; --phos:#00d4ff; --amber:#f5c518; --red:#ff3355;
   --display:'Bebas Neue',Impact,sans-serif; --mono:'IBM Plex Mono','SF Mono',Menlo,monospace;
   --gutter:clamp(18px,5vw,72px);
@@ -125,13 +125,13 @@ h2.kamh .cur{font-weight:400;color:#fff;animation:kbcur 1.05s steps(1) infinite}
 .name{font:400 clamp(72px,min(19vw,22vh),240px)/.84 var(--display);letter-spacing:.09em;color:var(--phos);text-shadow:0 0 34px rgba(0,212,255,.45);margin-bottom:10px}
 .name .cur{font-weight:400;animation:kbcur 1.05s steps(1) infinite;color:var(--phos)}
 @keyframes kbcur{0%,49%{opacity:1}50%,100%{opacity:0}}
-.kb-sub{font:500 clamp(10px,1vw,12px)/1.3 var(--mono);color:#3a6080;letter-spacing:.32em}
-.kb-net{display:flex;align-items:center;gap:10px;margin-top:10px;font:500 10px/1 var(--mono);letter-spacing:.24em;color:#2a7050}
+.kb-sub{font:500 clamp(10px,1vw,12px)/1.3 var(--mono);color:#ff5c77;text-shadow:0 0 10px rgba(255,51,85,.35);letter-spacing:.32em}
+.kb-net{display:flex;align-items:center;gap:10px;margin-top:10px;font:500 10px/1 var(--mono);letter-spacing:.24em;color:#3ddc97}
 .kb-net i{width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:blink 1.8s steps(1) infinite}
-.kb-net .v{margin-left:auto;color:#1e3a5f;letter-spacing:.1em}
+.kb-net .v{margin-left:auto;color:#6f93b8;letter-spacing:.1em}
 .kb-status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid #0d1e35;border-bottom:1px solid #0d1e35;margin-bottom:22px;max-width:860px}
 .kb-status div{padding:9px 12px;border-right:1px solid #0d1e35;display:flex;flex-direction:column;gap:3px}
-.kb-status span{font:500 9px/1 var(--mono);letter-spacing:.2em;color:#2a4a6a}
+.kb-status span{font:500 9.5px/1 var(--mono);letter-spacing:.2em;color:#7f9fbf}
 .kb-status b{font:500 12px/1.2 var(--mono);color:var(--text);letter-spacing:.06em}
 .kb-status b.g{color:#00ff88}
 @media (max-width:640px){ .kb-status{grid-template-columns:1fr 1fr} .kb-net .v{display:none} }
@@ -336,7 +336,7 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 .tx-f{display:flex;flex-direction:column;gap:3px;padding:5px 0}
 .tx-f span{white-space:nowrap;color:var(--phos);font-size:11.5px;letter-spacing:.06em}
 .tx-f input,.tx-f textarea{flex:1;min-width:0;background:rgba(0,212,255,.04);border:1px solid var(--rule);color:#fff;font:inherit;padding:7px 9px;caret-color:var(--phos);caret-shape:block;resize:none}
-.tx-f input::placeholder,.tx-f textarea::placeholder{color:#3b5568}
+.tx-f input::placeholder,.tx-f textarea::placeholder{color:#62809a}
 .tx-f input:focus,.tx-f textarea:focus{outline:none;border-color:var(--phos);box-shadow:0 0 0 1px var(--phos),0 0 14px rgba(0,212,255,.2)}
 .tx-m{flex-direction:column;gap:4px}
 .tx-m textarea{width:100%}
@@ -473,7 +473,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 /* ---------- the ssh terminal that opens into the vault ---------- */
 .sshw{position:fixed;z-index:49;left:50%;top:50%;width:min(620px,calc(100% - 32px));transform:translate(-50%,-50%);background:#03070d;border:1px solid rgba(0,212,255,.55);box-shadow:0 0 40px rgba(0,212,255,.18);font:500 13px/1.55 var(--mono);animation:stOpen .22s cubic-bezier(.2,.8,.2,1)}
 @keyframes stOpen{from{transform:translate(-50%,-50%) scale(.9);opacity:0}}
-.ssh-bar{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid #0d1e35;font-size:11px;color:#3a6080}
+.ssh-bar{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid #0d1e35;font-size:11px;color:#8fb4d4}
 .ssh-bar i{width:9px;height:9px;border-radius:50%;background:#1e3a5f} .ssh-bar span{margin-left:8px}
 .ssh-body{padding:12px 14px;min-height:190px}
 .ssh-l .sp-pr{color:#00ff88} .ssh-l.cmd .sp-tx{color:#eaf6ff} .ssh-l.dim .sp-tx{color:#5f7d99} .ssh-l.ok .sp-tx{color:#00d4ff}
@@ -510,7 +510,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 #work .file{padding:0;background:#03070d;border:1px solid color-mix(in srgb,var(--acc) 30%,#0d1e35);min-height:min(26vh,210px);transition:border-color .15s,box-shadow .15s,transform .15s;overflow:hidden}
 #work .file::before{display:none}
 #work .file:hover,#work .file:focus-visible{border-color:var(--acc);box-shadow:0 0 28px color-mix(in srgb,var(--acc) 30%,transparent),inset 0 0 40px color-mix(in srgb,var(--acc) 7%,transparent);transform:translateY(-2px)}
-.wt-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--acc) 25%,#0d1e35);font:500 10px/1 var(--mono);color:#3a6080;letter-spacing:.04em}
+.wt-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--acc) 25%,#0d1e35);font:500 10px/1 var(--mono);color:#8fb4d4;letter-spacing:.04em}
 .wt-bar i{width:7px;height:7px;border-radius:50%;background:#1e3a5f}
 .file:hover .wt-bar i:first-child{background:var(--acc)}
 .wt-bar span:first-of-type{margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -574,7 +574,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 .ab::before{content:"["} .ab::after{content:"]"}
 .ab:hover,.ab:focus-visible,.ab[aria-expanded="true"]{text-shadow:0 0 12px var(--c);text-decoration:underline;text-underline-offset:4px}
 .ab-pop{position:fixed;z-index:45;pointer-events:none;width:min(340px,calc(100vw - 24px));background:#03070d;border:1px solid var(--c,var(--phos));box-shadow:0 0 30px color-mix(in srgb,var(--c,var(--phos)) 25%,transparent);font:500 12.5px/1.5 var(--mono);animation:stOpen .16s ease-out}
-.ab-bar{display:flex;align-items:center;gap:5px;padding:6px 9px;border-bottom:1px solid #0d1e35;font-size:10px;color:#3a6080}
+.ab-bar{display:flex;align-items:center;gap:5px;padding:6px 9px;border-bottom:1px solid #0d1e35;font-size:10px;color:#8fb4d4}
 .ab-bar i{width:7px;height:7px;border-radius:50%;background:#1e3a5f} .ab-bar span{margin-left:6px}
 .ab-body{padding:10px 12px}
 .ab-pr{color:var(--c,var(--phos));font-size:11px}

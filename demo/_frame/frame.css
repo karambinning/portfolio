@@ -7,7 +7,7 @@
 :root{
   --screen:#07010f;  --panel:#0d0620;  --line:#2a1f4d;  --lineh:#3d2f6e;
   --ink:#ffe400;     --pink:#ff2e88;   --violet:#6c5cff; --cyan:#00f0ff;
-  --text:#e9e4ff;    --body:#b9b0e0;   --dim:#7a6fb0;
+  --text:#e9e4ff;    --body:#b9b0e0;   --dim:#9d93d6;
   /* hub colours, as on the notch hub bar */
   --hub-hub:#8b7bff; --hub-kam:#00d4ff; --hub-command:#3388ff; --hub-work:#ff7a00; --hub-intel:#00ff88; --hub-lab:#ff3355;
   --a:var(--ink); --b:var(--pink);
