@@ -51,8 +51,12 @@
   function schedule(els, vh, mode, W){
     // no scan line: the page is taken apart in reverse reading order (the last detail first, every box after the
     // things inside it) and put back in reading order (each box first, then its contents, one detail at a time)
-    const vis = els.map((e, i) => i).filter(i => els[i].vis), n = Math.max(1, vis.length - 1), t = els.map(() => 0);
-    vis.forEach((i, r) => { t[i] = (mode === 'out' ? (vis.length - 1 - r) : r) / n * W; });
+    // each piece gets time in proportion to its size, so a column of tiny rows does not eat the whole run
+    const vis = els.map((e, i) => i).filter(i => els[i].vis), t = els.map(() => 0);
+    const order = mode === 'out' ? vis.slice().reverse() : vis;
+    const w = order.map(i => Math.max(1, Math.sqrt(Math.min(els[i].r.width * els[i].r.height, innerWidth * innerHeight * .25)) / 40));
+    const total = w.reduce((a, b) => a + b, 0) - w[w.length - 1] || 1; let acc = 0;
+    order.forEach((i, k) => { t[i] = acc / total * W; acc += w[k]; });
     return t;
   }
 
