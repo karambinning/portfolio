@@ -8,6 +8,8 @@
   if (window.KBDismantle) return;
   const G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>§%&';
   const g = n => { let s = ''; for (let i = 0; i < n; i++) s += G[(Math.random() * G.length) | 0]; return s; };
+  // same length, same spaces: text that is scrambled rather than removed keeps every box its real size (no reflow)
+  const scr = t => t.replace(/\S/g, () => G[(Math.random() * G.length) | 0]);
   const SKIP = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'BR', 'NOSCRIPT', 'TEMPLATE', 'HEAD', 'TITLE', 'OPTION']);
   const state = new WeakMap();   // root -> { anims, texts, job }
 
@@ -103,7 +105,7 @@
       try { st.anims.push(e.el.animate(kf, { duration: D, delay: T[i], easing: 'steps(6,end)', fill: mode === 'out' ? 'forwards' : 'both' })); } catch (_){}
     });
     // the text: decays as its element is torn down, types back in once its element has formed
-    texts.forEach(x => { x.t = T[x.owner] || 0; x.L = x.o.length; if (mode === 'in') x.n.nodeValue = ''; });
+    texts.forEach(x => { x.t = T[x.owner] || 0; x.L = x.o.length; x.sc = scr(x.o); if (mode === 'in') x.n.nodeValue = x.sc; });
     st.texts = texts;
     beam(color, mode, Wr, m0 / W);
     const t0 = performance.now(), job = st.job;
@@ -115,10 +117,10 @@
         texts.forEach(x => {
           if (mode === 'out'){
             const q = Math.min(1, Math.max(0, (el - x.t) / (D * .55))), k = Math.floor(x.L * (1 - q));
-            x.n.nodeValue = k <= 0 ? '' : x.o.slice(0, k) + (q > 0 ? g(Math.min(4, x.L - k)) : x.o.slice(k));
+            x.n.nodeValue = q <= 0 ? x.o : x.o.slice(0, k) + scr(x.o.slice(k, k + 4)) + x.sc.slice(k + 4);   // scrambles from the end, never shortens
           } else {
             const s = x.t + D * .35, dur = Math.min(520, 80 + x.L * 7), q = Math.min(1, Math.max(0, (el - s) / dur)), k = Math.floor(x.L * q);
-            x.n.nodeValue = q <= 0 ? '' : k >= x.L ? x.o : x.o.slice(0, k) + g(Math.min(5, x.L - k));
+            x.n.nodeValue = k >= x.L ? x.o : x.o.slice(0, k) + scr(x.o.slice(k, k + 5)) + x.sc.slice(k + 5);   // decodes in place, never grows
           }
         });
         if (el < end) requestAnimationFrame(f);
