@@ -120,7 +120,7 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
   .mnode:focus-visible{outline:1px dashed var(--c);outline-offset:5px}
   .mnode.dim{opacity:.18}
   .mnode.sel{background:color-mix(in srgb,var(--c) 24%,var(--screen))}
-  .mnode.pre{opacity:0}
+  .mnode.pre{opacity:0;transition:none}
 
   /* intelligence profile */
   .profile{position:absolute;top:58px;right:0;bottom:50px;width:min(470px,42%);z-index:10;display:flex;flex-direction:column;
