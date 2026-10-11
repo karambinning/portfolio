@@ -169,7 +169,7 @@
       const b = document.createElement('button');
       b.className = 'mod' + (ok ? '' : ' dev'); b.style.setProperty('--c', c); b.style.left = x + '%'; b.style.top = y + '%';
       b.textContent = name; b.setAttribute('aria-label', `${name}, ${sec} section, ${ok ? 'working' : 'in development'}`);
-      b.addEventListener('click', () => { pick(b, ln, sec, name, ok, text, c); if (PHQ.matches) reveal(read); });
+      b.addEventListener('click', () => { pick(b, ln, sec, name, ok, text, c); if (PHQ.matches){ reveal(read); setTimeout(() => reveal(read), 1100); } });
       b._home = [x, y]; b._am = am;
       orbit.appendChild(b); all.push([b, ln, sec, name, ok, text, c]);
     });

@@ -61,6 +61,44 @@
     .t-ctl .note{display:none}
     .grid{height:84px}
   }
+/* ===phone=== */
+/* phones (≤ 600px): War Room and World Cup become a swipeable pair under a two-way segmented control; charts take the
+   card's full width; nothing is hidden and type stays ≥ 12px. Nothing here applies above 600px. */
+@media (min-width:601px){ .qseg{display:none} }
+@media (max-width:600px){
+  .t-unit{font-size:12px;flex-wrap:wrap;row-gap:3px}
+  .qseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;position:sticky;top:-8px;z-index:4;margin:0 -14px;padding:4px 14px;background:var(--screen)}
+  .qseg .t-btn{justify-content:center;min-height:44px;font-size:13px;letter-spacing:.08em;border:1px solid var(--line);
+    background:color-mix(in srgb,var(--a) 4%,transparent);transition:background-color .15s,border-color .15s,transform .1s}
+  .qseg .t-btn::before,.qseg .t-btn::after{content:none}
+  .qseg .t-btn[aria-pressed="true"]{border-color:var(--a);background:color-mix(in srgb,var(--a) 16%,transparent)}
+  .qseg .t-btn[aria-pressed="true"] span{color:var(--b)}
+  .qseg .t-btn:active{transform:scale(.97)}
+  .q{display:flex;gap:0;flex:none;margin:0 -14px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .q::-webkit-scrollbar{display:none}
+  .half,.half + .half{flex:0 0 100%;box-sizing:border-box;min-width:0;padding:2px 14px 4px;border:0;scroll-snap-align:start;scroll-snap-stop:always;gap:8px}
+  .hd b{font-size:15px}
+  .hd .k{font-size:12px;letter-spacing:.06em;line-height:1.25}
+  .paper{font-size:12px;letter-spacing:.08em}
+  .half .t-p{font-size:13px;line-height:1.5}
+  .eq{height:156px} .br{height:146px} .grid{height:84px} .clv .viz{height:72px}
+  .cap,.dir .row{font-size:12px}
+  .gloss{display:block;font-size:12px}
+  .verdict,.verdict.live{font-size:12.5px;line-height:1.45}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-top:4px}
+  .st strong{font-size:24px}
+  .st span{font-size:12px;letter-spacing:.04em}
+  .t-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:6px 10px 8px}
+  .t-ctl .sp{display:none}
+  .t-ctl .t-btn{justify-content:center;text-align:center;min-height:44px;padding:2px 4px;font-size:12.5px;line-height:1.15;white-space:normal;
+    border:1px solid var(--line);background:color-mix(in srgb,var(--a) 4%,transparent);transition:background-color .15s,transform .1s}
+  .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+  .t-ctl .t-btn:active{transform:scale(.96);background:color-mix(in srgb,var(--a) 22%,transparent)}
+  .t-ctl .note{display:block;grid-column:1/-1;text-align:center;font-size:12px;letter-spacing:.06em;padding:2px 0 0}
+}
+@media (max-width:600px) and (prefers-reduced-motion:reduce){ .qseg .t-btn,.t-ctl .t-btn{transition:none} .qseg .t-btn:active,.t-ctl .t-btn:active{transform:none} }
+/* ===phone-end=== */
 </style>
 </head>
 <body data-self="quant" data-brand="[QUANT]" data-unit="K·B QUANT TERMINAL · MARKETS + MODELS · UNIT 04" data-status="MOSTLY PAPER" data-status-tail="LIVE TESTS: SMALL LOSS"
@@ -124,5 +162,25 @@
 </div>
 <script src="../../_frame/frame.js?v=10111730"></script>
 <script src="assets/quant.js"></script>
+<script>
+/* phones only: a two-way segmented control over the swipeable War Room / World Cup pair; the replay buttons bring their chart into view */
+(() => {
+  const mq = matchMedia('(max-width:600px)'), q = document.querySelector('.q'); if (!q) return;
+  const halves = [...q.querySelectorAll('.half')]; let seg = null;
+  const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  const go = i => q.scrollTo({ left: i * q.clientWidth, behavior: smooth() });
+  const mark = () => { if (!seg) return; const i = Math.round(q.scrollLeft / Math.max(1, q.clientWidth));
+    seg.querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', k === i)); };
+  const build = () => {
+    if (seg || !mq.matches) return;
+    seg = document.createElement('div'); seg.className = 'qseg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Experiments');
+    seg.innerHTML = halves.map((h, i) => `<button class="t-btn" type="button" aria-pressed="${i === 0}"><span>${h.querySelector('.hd b').textContent}</span></button>`).join('');
+    seg.querySelectorAll('button').forEach((b, i) => b.addEventListener('click', () => go(i)));
+    q.before(seg); q.addEventListener('scroll', mark, { passive: true }); mark();
+  };
+  build(); mq.addEventListener ? mq.addEventListener('change', build) : mq.addListener(build);
+  [['b-wr', 0], ['b-fill', 0], ['b-kr', 1]].forEach(([id, i]) => { const b = document.getElementById(id); b && b.addEventListener('click', () => { if (mq.matches) go(i); }); });
+})();
+</script>
 </body>
 </html>
