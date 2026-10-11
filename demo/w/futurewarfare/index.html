@@ -95,7 +95,8 @@
   .gauges .t-label{margin-bottom:3px}
   .gauges .t-bar{font-size:12px} .gauges .t-bar .fill{height:10px}
   .gauges .det .t-bar .fill i{background:var(--b)}
-  .log{flex:none;max-height:86px;overflow:auto;border-top:1px dashed var(--line);padding-top:6px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  /* newest entry on top; older ones fall off the bottom of the window rather than scrolling */
+  .log{flex:none;max-height:86px;overflow:hidden;border-top:1px dashed var(--line);padding-top:6px}
   .log div{font-size:11.5px;color:var(--body);line-height:1.45;padding:1px 0}
   .log .g{color:#00ff88} .log .p{color:#ffcc00} .log .r{color:#ff3355}
   .end{display:flex;flex-direction:column;gap:8px}
@@ -115,6 +116,8 @@
   @media (prefers-reduced-motion:reduce){ .node.alert:not(.sel){animation:none} }
   .notsim{border:1px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);padding:7px 10px;font:600 11.5px/1.45 var(--mono);color:var(--text);margin-bottom:8px}
   .notsim b{color:var(--a);display:block;letter-spacing:.04em;margin-bottom:2px}
+  .right .notsim{flex:none}
+  .panes .t-list li{font-size:12px;line-height:1.42;padding:4px 0 4px 18px}
 </style>
 </head>
 <body data-self="futurewarfare" data-brand="[F·W]" data-unit="FUTURE WARFARE · TRAINING TERMINAL · UNIT 08" data-status="CURRICULUM" data-status-tail="RED TEAM"
@@ -130,7 +133,6 @@
           <div class="t-sub2">For civilians and students · taught through drills</div>
         </div>
         <div class="panes">
-          <div class="notsim"><b>THE DRILLS ON THE RIGHT ARE A SIMULATION MADE FOR THIS PAGE.</b> They are not the drills I ran and not the software itself. The real module is described under [ THE SOFTWARE ].</div>
           <div class="pane" id="p-software">
             <div class="t-label">What the software actually is</div>
             <ul class="t-list">
@@ -172,6 +174,7 @@
       </div>
 
       <div class="right">
+        <div class="notsim"><b>THE DRILLS BELOW ARE A SIMULATION MADE FOR THIS PAGE.</b> They are not the drills I ran and not the software itself. The real module is described under [ THE SOFTWARE ].</div>
         <section class="con" id="con" aria-label="Drill console">
           <div class="con-h">
             <div><div class="nm" id="dName">RED TEAM · SCOPE REVIEW</div><div class="sub" id="dSub">CYBER SECURITY · ZONE C2 · TABLETOP</div></div>
