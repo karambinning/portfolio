@@ -1,0 +1,68 @@
+/* The timeline as a fly-through: each moment comes out of the distance, holds long enough to read, and is flown
+   through to the next. It ends on a summary of all four; a moment opens in full from there. */
+.tf{position:relative;flex:1;min-height:0;overflow:hidden;perspective:900px;perspective-origin:50% 45%;cursor:default}
+.tf-grid{position:absolute;left:-60%;right:-60%;height:120%;pointer-events:none;opacity:.55;
+  background-image:linear-gradient(rgba(0,212,255,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.22) 1px,transparent 1px);
+  background-size:80px 80px;animation:tfRun 1.6s linear infinite}
+.tf-grid.floor{top:52%;transform-origin:50% 0;transform:rotateX(78deg);-webkit-mask:linear-gradient(transparent,#000 35%)}
+.tf-grid.ceil{bottom:52%;transform-origin:50% 100%;transform:rotateX(-78deg);opacity:.25;-webkit-mask:linear-gradient(#000 65%,transparent)}
+.tf.warp .tf-grid{animation-duration:.35s}
+@keyframes tfRun{to{background-position:0 80px,0 0}}
+.tf-glow{position:absolute;left:50%;top:45%;width:60%;height:40%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(0,212,255,.12),transparent 70%);pointer-events:none}
+.tf-streaks{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .2s}
+.tf.warp .tf-streaks{opacity:1}
+.tf-streaks i{position:absolute;left:50%;top:45%;width:2px;height:120px;background:linear-gradient(transparent,var(--phos));transform-origin:50% 0;animation:tfStreak .45s linear infinite}
+@keyframes tfStreak{from{transform:rotate(var(--r)) translateY(40px) scaleY(.2);opacity:0}30%{opacity:.8}to{transform:rotate(var(--r)) translateY(70vh) scaleY(1.6);opacity:0}}
+
+/* one moment: a KAM terminal panel in depth */
+.tf-m{position:absolute;left:50%;top:46%;width:min(760px,86%);transform:translate(-50%,-50%) translateZ(-2400px);opacity:0;
+  border:1px solid color-mix(in srgb,var(--c) 60%,transparent);background:rgba(3,8,15,.9);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 60px color-mix(in srgb,var(--c) 22%,transparent),inset 0 0 40px color-mix(in srgb,var(--c) 7%,transparent);
+  will-change:transform,opacity;pointer-events:none}
+.tf-m::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.tf-bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid color-mix(in srgb,var(--c) 35%,transparent);font:500 11px/1 var(--mono);letter-spacing:.1em;color:#9fb6cf}
+.tf-bar i{width:8px;height:8px;border-radius:50%;background:#16273a}.tf-bar i:first-child{background:var(--c)}
+.tf-bar em{margin-left:auto;font-style:normal;color:var(--c)}
+.tf-in{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;padding:18px 22px 22px;align-items:center}
+.tf-date{font:400 clamp(54px,7vw,104px)/.9 var(--display);color:var(--c);letter-spacing:.02em;text-shadow:0 0 28px color-mix(in srgb,var(--c) 60%,transparent)}
+.tf-ttl{font:600 clamp(15px,1.5vw,19px)/1.35 var(--mono);color:#fff;margin-top:10px}
+.tf-pts{list-style:none;margin:0;padding:0}
+.tf-pts li{position:relative;padding:8px 0 8px 20px;border-bottom:1px solid rgba(255,255,255,.07);font:400 clamp(13px,1.15vw,15px)/1.5 var(--mono);color:var(--text)}
+.tf-pts li::before{content:"›";position:absolute;left:3px;color:var(--c)}
+
+/* summary: all four, then any one in full */
+.tf-sum{position:absolute;inset:6% 0 4%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
+.tf.done .tf-sum{opacity:1;pointer-events:auto}
+.tf-card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:16px 16px 18px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);
+  background:rgba(3,8,15,.88);box-shadow:0 0 30px color-mix(in srgb,var(--c) 12%,transparent);transition:transform .2s,box-shadow .2s,border-color .2s}
+.tf-card:hover,.tf-card:focus-visible{transform:translateY(-4px);border-color:var(--c);box-shadow:0 0 40px color-mix(in srgb,var(--c) 35%,transparent)}
+.tf-card b{font:400 clamp(30px,3.4vw,46px)/.95 var(--display);color:var(--c);text-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent)}
+.tf-card strong{font:600 14px/1.35 var(--mono);color:#fff}
+.tf-card span{font:400 13px/1.5 var(--mono);color:var(--body)}
+.tf-card em{margin-top:auto;font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--c);font-style:normal}
+.tf-hint{grid-column:1/-1;font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--dim);text-align:center}
+
+.tf-full{position:absolute;inset:3% 4% 4%;display:none;flex-direction:column;border:1px solid color-mix(in srgb,var(--c) 60%,transparent);background:rgba(3,8,15,.96);
+  box-shadow:0 0 60px color-mix(in srgb,var(--c) 20%,transparent);z-index:3}
+.tf-full.on{display:flex;animation:tfOpen .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes tfOpen{from{transform:scale(.6) translateZ(0);opacity:0}}
+.tf-full .tf-in{flex:1;min-height:0;align-items:start;overflow:auto;overscroll-behavior:contain}
+.tf-full .tf-copy{font:400 clamp(13px,1.15vw,15px)/1.65 var(--mono);color:var(--body);margin-top:12px}
+.tf-full .tf-pts li.minor{opacity:.75}
+.tf-nav{display:flex;gap:8px;margin-left:auto}
+.tf-nav button{all:unset;cursor:pointer;font:600 11px/1 var(--mono);letter-spacing:.1em;color:var(--c);padding:6px 9px;border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.tf-nav button:hover,.tf-nav button:focus-visible{background:var(--c);color:#02060c}
+.tf-skip{position:absolute;right:0;bottom:2px;font:500 11px/1 var(--mono);letter-spacing:.08em;color:var(--dim);z-index:2;pointer-events:none}
+.tf.done .tf-skip{display:none}
+
+@media (max-width:600px){
+  .tf{perspective:600px}
+  .tf-m{width:92%}
+  .tf-in{grid-template-columns:1fr;gap:10px;padding:14px 14px 16px}
+  .tf-date{font-size:52px}
+  .tf-sum{grid-template-columns:1fr 1fr;gap:10px;inset:2% 0}
+  .tf-card{padding:12px}
+  .tf-card span{display:none}
+  .tf-full{inset:0}
+}
+@media (prefers-reduced-motion:reduce){ .tf-grid,.tf-streaks i{animation:none} }

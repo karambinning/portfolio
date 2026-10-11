@@ -726,6 +726,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
 <script src="demo/_frame/dismantle.js?v=10111540"></script>
+<link rel="stylesheet" href="assets/tl-fly.css?v=1">
 </head>
 <body>
 
@@ -778,7 +779,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   <div class="in-wrap tl-wrap">
     <div class="tl-head" id="tlHead">
       <h2 class="tl-title"><span class="br">[ </span>MARCH TO NOW<span class="br"> ]</span><span class="cur" aria-hidden="true">_</span></h2>
-      <span class="tl-chip" aria-hidden="true">ONE TRACK · FOUR MOMENTS</span>
+      <span class="tl-chip" aria-hidden="true">FOUR MOMENTS · FLY THROUGH</span>
       <button type="button" class="tl-btn" id="tlReplay" aria-label="Replay the timeline">↻ replay</button>
     </div>
     <ol class="tl-src" id="tlSrc" aria-label="Timeline, March 2026 to now">
@@ -836,7 +837,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         </ul>
       </li>
     </ol>
-    <div class="tl-board" id="tlBoard" aria-hidden="true"></div>
   </div>
 </section>
 
@@ -1620,296 +1620,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (window.tlStart){ if (s.id === 'timeline') window.tlStart(); else window.tlStop(); }   // the timeline plays itself while it is on screen
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
   }
-  /* ---------- the timeline: one slide, one sequence ----------
-     A playhead flows along a data track from March 2026 to now. Entering a moment glitches its title in behind the track
-     and types its paragraph in the "now playing" console; reaching a point pulses its node and types a card in.
-     Cards stay, so it ends as the whole timeline on one board. Everything is derived from one clock (TLX.t, ms),
-     so scrubbing is just setting it. Content is read from the hidden ordered list (#tlSrc), which screen readers use. */
-  const TLX = { touched: -1e9, t: 0, base: -1e9, on: false, paused: false, raf: 0, last: 0, built: false, ph: -2, hoverPh: -1, ended: false };
-  const TL_LAB = 36, TL_PLAY = 26000, TL_DRAW = 1300, TL_TYPE = 900, TL_DECODE = 700;
-  const tlSc = $('#timeline'), tlBoard = $('#tlBoard');
-  const TL_D = s => Date.parse(s + 'T12:00:00Z');
-  const TL_MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const TL_NOW = Math.max(Date.now(), TL_D('2026-10-11'));
-  const TL_W = [.205, .26, .265, .27];                        // band widths: the screen is shared by what happened, not by days
-  const TL_G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>▓▒░';
-  const tlPhases = [...tlSc.querySelectorAll('.tl-m')].map((m, i) => ({
-    i, term: m.dataset.term, from: TL_D(m.dataset.from), to: m.dataset.to ? TL_D(m.dataset.to) : TL_NOW,
-    date: m.querySelector('.date').textContent, title: m.querySelector('h3').textContent, copy: m.querySelector('.copy').textContent,
-    pts: [...m.querySelectorAll('.pts li')].map(li => ({ text: li.textContent, at: li.dataset.at ? TL_D(li.dataset.at) : null, minor: li.classList.contains('minor') })) }));
-  // each point sits at its date: dated ones ("May:", "9 March:") at that date, the rest spread evenly between them
-  tlPhases.forEach(p => { let prevT = p.from, prevI = -1;
-    for (let k = 0; k <= p.pts.length; k++){
-      if (k < p.pts.length && p.pts[k].at == null) continue;
-      const nextT = k === p.pts.length ? p.to : p.pts[k].at, n = k - prevI - 1;
-      for (let j = 1; j <= n; j++) p.pts[prevI + j].t = prevT + (nextT - prevT) * j / (n + 1);
-      if (k < p.pts.length){ p.pts[k].t = nextT; prevT = nextT; prevI = k; }
-    } });
-  const tlCards = []; tlPhases.forEach(p => p.pts.forEach(pt => { pt.p = p.i; pt.k = tlCards.length; tlCards.push(pt); }));
-  const tlEl = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (parent) parent.appendChild(e); return e; };
-  const tlEsc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
-  const TL_END_H = 'March to now // ' + tlPhases.length + ' moments · ' + tlCards.length + ' points';
-  const TL_END_P = tlPhases.map(p => `> ${String(p.i + 1).padStart(2, '0')} · ${p.date} · ${p.title}`).join('\n') + '\n> hover any card to read it in full\n> click the track to replay from there';
-  let tlB = {};
-  function tlBuild(){
-    if (TLX.built) return; TLX.built = true;
-    const head = $('#tlHead');
-    tlB.stat = tlEl('span', 'tl-stat', null); head.insertBefore(tlB.stat, $('#tlReplay'));
-    tlPhases.forEach(p => {
-      p.band = tlEl('div', 'tl-band', tlBoard); p.band.style.setProperty('--a', (.05 + p.i * .025).toFixed(3));
-      tlEl('div', 'tl-tint', p.band);
-      p.ghost = tlEl('div', 'tl-ghost', p.band); p.ghost.textContent = p.title; p.ghost.style.setProperty('--go', (.2 + p.i * .03).toFixed(2));
-    });
-    tlB.leads = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); tlB.leads.setAttribute('class', 'tl-leads'); tlBoard.appendChild(tlB.leads);
-    tlB.trk = tlEl('div', 'tl-trk', tlBoard); tlB.fill = tlEl('div', 'tl-fill', tlBoard); tlB.scan = tlEl('div', 'tl-scan', tlBoard);
-    tlB.ticks = []; const d0 = new Date(tlPhases[0].from);
-    for (let t = TL_D('2026-03-02'); t <= TL_NOW; t += 7 * 864e5) tlB.ticks.push({ t, el: tlEl('div', 'tl-tick', tlBoard) });   // Mondays
-    tlB.mons = [];
-    for (let m = d0.getUTCMonth(), y = d0.getUTCFullYear(); ; m++){ const t = Date.UTC(y, m, 1, 12); if (t > TL_NOW) break;
-      tlB.ticks.push({ t, el: tlEl('div', 'tl-tick m', tlBoard) }); tlB.mons.push({ t, el: tlEl('div', 'tl-mon', tlBoard, TL_MON[m % 12]) }); }
-    tlB.now = tlEl('div', 'tl-mon now', tlBoard, 'NOW ▸');
-    tlB.hit = tlEl('div', 'tl-hit tl-hov', tlBoard); tlB.aim = tlEl('div', 'tl-aim', tlBoard);
-    tlCards.forEach(c => {
-      c.node = tlEl('div', 'tl-node', tlBoard);
-      c.lead = document.createElementNS('http://www.w3.org/2000/svg', 'path'); c.lead.setAttribute('pathLength', '1'); tlB.leads.appendChild(c.lead);
-      const d = new Date(c.t), exact = /^\d{1,2} [A-Z][a-z]+:/.test(c.text);
-      c.el = tlEl('div', 'tl-card tl-hov', tlBoard,
-        `<div class="tl-ch"><b>${exact ? String(d.getUTCDate()).padStart(2, '0') + ' ' : ''}${TL_MON[d.getUTCMonth()]} 2026</b><span>${String(c.k + 1).padStart(2, '0')}/${tlCards.length}</span></div><div class="tl-cb"></div>`);
-      c.body = c.el.querySelector('.tl-cb'); c.body.textContent = c.text; c.shown = -1;
-    });
-    tlPhases.forEach(p => { p.lab = tlEl('div', 'tl-plab tl-hov', tlBoard, `<b>${tlEsc(p.date)}</b><span>${tlEsc(p.title)}</span><p></p>`); p.labP = p.lab.querySelector('p'); });
-    tlB.con = tlEl('div', 'tl-con tl-hov', tlBoard, '<div class="tl-con-bar"><i></i><i></i><i></i><span>now_playing</span><em></em></div><div class="tl-con-body"><div class="tl-con-h"></div><div class="tl-con-p"></div></div>');
-    tlB.conN = tlB.con.querySelector('em'); tlB.conH = tlB.con.querySelector('.tl-con-h'); tlB.conP = tlB.con.querySelector('.tl-con-p');
-    tlB.ph = tlEl('div', 'tl-ph', tlBoard, '<i></i><s></s><b></b>');
-    tlWire();
-  }
-  /* ---------- layout: measure real sizes, then pack every card so none overlaps and none leaves the board ---------- */
-  function tlLayout(){
-    if (!TLX.built) return;
-    const vert = tlSc.clientWidth < 680; tlB.vert = vert;
-    tlSc.classList.toggle('tl-vert', vert); tlBoard.classList.toggle('vert', vert);
-    tlBoard.style.height = '';
-    const W = tlBoard.clientWidth; if (W < 50) return;
-    tlCards.forEach(c => { c.el.classList.remove('open'); c.body.textContent = c.text; c.shown = -1; c.lead.classList.remove('hl'); });
-    tlPhases.forEach(p => { p.ghost.textContent = p.title; p.labP.textContent = ''; p.lab.style.height = ''; p.lab.style.width = ''; });
-    TLX.conKey = '';
-    if (vert) tlLayoutV(W); else tlLayoutH(W);
-    tlB.leads.setAttribute('viewBox', `0 0 ${W} ${tlB.H}`);
-    tlCards.forEach(c => { c.tf = c.np / tlB.L * TL_PLAY; c.node.style.left = (vert ? tlB.X : c.np) + 'px'; c.node.style.top = (vert ? c.np : tlB.T) + 'px';
-      c.el.classList.toggle('trunc', c.body.scrollHeight > c.body.clientHeight + 2); });
-    tlPhases.forEach(p => { p.tf = p.np / tlB.L * TL_PLAY; });
-    tlB.ticks.forEach(k => { k.el.style.left = (vert ? tlB.X : k.p) + 'px'; k.el.style.top = (vert ? k.p : tlB.T) + 'px'; });
-    tlRender(true);
-  }
-  function tlFitGhost(p, bw, maxH){ const g = p.ghost; let fs = Math.min(150, maxH * .42);
-    for (; fs > 26; fs -= 3){ g.style.fontSize = fs + 'px'; if (g.scrollWidth <= bw + 1 && g.offsetHeight <= maxH && g.offsetHeight <= fs * .9 * 3.2) break; } }
-  // phase labels sit just above the track at the start of their band; returns them, and the track strip, as obstacles
-  function tlLabels(T, W){
-    tlPhases.forEach(p => { const l = p.lab; l.style.maxWidth = (p.x1 - p.x0 - 12) + 'px'; l.style.left = (p.x0 + 6) + 'px'; l.style.top = (T - 10 - TL_LAB) + 'px'; l.style.height = TL_LAB + 'px'; });
-    return [{ x: 0, y: T - 10 - TL_LAB, w: W, h: TL_LAB + 10 + 24 }];
-  }
-  function tlLayoutH(W){
-    const H = tlBoard.clientHeight; let T = Math.round(H * .5); tlB.W = W; tlB.H = H; tlB.T = T; tlB.L = W; tlBoard.style.setProperty('--T', T + 'px');
-    let acc = 0; tlPhases.forEach(p => { p.x0 = Math.round(acc * W); acc += TL_W[p.i]; p.x1 = Math.round(acc * W); p.np = p.x0;
-      Object.assign(p.band.style, { left: p.x0 + 'px', width: (p.x1 - p.x0) + 'px', top: '', height: '' }); p.ghost.style.top = ''; });
-    const X = t => { const p = tlPhases.find(q => t < q.to) || tlPhases[tlPhases.length - 1]; return p.x0 + (p.x1 - p.x0) * Math.max(0, Math.min(1, (t - p.from) / (p.to - p.from))); };
-    tlB.ticks.forEach(k => { k.p = X(k.t); });
-    const nowW = 44; tlB.now.style.left = (W - nowW) + 'px';
-    tlB.mons.forEach(m => { m.p = X(m.t) + 4; m.el.style.left = m.p + 'px'; m.el.style.display = m.p + 30 > W - nowW ? 'none' : ''; });
-    tlPhases.forEach(p => tlFitGhost(p, p.x1 - p.x0 - 16, H * .62));
-    tlLabels(T, W);
-    // the console: as tall as its longest paragraph, at a few widths
-    const cons = [.34, .42].map(f => { const cw = Math.round(Math.max(300, Math.min(f < .4 ? 430 : 520, W * f))); tlB.con.style.width = cw + 'px'; tlB.con.style.height = 'auto';
-      let ch = 0; [...tlPhases.map(p => [p.date + ' // ' + p.title, p.copy]), [TL_END_H, TL_END_P]].forEach(([h, p]) => { tlB.conH.textContent = h; tlB.conP.textContent = p; ch = Math.max(ch, tlB.con.offsetHeight); });
-      return [cw, ch]; });
-    tlCards.forEach(c => { c.np = c.nx = Math.round(X(c.t)); });
-    // try card sizes from roomiest to tightest, the console in each corner and the track a little up or down;
-    // keep the best layout that fits every card with no overlap
-    const CFG = [[.2, 3], [.185, 3], [.17, 3], [.2, 2], [.17, 2], [.155, 2], [.14, 2]];
-    let best = null;
-    for (const [fw, lines] of CFG){
-      const w = Math.round(Math.max(150, Math.min(250, W * fw)));
-      let hh = 0; tlCards.forEach(c => { c.el.style.width = w + 'px'; c.el.style.height = 'auto'; c.el.style.setProperty('--lines', lines); c.w = w; hh = Math.max(hh, c.el.offsetHeight); });
-      tlCards.forEach(c => { c.h = hh; });
-      for (const tf of [.5, .54, .46, .58, .42, .62, .38]) for (const [cw, ch] of cons){
-        const T2 = Math.round(H * tf), ob = tlLabels(T2, W);
-        for (const corner of ['br', 'tr', 'bl', 'tl']){
-          const con = { x: corner[1] === 'l' ? 0 : W - cw, y: corner[0] === 't' ? 0 : H - ch, w: cw, h: ch };
-          if (ob.some(r => con.x < r.x + r.w + 8 && con.x + con.w + 8 > r.x && con.y < r.y + r.h + 8 && con.y + con.h + 8 > r.y)) continue;
-          const r = tlPack(ob.concat([con]), W, H, T2);
-          if (window.TL_DEBUG) console.log('cfg', fw, lines, tf, cw, corner, r ? r.score | 0 : 'fail@' + TLX.failAt);
-          if (r && (!best || r.score < best.score)) best = { ...r, con, w, lines, T: T2 };
-        }
-      }
-      if (best) break;
-    }
-    if (!best){ // nothing fits (a very small window): place them anyway, readable on hover
-      const w = Math.round(Math.max(140, W * .14)), [cw, ch] = cons[0]; best = { score: 0, T, con: { x: W - cw, y: H - ch, w: cw, h: ch }, w, lines: 2, pos: tlCards.map((c, i) => ({ x: Math.min(W - w, Math.max(0, c.nx - w / 2)), y: i % 2 ? T + 30 : Math.max(0, T - 30 - c.h), side: i % 2 ? 1 : -1 })) };
-    }
-    T = tlB.T = best.T; tlBoard.style.setProperty('--T', T + 'px'); tlLabels(T, W);
-    tlB.con.style.left = best.con.x + 'px'; tlB.con.style.top = best.con.y + 'px'; tlB.con.style.width = best.con.w + 'px'; tlB.con.style.height = best.con.h + 'px';
-    tlCards.forEach((c, i) => { const q = best.pos[i];
-      c.el.style.width = best.w + 'px'; c.el.style.setProperty('--lines', best.lines); c.h = best.pos[0].h; c.el.style.height = c.h + 'px';
-      c.x = q.x; c.y = q.y; c.side = q.side; c.w = best.w;
-      c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px'; c.el.style.setProperty('--org', c.side < 0 ? '50% 100%' : '50% 0%');
-      // leader: straight up or down from the node, then across to the card's nearest edge
-      const ex = Math.max(c.x + 12, Math.min(c.x + c.w - 12, c.nx)), ey = c.side < 0 ? c.y + c.h : c.y, ny = c.side < 0 ? T - 6 : T + 6;
-      const ky = c.side < 0 ? Math.max(ey + 6, ny - 14) : Math.min(ey - 6, ny + 14);
-      c.lead.setAttribute('d', ex === c.nx ? `M${c.nx},${ny}V${ey}` : `M${c.nx},${ny}V${ky}L${ex},${ey}`);
-    });
-  }
-  /* narrow screens: the track runs top to bottom, each moment opens with its own console block, cards alternate left and right */
-  function tlLayoutV(W){
-    const X = Math.round(W / 2), gap = 13, knots = []; let y = 16;
-    tlB.W = W; tlB.X = X; tlBoard.style.setProperty('--X', X + 'px');
-    tlPhases.forEach(p => {
-      const l = p.lab; Object.assign(l.style, { left: '0px', width: W + 'px', maxWidth: 'none' });
-      p.labP.textContent = p.copy; const bh = l.offsetHeight; l.style.height = bh + 'px'; l.style.top = y + 'px';
-      p.y0 = y; p.np = y; y += bh + 20; knots.push([p.from, y - 10]);
-      const bot = [y, y + 34]; let lastTop = y - 34;
-      p.pts.forEach((c, k) => { const s = k % 2, w = s ? W - X - gap : X - gap;
-        c.el.style.width = w + 'px'; c.el.style.height = 'auto'; c.el.style.setProperty('--lines', 4); c.w = w; c.h = c.el.offsetHeight; c.el.style.height = c.h + 'px';
-        const cy = Math.max(bot[s], lastTop + 30); c.x = s ? X + gap : 0; c.y = cy; c.side = 1; lastTop = cy; bot[s] = cy + c.h + 10; c.np = cy + 11;
-        c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px'; c.el.style.setProperty('--org', s ? '0% 50%' : '100% 50%');
-        c.lead.setAttribute('d', `M${X + (s ? 5 : -5)},${c.np}H${s ? c.x : c.x + c.w}`); knots.push([c.t, c.np]); });
-      y = Math.max(...bot) + 14; p.y1 = y; knots.push([p.to, y - 4]);
-      Object.assign(p.band.style, { left: '0px', width: W + 'px', top: p.y0 + 'px', height: (p.y1 - p.y0) + 'px' });
-    });
-    tlB.L = y; tlB.H = y; tlB.T = 0;
-    const Y = t => { for (let i = 1; i < knots.length; i++) if (t <= knots[i][0]){ const [t0, y0] = knots[i - 1], [t1, y1] = knots[i]; return t1 > t0 ? y0 + (y1 - y0) * (t - t0) / (t1 - t0) : y1; } return y; };
-    tlB.ticks.forEach(k => { k.p = Y(k.t); });
-    tlPhases.forEach(p => { tlFitGhost(p, W - 16, (p.y1 - p.y0) * .8); p.ghost.style.top = ((p.y1 - p.y0) / 2) + 'px'; });
-    tlBoard.style.setProperty('--L', y + 'px');
-  }
-  function tlPack(obst, W, H, T){
-    const rects = obst.slice(), pos = [], M = 8; let score = 0;
-    for (const c of tlCards){
-      const pref = c.k % 2 ? 1 : -1; let best = null;
-      for (const side of [pref, -pref]){
-        const y0 = side < 0 ? T - 10 - TL_LAB - M - c.h : T + 24 + M, st = c.h + M, n = side < 0 ? Math.floor(y0 / st) : Math.floor((H - c.h - y0) / st);
-        for (let j = 0; j <= n; j++){
-          const y = side < 0 ? y0 - j * st : y0 + j * st, base = j * 40 + (side !== pref ? 30 : 0);
-          if (best && base >= best.s) break;
-          for (let dx = 0; dx <= W; dx += 8){
-            if (best && base + dx * .12 >= best.s) break;
-            for (const sg of dx ? [1, -1] : [1]){
-              const x = Math.round(c.nx - c.w / 2 + sg * dx); if (x < 0 || x + c.w > W) continue;
-              const off = Math.max(0, x + 14 - c.nx, c.nx - (x + c.w - 14));          // 0 while the node sits under the card
-              const s = base + off * 1.1 + dx * .12; if (best && s >= best.s) continue;
-              let hit = false; for (const r of rects) if (x < r.x + r.w + M && x + c.w + M > r.x && y < r.y + r.h + M && y + c.h + M > r.y){ hit = true; break; }
-              if (!hit) best = { x, y, side, s };
-            }
-          }
-        }
-      }
-      if (!best){ TLX.failAt = c.k; return null; }
-      rects.push({ x: best.x, y: best.y, w: c.w, h: c.h }); best.h = c.h; pos.push(best); score += best.s;
-    }
-    return { pos, score };
-  }
-  /* ---------- render: everything follows from TLX.t ---------- */
-  const tlCls = (el, c, on) => { if (el.classList.contains(c) !== on) el.classList.toggle(c, on); };
-  function tlGlyphs(s, k){ let o = s.slice(0, k); for (let i = k; i < Math.min(s.length, k + 6); i++) o += s[i] === ' ' ? ' ' : TL_G[Math.random() * TL_G.length | 0]; return o; }
-  function tlRender(force){
-    if (!TLX.built || !tlB.W) return;
-    const t = TLX.t, L = tlB.L, V = tlB.vert, draw = Math.max(0, Math.min(1, (t + TL_DRAW) / TL_DRAW)), drawP = draw * L;
-    const pp = Math.max(0, Math.min(1, t / TL_PLAY)) * L, ended = t >= TL_PLAY, live = t >= 0;
-    tlB.trk.style.transform = V ? `scaleY(${draw})` : `scaleX(${draw})`;
-    tlB.scan.style.opacity = draw > 0 && draw < 1 ? 1 : 0; tlB.scan.style.transform = V ? `translateY(${drawP}px)` : `translateX(${drawP}px)`;
-    tlB.fill.style.transform = V ? `scaleY(${pp / L})` : `scaleX(${pp / L})`;
-    tlB.ticks.forEach(k => tlCls(k.el, 'on', k.p <= drawP));
-    tlB.mons.forEach(m => tlCls(m.el, 'on', m.p <= drawP)); tlCls(tlB.now, 'on', draw >= 1);
-    tlCls(tlB.ph, 'on', live); tlCls(tlB.ph, 'end', ended); tlCls(tlB.ph, 'held', TLX.paused && live && !ended);
-    tlB.ph.style.transform = V ? `translateY(${pp}px)` : `translateX(${pp}px)`;
-    let cur = -1; tlPhases.forEach(p => { if (live && t >= p.tf) cur = p.i; });
-    const ptype = q => q.tf < TLX.base || reduce ? 1 : Math.max(0, Math.min(1, (t - q.tf) / Math.min(((q.i + 1 < tlPhases.length ? tlPhases[q.i + 1].tf : TL_PLAY) - q.tf) * .82, q.copy.length * 16)));
-    let reach = 0;
-    tlPhases.forEach(p => { const on = live && t >= p.tf, dec = p.tf < TLX.base ? 1 : (t - p.tf) / TL_DECODE;
-      tlCls(p.band, 'cur', p.i === cur && !ended); tlCls(p.lab, 'on', on); tlCls(p.ghost, 'on', on);
-      tlCls(p.ghost, 'glitch', on && dec < 1 && !reduce);
-      const txt = on && dec < 1 && !reduce ? tlGlyphs(p.title, Math.floor(p.title.length * Math.max(0, dec))) : p.title;
-      if (p.ghost.textContent !== txt) p.ghost.textContent = txt;
-      if (V){ const s = on ? p.copy.slice(0, Math.round(p.copy.length * ptype(p))) : ''; if (p.labP.textContent !== s) p.labP.textContent = s;
-        if (on) reach = Math.max(reach, p.y0 + p.lab.offsetHeight); } });
-    tlCards.forEach(c => { const on = live && t >= c.tf, open = c.el.classList.contains('open'), age = t - c.tf;
-      const typed = !on ? 0 : (c.tf < TLX.base || reduce) ? 1 : Math.min(1, age / TL_TYPE), n = open ? c.text.length : Math.round(c.text.length * typed);
-      tlCls(c.node, 'vis', c.np <= drawP); tlCls(c.node, 'on', on); tlCls(c.el, 'on', on || open);
-      tlCls(c.el, 'typing', on && typed < 1 && !open); tlCls(c.el, 'hot', on && age < 1800 && c.tf >= TLX.base);
-      tlCls(c.el, 'old', on && (age > 3200 || c.tf < TLX.base)); tlCls(c.lead, 'on', on); tlCls(c.lead, 'old', on && (age > 3200 || c.tf < TLX.base));
-      if (on && V) reach = Math.max(reach, c.y + c.h);
-      if (n !== c.shown){ c.shown = n; c.body.textContent = n >= c.text.length ? c.text : c.text.slice(0, n); } });
-    // narrow screens: the board grows as the sequence reveals it, so a swipe at the bottom always moves on
-    if (V){ const h = Math.round(Math.min(L, Math.max(reach, pp) + 40)); if (tlB.grown !== h){ tlB.grown = h; tlBoard.style.height = h + 'px'; }
-      if (TLX.on && !TLX.paused && !ended && performance.now() - TLX.touched > 3500){ const vh = tlSc.clientHeight, top = tlBoard.offsetTop;
-        const want = Math.max(0, top + pp - vh * .6); if (want > tlSc.scrollTop + 1) tlSc.scrollTop += Math.max(1, (want - tlSc.scrollTop) * .12); } }
-    // the console: the moment being played, or one being hovered, or the end card
-    tlCls(tlB.con, 'on', live || TLX.hoverPh >= 0);
-    let key, h, p, num;
-    if (TLX.hoverPh >= 0){ const q = tlPhases[TLX.hoverPh]; key = 'h' + q.i; h = q.date + ' // ' + q.title; p = q.copy; num = `${q.i + 1}/${tlPhases.length}`; }
-    else if (ended){ key = 'end'; h = TL_END_H; p = TL_END_P; num = 'end'; }
-    else if (cur >= 0){ const q = tlPhases[cur]; h = q.date + ' // ' + q.title; p = q.copy.slice(0, Math.round(q.copy.length * ptype(q))); key = 'p' + q.i + ':' + p.length; num = `${q.i + 1}/${tlPhases.length}`; }
-    else { key = 'boot'; h = 'March to now'; p = '> scanning track'; num = '0/' + tlPhases.length; }
-    if (key !== TLX.conKey){ TLX.conKey = key; tlB.conH.textContent = h; tlB.conP.textContent = p; tlB.conN.textContent = num; }
-    const pct = Math.round(Math.max(0, Math.min(1, t / TL_PLAY)) * 100);
-    const stat = ended ? '<b>■ END</b> · MAR 2026 → NOW' : `<b>${TLX.paused && live ? '❚❚ HELD' : '▶ PLAY'}</b> · ${cur >= 0 ? tlEsc(tlPhases[cur].date).toUpperCase() : 'SCAN'} · ${pct}%`;
-    if (tlB.stat.innerHTML !== stat) tlB.stat.innerHTML = stat;
-    // the typing line at the foot follows the moments
-    const ph = ended ? 4 : cur;
-    if (ph !== TLX.ph && TLX.on){ TLX.ph = ph; if (ph >= 0) typeTerm(ended ? '> march to now · played · click the track to replay from any point' : TERM[tlPhases[ph].term] || ''); }
-  }
-  function tlFrame(now){
-    TLX.raf = 0; if (!TLX.on) return;
-    const dt = Math.min(80, now - (TLX.last || now)); TLX.last = now;
-    if (!TLX.paused) TLX.t += dt;
-    tlRender();
-    const decoding = tlPhases.some(p => TLX.t >= p.tf && TLX.t - p.tf < TL_DECODE);
-    if ((!TLX.paused && TLX.t < TL_PLAY + 3600) || decoding) TLX.raf = requestAnimationFrame(tlFrame);
-  }
-  function tlKick(){ if (TLX.on && !TLX.raf){ TLX.last = 0; TLX.raf = requestAnimationFrame(tlFrame); } }
-  function tlSeek(t, scrub){ TLX.t = t; TLX.base = scrub ? t : -1e9; TLX.ph = -2; tlRender(); tlKick(); }
-  function tlHold(p){ if (TLX.paused === p) return; TLX.paused = p; tlRender(); tlKick(); }
-  function tlOpen(c, open){
-    if (open === c.el.classList.contains('open')) return;
-    if (!open){ c.el.classList.remove('open'); c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px'; c.el.style.width = c.w + 'px'; c.el.style.height = c.h + 'px'; c.lead.classList.remove('hl'); tlRender(); return; }
-    const W = tlB.W, H = tlB.H, w = tlB.vert ? c.w : Math.max(c.w, Math.min(340, W * .3));
-    c.el.classList.add('open'); c.el.style.width = w + 'px'; c.el.style.height = 'auto'; c.body.textContent = c.text; c.shown = c.text.length;
-    const h = c.el.offsetHeight, x = Math.max(0, Math.min(W - w, c.x + (c.w - w) / 2)), y = c.side < 0 ? Math.max(0, c.y + c.h - h) : Math.min(tlB.vert ? tlBoard.offsetHeight - h : H - h, c.y);
-    c.el.style.left = x + 'px'; c.el.style.top = Math.max(0, y) + 'px'; c.lead.classList.add('hl');
-  }
-  function tlWire(){
-    // hover pauses, but only a real move of the pointer: a card appearing under a resting mouse must not stop the show
-    let lx = -1, ly = -1;
-    tlBoard.addEventListener('pointermove', e => {
-      if (e.pointerType === 'touch' || (e.clientX === lx && e.clientY === ly)) return; lx = e.clientX; ly = e.clientY;
-      tlHold(!!e.target.closest('.tl-hov'));
-      if (e.target === tlB.hit && !tlB.vert){ const r = tlBoard.getBoundingClientRect(), k = r.width / tlBoard.offsetWidth; tlB.aim.style.left = ((e.clientX - r.left) / k) + 'px'; }
-    });
-    tlBoard.addEventListener('pointerleave', () => { lx = ly = -1; tlHold(false); TLX.hoverPh = -1; });
-    tlB.hit.addEventListener('click', e => {
-      const r = tlBoard.getBoundingClientRect(), k = r.width / tlBoard.offsetWidth, x = tlB.vert ? (e.clientY - r.top) / k : (e.clientX - r.left) / k;
-      tlSeek(Math.max(0, Math.min(1, x / tlB.L)) * TL_PLAY, true); TLX.touched = performance.now(); if (window.SFX && SFX.blip) SFX.blip();
-    });
-    tlCards.forEach(c => {
-      c.el.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') tlOpen(c, true); });
-      c.el.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') tlOpen(c, false); });
-      c.el.addEventListener('click', () => { const o = !c.el.classList.contains('open'); tlCards.forEach(d => d !== c && tlOpen(d, false)); tlOpen(c, o); });
-    });
-    tlPhases.forEach(p => {
-      p.lab.addEventListener('pointerenter', () => { TLX.hoverPh = p.i; tlRender(); });
-      p.lab.addEventListener('pointerleave', () => { TLX.hoverPh = -1; tlRender(); });
-      p.lab.addEventListener('click', () => { tlSeek(p.tf + 1, true); TLX.hoverPh = p.i; tlRender(); });
-    });
-    $('#tlReplay').addEventListener('click', () => { tlCards.forEach(c => tlOpen(c, false)); TLX.paused = false; tlSeek(reduce ? TL_PLAY : -TL_DRAW, reduce); });
-    ['touchstart', 'wheel'].forEach(ev => tlSc.addEventListener(ev, () => { TLX.touched = performance.now(); }, { passive: true }));
-    let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (scenes[cur] === tlSc) tlLayout(); else tlB.W = 0; }, 160); });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (scenes[cur] === tlSc) tlLayout(); });
-  }
-  window.tlStart = () => {
-    tlBuild(); TLX.on = true; TLX.touched = -1e9; tlB.grown = -1; TLX.paused = false; TLX.hoverPh = -1; tlLayout();
-    tlSeek(reduce ? TL_PLAY : -TL_DRAW, reduce);
-  };
-  window.tlStop = () => { TLX.on = false; cancelAnimationFrame(TLX.raf); TLX.raf = 0; if (TLX.built) tlCards.forEach(c => tlOpen(c, false)); };
-  window.TLX = TLX;
+  /* the timeline is a fly-through: assets/tl-fly.js (it defines window.tlStart / tlStop) */
   /* TRANSITIONS ARE LOCKED — see BRIEF.md "Transitions — LOCKED". In and out differ per channel:
      estate IN = ssh build (data-warp) · agents IN/OUT = hologram (data-holo) · dissertation IN = red-team
      attack, OUT = blue-team defence, each then deconstructs old / shutters / reconstructs new, no words (data-attack) · timeline = glitch, then it plays itself on one slide · else glitch.
@@ -2089,5 +1800,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }
 })();
 </script>
+<script src="assets/tl-fly.js?v=1"></script>
 </body>
 </html>
