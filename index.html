@@ -544,143 +544,28 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 .pts li.minor{opacity:.7;font-size:.92em}
 .ssh-l.ok .sp-tx{font-weight:600}
 
-/* ---------- the timeline: one slide, one sequence. A playhead flows along a data track from March to now ---------- */
-#timeline{overflow:hidden}
-#timeline > .tl-wrap{height:100%;margin:0;display:flex;flex-direction:column;gap:10px;min-height:0}
-.tl-src{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
-.tl-head{display:flex;align-items:center;gap:10px 18px;min-height:36px;position:relative;z-index:9}
-.tl-title{font:800 clamp(24px,2.5vw,32px)/1 var(--mono);color:#fff;letter-spacing:-.01em;white-space:nowrap;text-shadow:0 0 18px rgba(0,212,255,.7),0 0 2px #00d4ff}
-.tl-title .br,.tl-title .cur{color:var(--phos)}
-.tl-title .cur{animation:blink 1.05s steps(1) infinite}
-.tl-chip{font:600 11px/1 var(--mono);letter-spacing:.2em;color:#001018;background:var(--phos);padding:5px 8px;white-space:nowrap}
-.tl-stat{margin-left:auto;font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim);white-space:nowrap;text-transform:uppercase}
-.tl-stat b{color:var(--phos);font-weight:600}
-.tl-btn{all:unset;box-sizing:border-box;cursor:pointer;font:600 11px/1 var(--mono);letter-spacing:.14em;color:var(--phos);border:1px solid color-mix(in srgb,var(--phos) 55%,var(--rule));padding:7px 10px;white-space:nowrap;text-transform:uppercase}
-.tl-btn:hover,.tl-btn:focus-visible{background:var(--phos);color:var(--void)}
-.tl-board{position:relative;flex:1;min-height:0;overflow:hidden;--T:50%}
-/* phase bands, brighter as the signal gets closer to now */
-.tl-band{position:absolute;top:0;bottom:0;pointer-events:none;border-left:1px dashed rgba(0,212,255,.16);z-index:1}
-.tl-band:first-child{border-left:0}
-.tl-tint{position:absolute;left:0;right:0;top:calc(var(--T) - 24px);height:48px;background:linear-gradient(180deg,transparent,rgba(0,212,255,var(--a)) 50%,transparent);opacity:.35;transition:opacity .6s}
-.tl-band.cur .tl-tint{opacity:1}
-.tl-ghost{position:absolute;left:8px;right:8px;top:var(--T);transform:translateY(-50%);font:400 64px/.86 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--phos);
-  text-shadow:0 0 26px rgba(0,212,255,.7);opacity:0;white-space:normal;overflow-wrap:anywhere}
-.tl-ghost.on{opacity:var(--go)}
-.tl-ghost.glitch{animation:tlGh .7s steps(7) both}
-@keyframes tlGh{
-  0%{opacity:0;transform:translate(-18px,-50%) skewX(-10deg);text-shadow:-8px 0 var(--red),8px 0 var(--phos);clip-path:inset(0 0 70% 0)}
-  20%{opacity:.75;transform:translate(14px,-50%);text-shadow:7px 0 var(--red),-7px 0 var(--phos);clip-path:inset(30% 0 30% 0)}
-  40%{opacity:.35;transform:translate(-6px,-50%) skewX(6deg);text-shadow:-5px 0 var(--red),5px 0 var(--phos);clip-path:inset(60% 0 0 0)}
-  60%{opacity:.6;transform:translate(4px,-50%);text-shadow:3px 0 var(--red),-3px 0 var(--phos);clip-path:inset(0 0 0 0)}
-  80%{opacity:.3;transform:translate(-2px,-50%)}
-  100%{opacity:var(--go);transform:translateY(-50%);text-shadow:0 0 26px rgba(0,212,255,.7);clip-path:none}}
-/* the data track */
-.tl-trk,.tl-fill{position:absolute;left:0;right:0;top:calc(var(--T) - 1px);height:2px;transform-origin:0 50%;z-index:4;pointer-events:none}
-.tl-trk{background:#1f4166;box-shadow:0 0 6px rgba(0,212,255,.25)}
-.tl-fill{background:var(--phos);box-shadow:0 0 12px var(--phos),0 0 2px #fff;transform:scaleX(0)}
-.tl-scan{position:absolute;left:0;top:calc(var(--T) - 30px);width:3px;height:60px;margin-left:-1px;z-index:5;pointer-events:none;opacity:0;
-  background:linear-gradient(transparent,#fff 45%,#fff 55%,transparent);box-shadow:0 0 22px 6px rgba(0,212,255,.65)}
-.tl-tick{position:absolute;top:var(--T);width:1px;height:7px;background:#3d6a95;opacity:0;transition:opacity .3s;z-index:4;pointer-events:none}
-.tl-tick.m{height:15px;top:calc(var(--T) - 7px);background:#7aa6cf}
-.tl-tick.on{opacity:1}
-.tl-mon{position:absolute;top:calc(var(--T) + 12px);font:500 11px/1 var(--mono);letter-spacing:.16em;color:var(--dim);opacity:0;transition:opacity .3s;z-index:4;pointer-events:none;white-space:nowrap}
-.tl-mon.on{opacity:1}
-.tl-mon.now{color:var(--amber);text-shadow:0 0 10px rgba(245,197,24,.5)}
-.tl-hit{position:absolute;left:0;right:0;top:calc(var(--T) - 18px);height:46px;z-index:5;cursor:crosshair}
-.tl-aim{position:absolute;top:calc(var(--T) - 18px);height:46px;width:1px;background:rgba(245,197,24,.8);box-shadow:0 0 8px rgba(245,197,24,.6);z-index:5;pointer-events:none;display:none}
-.tl-hit:hover + .tl-aim{display:block}
-/* a node per point, pulsing as the playhead reaches it */
-.tl-node{position:absolute;top:var(--T);width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border:1.5px solid #4f7ca6;background:var(--void);transform:rotate(45deg);z-index:6;opacity:0;transition:opacity .3s;pointer-events:none}
-.tl-node.vis{opacity:1}
-.tl-node.on{background:var(--phos);border-color:#e9fbff;box-shadow:0 0 10px var(--phos)}
-.tl-node.on::after{content:"";position:absolute;inset:-7px;border:1px solid var(--phos);animation:tlPulse .9s ease-out both}
-@keyframes tlPulse{from{transform:scale(.3);opacity:1}to{transform:scale(2.4);opacity:0}}
-/* phase labels: the date and title, crisp, on the track */
-.tl-plab{position:absolute;z-index:6;cursor:pointer;box-sizing:border-box;overflow:hidden;padding:2px 8px 1px 8px;background:linear-gradient(90deg,rgba(4,8,15,.92),rgba(4,8,15,.78) 70%,rgba(4,8,15,0));border-left:2px solid var(--phos);opacity:0;transition:opacity .4s}
-.tl-plab.on{opacity:1}
-.tl-plab b{display:block;font:400 21px/1 var(--display);letter-spacing:.08em;color:var(--phos);text-shadow:0 0 14px rgba(0,212,255,.6);white-space:nowrap}
-.tl-plab span{display:block;font:600 11px/1.3 var(--mono);color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl-plab:hover b{color:#fff}
-.tl-plab p{display:none}
-/* leader lines from node to card */
-.tl-leads{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
-.tl-leads path{fill:none;stroke:var(--phos);stroke-width:1;opacity:0;stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset .4s ease-out,opacity .3s}
-.tl-leads path.on{opacity:.62;stroke-dashoffset:0}
-.tl-leads path.old{opacity:.34}
-.tl-leads path.hl{opacity:1;stroke-width:1.5}
-/* point cards: small KAM terminals */
-.tl-card{position:absolute;z-index:6;box-sizing:border-box;background:#03070d;border:1px solid color-mix(in srgb,var(--phos) 40%,#0d1e35);cursor:default;padding-bottom:6px;
-  opacity:0;visibility:hidden;transform:scaleY(.2);transform-origin:50% var(--org,100%);transition:opacity .2s,transform .28s cubic-bezier(.2,.8,.2,1),border-color .8s,box-shadow .8s,visibility 0s .28s}
-.tl-card.on{opacity:1;visibility:visible;transform:none;transition:opacity .2s,transform .28s cubic-bezier(.2,.8,.2,1),border-color .8s,box-shadow .8s,visibility 0s}
-.tl-card.hot{border-color:var(--phos);box-shadow:0 0 24px rgba(0,212,255,.38),inset 0 0 22px rgba(0,212,255,.09)}
-.tl-card.old{border-color:#24476b}
-.tl-ch{position:absolute;left:7px;right:7px;top:-7px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--phos);white-space:nowrap}
-.tl-ch>*,.tl-ch{line-height:13px}
-.tl-ch b,.tl-ch span{background:#03070d;padding:0 4px}
-.tl-ch b{font-weight:600}
-.tl-ch span{color:#8fb0cf;font-weight:500;letter-spacing:.06em}
-.tl-card.trunc .tl-ch span::after{content:" [+]";color:var(--amber)}
-.tl-cb{padding:9px 9px 0;font:400 12px/1.38 var(--mono);color:#e2f2ff;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:var(--lines,3);overflow:hidden;max-height:calc(var(--lines,3) * 1.38em + 9px)}
-.tl-card.old .tl-cb{color:#c7dcef}
-.tl-card.typing .tl-cb::after{content:"\2588";color:var(--phos);margin-left:1px}
-.tl-card.open{z-index:20;border-color:var(--phos);box-shadow:0 0 34px rgba(0,212,255,.4),0 0 0 1px rgba(0,212,255,.4);opacity:1;visibility:visible;transform:none}
-.tl-card.open .tl-cb{display:block;-webkit-line-clamp:unset;max-height:none;color:#fff}
-.tl-card.open .tl-ch span::after{content:""}
-/* the "now playing" console */
-.tl-con{position:absolute;z-index:7;box-sizing:border-box;background:rgba(3,7,13,.97);border:1px solid rgba(0,212,255,.6);box-shadow:0 0 34px rgba(0,212,255,.18),inset 0 0 40px rgba(0,212,255,.04);opacity:0;transition:opacity .4s}
-.tl-con.on{opacity:1}
-.tl-con-bar{display:flex;align-items:center;gap:5px;padding:6px 9px;border-bottom:1px solid #12263e;font:500 11px/1 var(--mono);color:#9fc0de;letter-spacing:.06em;white-space:nowrap}
-.tl-con-bar i{width:7px;height:7px;border-radius:50%;background:#1e3a5f}
-.tl-con-bar i:first-child{background:var(--red);box-shadow:0 0 6px var(--red)}
-.tl-con-bar span{margin-left:6px}
-.tl-con-bar em{margin-left:auto;font-style:normal;color:var(--phos)}
-.tl-con-body{padding:9px 12px 10px}
-.tl-con-h{font:400 21px/1.05 var(--display);letter-spacing:.06em;color:var(--phos);text-shadow:0 0 12px rgba(0,212,255,.55);margin-bottom:6px}
-.tl-con-p{font:400 12.5px/1.5 var(--mono);color:var(--text);white-space:pre-line}
-.tl-con-p::after{content:"_";color:var(--phos);animation:blink 1s steps(1) infinite}
-/* the playhead: a block cursor with a scanline through the whole board */
-.tl-ph{position:absolute;left:0;top:0;bottom:0;width:0;z-index:8;pointer-events:none;opacity:0;will-change:transform}
-.tl-ph.on{opacity:1}
-.tl-ph i{position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(transparent,rgba(0,212,255,.55) 20%,rgba(160,240,255,.95) 50%,rgba(0,212,255,.55) 80%,transparent);box-shadow:0 0 10px rgba(0,212,255,.55)}
-.tl-ph s{position:absolute;right:0;top:calc(var(--T) - 1px);height:2px;width:180px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9));filter:blur(.5px)}
-.tl-ph b{position:absolute;left:-6px;top:calc(var(--T) - 10px);width:12px;height:20px;background:var(--phos);box-shadow:0 0 16px var(--phos),0 0 4px #fff}
-.tl-ph.end i,.tl-ph.end s{opacity:0;transition:opacity .8s}
-.tl-ph.end b{animation:blink 1.05s steps(1) infinite}
-.tl-ph.held b{background:var(--amber);box-shadow:0 0 16px var(--amber)}
-/* narrow screens: the track runs top to bottom; each moment opens with its own console block; the channel scrolls */
-#timeline.tl-vert{overflow-y:auto}
-#timeline.tl-vert > .tl-wrap{height:auto;margin:0}
-.tl-vert .tl-head{flex-wrap:wrap;gap:8px 12px}
-.tl-vert .tl-chip{display:none}
-.tl-vert .tl-stat{margin-left:0}
-.tl-board.vert{flex:none;height:0}
-.vert .tl-band{border-left:0;border-top:1px dashed rgba(0,212,255,.16)}
-.vert .tl-tint{top:0;bottom:0;height:auto;left:calc(var(--X) - 30px);right:auto;width:60px;background:linear-gradient(90deg,transparent,rgba(0,212,255,var(--a)) 50%,transparent)}
-.vert .tl-ghost{text-align:center}
-.vert .tl-trk,.vert .tl-fill{left:calc(var(--X) - 1px);right:auto;top:0;width:2px;height:var(--L);transform-origin:50% 0}
-.vert .tl-fill{transform:scaleY(0)}
-.vert .tl-scan{top:0;left:calc(var(--X) - 30px);width:60px;height:3px;margin:-1px 0 0;background:linear-gradient(90deg,transparent,#fff 45%,#fff 55%,transparent)}
-.vert .tl-tick{width:7px;height:1px;margin-left:-3px}
-.vert .tl-tick.m{width:15px;height:1px;margin:0 0 0 -7px}
-.vert .tl-mon,.vert .tl-aim{display:none}
-.vert .tl-hit{left:calc(var(--X) - 12px);right:auto;width:24px;top:0;height:100%}
-.vert .tl-con{display:none}
-.vert .tl-plab{z-index:7;overflow:visible;box-sizing:border-box;padding:9px 12px 10px;background:rgba(3,7,13,.97);border:1px solid rgba(0,212,255,.6);border-left-width:3px;box-shadow:0 0 28px rgba(0,212,255,.16)}
-.vert .tl-plab b{font-size:26px}
-.vert .tl-plab span{font-size:11.5px;white-space:normal}
-.vert .tl-plab p{display:block;margin-top:7px;font:400 13px/1.5 var(--mono);color:var(--text);white-space:normal}
-.vert .tl-plab.on p::after{content:"_";color:var(--phos);animation:blink 1s steps(1) infinite}
-.vert .tl-ph{left:0;right:0;top:0;bottom:auto;width:auto;height:0}
-.vert .tl-ph i{left:0;right:0;top:0;bottom:auto;width:auto;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.55) 20%,rgba(160,240,255,.95) 50%,rgba(0,212,255,.55) 80%,transparent)}
-.vert .tl-ph s{left:calc(var(--X) - 1px);right:auto;top:auto;bottom:0;width:2px;height:140px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.9))}
-.vert .tl-ph b{left:calc(var(--X) - 6px);top:-10px}
-.vert .tl-ph{z-index:5}
-.vert .tl-cb{padding-left:8px;padding-right:8px}
-.vert .tl-ch{padding:5px 7px 4px;letter-spacing:.06em}
-@media (prefers-reduced-motion:reduce){
-  .tl-ghost.glitch,.tl-node.on::after,.tl-ph.end b,.tl-title .cur{animation:none}
-  .tl-card,.tl-card.on,.tl-leads path,.tl-tick,.tl-mon,.tl-node,.tl-plab,.tl-con{transition:none}
-}
+/* ---------- the timeline: one channel, a sequence along a rail ---------- */
+.tl-wrap{display:flex;flex-direction:column;gap:clamp(14px,3vh,28px);width:100%}
+.tl-rail{position:relative;height:54px;margin:0 clamp(20px,4vw,48px)}
+.tl-line{position:absolute;left:0;right:0;top:12px;height:2px;background:#0d1e35}
+.tl-line i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--phos);box-shadow:0 0 10px var(--phos);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.tl-stop{all:unset;cursor:pointer;position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px}
+.tl-stop i{width:12px;height:12px;margin-top:7px;border:2px solid #1e3a5f;background:var(--void);transition:all .3s}
+.tl-stop span{font:500 11px/1 var(--mono);letter-spacing:.12em;color:var(--dim);white-space:nowrap;text-transform:uppercase}
+.tl-stop.done i{background:var(--phos);border-color:var(--phos)}
+.tl-stop.on i{background:var(--phos);border-color:#fff;box-shadow:0 0 14px var(--phos);transform:scale(1.35)}
+.tl-stop.on span{color:var(--phos)}
+.tl-stop:first-of-type{transform:none;align-items:flex-start} .tl-stop:last-of-type{transform:translateX(-100%);align-items:flex-end}
+.tl-stop:focus-visible{outline:2px solid var(--phos);outline-offset:6px}
+.tl-step{display:none;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(28px,5vw,72px);align-items:center}
+.tl-step.on{display:grid}
+.tl-step .date{font-size:clamp(64px,min(9vw,18vh),170px)}
+.tl-step.enter{animation:tlIn .55s cubic-bezier(.2,.8,.2,1) both}
+.tl-step.enter.back{animation-name:tlInBack}
+@keyframes tlIn{from{opacity:0;transform:translateX(60px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes tlInBack{from{opacity:0;transform:translateX(-60px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+.tl-hint{font:500 11px/1 var(--mono);color:var(--dim);letter-spacing:.08em}
+.tl-hint b{color:var(--phos);font-weight:500}
 /* ---------- also built: chips with a small terminal on hover ---------- */
 .also{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .also-k{font:600 12px/1 var(--mono);letter-spacing:.12em;color:var(--phos);margin-right:4px}
@@ -696,6 +581,18 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
 
+@media (max-width:900px){ .tl-step{grid-template-columns:1fr} .tl-stop span{font-size:9px;letter-spacing:.04em} }
+.tl-stop .yr{font-style:normal}
+/* phones: each moment fits the screen; its list scrolls inside its own panel */
+@media (max-width:600px){
+  #timeline .tl-wrap{height:100%;margin:0}
+  .tl-stop .yr{display:none}
+  .tl-stage{flex:1;min-height:0;position:relative}
+  .tl-step.on{display:flex;flex-direction:column;height:100%;gap:10px}
+  .tl-step .date{font-size:clamp(40px,12vw,56px)}
+  .tl-step .pts{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-mask:linear-gradient(#000 85%,transparent)}
+  .tl-step .pts li{padding:8px 0 8px 20px;font-size:13px}
+}
 
 @media (max-width:900px){ .ct{grid-template-columns:1fr} }
 
@@ -932,68 +829,79 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   </div>
 </section>
 
-<section class="scene" id="timeline" data-name="MARCH TO NOW" aria-label="March 2026 to now">
+<section class="scene" id="timeline" data-steps data-name="MARCH TO NOW" aria-label="March 2026 to now">
   <div class="in-wrap tl-wrap">
-    <div class="tl-head" id="tlHead">
-      <h2 class="tl-title"><span class="br">[ </span>MARCH TO NOW<span class="br"> ]</span><span class="cur" aria-hidden="true">_</span></h2>
-      <span class="tl-chip" aria-hidden="true">FOUR MOMENTS · FLY THROUGH</span>
-      <button type="button" class="tl-btn" id="tlReplay" aria-label="Replay the timeline">↻ replay</button>
+    <div class="tl-rail" role="tablist" aria-label="Timeline">
+      <div class="tl-line"><i id="tlFill"></i></div>
+      <button type="button" role="tab" class="tl-stop on" data-i="0" style="left:0.0000%"><i></i><span>Mar<em class="yr"> 2026</em></span></button>
+      <button type="button" role="tab" class="tl-stop" data-i="1" style="left:33.3333%"><i></i><span>Apr<em class="yr"> 2026</em></span></button>
+      <button type="button" role="tab" class="tl-stop" data-i="2" style="left:66.6667%"><i></i><span>May–Jun<em class="yr"> 2026</em></span></button>
+      <button type="button" role="tab" class="tl-stop" data-i="3" style="left:100.0000%"><i></i><span>Jul<em class="yr"> 2026</em> – now</span></button>
     </div>
-    <ol class="tl-src" id="tlSrc" aria-label="Timeline, March 2026 to now">
-      <li class="tl-m" data-term="mar" data-from="2026-03-01" data-to="2026-04-01">
-        <div class="date">Mar 2026</div>
-        <h3>First line of code</h3>
-        <p class="copy">A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.</p>
-        <ul class="pts">
-          <li>First Claude session, after a year on ChatGPT, without ever having written a line of code</li>
-          <li>First build: an in-browser AI analyst for live Polymarket data</li>
-          <li data-at="2026-03-09">9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
-          <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
-          <li>The War Room conceived: a seven-agent trading team, tested on paper and with small live stakes</li>
-        </ul>
-      </li>
-      <li class="tl-m" data-term="apr" data-from="2026-04-01" data-to="2026-05-01">
-        <div class="date">Apr 2026</div>
-        <h3>A security scare, turned into a curriculum</h3>
-        <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
-        <ul class="pts">
-          <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
-          <li>Learned to read the logs properly; the evidence showed a false alarm</li>
-          <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
-          <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
-          <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
-          <li>It later grew into Future Warfare, a wider curriculum on modern conflict</li>
-          <li>Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis</li>
-        </ul>
-      </li>
-      <li class="tl-m" data-term="jun" data-from="2026-05-01" data-to="2026-07-01">
-        <div class="date">May–Jun 2026</div>
-        <h3>A small, semi-autonomous agent fleet</h3>
-        <p class="copy">I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me. Alongside it, the summer brought more tools for study, work and outreach.</p>
-        <ul class="pts">
-          <li data-at="2026-05-05">May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
-          <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
-          <li data-at="2026-06-09">June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
-          <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
-          <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
-          <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
-          <li class="minor">Anthropic Academy: three AI Fluency courses</li>
-        </ul>
-      </li>
-      <li class="tl-m" data-term="now" data-from="2026-07-01">
-        <div class="date">Jul 2026 – now</div>
-        <h3>The estate comes together</h3>
-        <p class="copy">Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.</p>
-        <ul class="pts">
-          <li data-at="2026-07-06">July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day</li>
-          <li>A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion</li>
-          <li>The intelligence engine audited and made queryable by my director agent</li>
-          <li data-at="2026-09-05">September: one canonical vault with written rules and a checker; Sentinel watching every machine</li>
-          <li data-at="2026-09-23">Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop</li>
-          <li data-at="2026-10-01">Final year: a dissertation on great-power war as a process, with its own forecasting lab</li>
-        </ul>
-      </li>
-    </ol>
+    <div class="tl-stage">
+      <div class="tl-step on" data-i="0" data-term="mar">
+    <div>
+      <div class="date">Mar 2026</div>
+      <h3>First line of code</h3>
+      <p class="copy">A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.</p>
+    </div>
+    <ul class="pts">
+      <li>First Claude session, after a year on ChatGPT, without ever having written a line of code</li>
+      <li>First build: an in-browser AI analyst for live Polymarket data</li>
+      <li>9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
+      <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
+      <li>The War Room conceived: a seven-agent trading team, tested on paper and with small live stakes</li>
+    </ul>
+  </div>
+      <div class="tl-step" data-i="1" data-term="apr">
+    <div>
+      <div class="date">Apr 2026</div>
+      <h3>A security scare, turned into a curriculum</h3>
+      <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
+    </div>
+    <ul class="pts">
+      <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
+      <li>Learned to read the logs properly; the evidence showed a false alarm</li>
+      <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
+      <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
+      <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
+      <li>It later grew into Future Warfare, a wider curriculum on modern conflict</li>
+      <li>Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis</li>
+    </ul>
+  </div>
+      <div class="tl-step" data-i="2" data-term="jun">
+    <div>
+      <div class="date">May–Jun 2026</div>
+      <h3>A small, semi-autonomous agent fleet</h3>
+      <p class="copy">I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me. Alongside it, the summer brought more tools for study, work and outreach.</p>
+    </div>
+    <ul class="pts" id="junPts">
+      <li>May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
+      <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
+      <li>June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
+      <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
+      <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
+      <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
+      <li class="minor">Anthropic Academy: three AI Fluency courses</li>
+    </ul>
+  </div>
+      <div class="tl-step" data-i="3" data-term="now">
+    <div>
+      <div class="date">Jul 2026 – now</div>
+      <h3>The estate comes together</h3>
+      <p class="copy">Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.</p>
+    </div>
+    <ul class="pts" id="nowPts">
+      <li>July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day</li>
+      <li>A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion</li>
+      <li>The intelligence engine audited and made queryable by my director agent</li>
+      <li>September: one canonical vault with written rules and a checker; Sentinel watching every machine</li>
+      <li>Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop</li>
+      <li>Final year: a dissertation on great-power war as a process, with its own forecasting lab</li>
+    </ul>
+  </div>
+    </div>
+    <div class="tl-hint">scroll to move along the timeline · <b id="tlPos">1 / 4</b></div>
   </div>
 </section>
 
@@ -1215,7 +1123,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     apr:'> false alarm · curriculum written · drills logged',
     jun:'> semi-autonomous fleet · reviewer checks every task',
     now:'> estate online · vault mounted · final year',
-    timeline:'> march to now · fly through four moments',
+    timeline:'> march to now · scroll to move along it',
     work:'> eight terminals · open any to use it',
     estate:'> four macs · one vault · select a machine',
     agents:'> director · builder · reviewer · no self-grading',
@@ -1775,18 +1683,72 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (history.replaceState) history.replaceState(null, '', '#' + s.id);
     typeTerm(TERM[s.id] || '');
     if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
-    if (window.tlStart){ if (s.id === 'timeline') window.tlStart(); else window.tlStop(); }   // the timeline plays itself while it is on screen
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
   }
-  /* the timeline is a fly-through: assets/tl-fly.js (it defines window.tlStart / tlStop) */
+  /* ---------- the timeline as one continuous scroll: position p runs 0 → steps-1 along the rail ---------- */
+  const TL = { p: 0, max: 3, over: 0, raf: 0, tween: null };
+  const TL_G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>';
+  function tlRender(){
+    const sc = $('#timeline'); if (!sc) return;
+    const steps = [...sc.querySelectorAll('.tl-step')], stops = [...sc.querySelectorAll('.tl-stop')];
+    TL.max = steps.length - 1;
+    const p = TL.p, k = Math.max(0, Math.min(TL.max, Math.round(p))), d = Math.abs(p - k);   // d: 0 at a date, 0.5 halfway
+    const f = Math.max(0, 1 - d / .5);                                                       // 1 → fully rendered, 0 → gone
+    steps.forEach((st, i) => { const on = i === k; st.classList.toggle('on', on); st.classList.remove('enter', 'back'); });
+    stops.forEach((st, i) => { st.classList.toggle('on', i === k); st.classList.toggle('done', i < p); });
+    $('#tlFill').style.transition = 'none'; $('#tlFill').style.width = (p / TL.max * 100) + '%';
+    $('#tlPos').textContent = `${k + 1} / ${steps.length}`;
+    const st = steps[k];
+    st.style.opacity = (.25 + .75 * f).toFixed(3);
+    st.style.transform = `translateX(${((p - k) * -60).toFixed(1)}px)`;
+    // text decodes in as you arrive at a date and decays out as you leave it
+    textNodes(st).forEach(n => { const o = ORIG.get(n), L = o.length, n2 = Math.ceil(L * f);
+      n.nodeValue = f >= .999 ? o : o.slice(0, n2) + o.slice(n2, n2 + Math.min(4, L - n2)).replace(/\S/g, () => TL_G[(Math.random() * TL_G.length) | 0]); });
+    if (tlStep !== k){ tlStep = k; typeTerm(TERM[st.dataset.term] || ''); }
+  }
+  function tlScroll(dy){
+    const next = TL.p + dy / 420;                     // ~420px of scrolling per date
+    if (next > TL.max){ TL.p = TL.max; TL.over += dy; if (TL.over > 160){ TL.over = 0; go(cur + 1, true); } }
+    else if (next < 0){ TL.p = 0; TL.over += dy; if (TL.over < -160){ TL.over = 0; go(cur - 1, true); } }
+    else { TL.p = next; TL.over = 0; }
+    if (!TL.raf) TL.raf = requestAnimationFrame(() => { TL.raf = 0; tlRender(); });
+  }
+  function tlTo(target){                               // keys and rail clicks glide to a date
+    cancelAnimationFrame(TL.tween); const from = TL.p, t0 = performance.now(), dur = reduce ? 0 : 600;
+    (function f(now){ const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3); TL.p = from + (target - from) * e; tlRender(); if (k < 1) TL.tween = requestAnimationFrame(f); })(t0);
+  }
+
+  /* the timeline channel steps through its moments before handing scroll on */
+  let tlStep = 0;
+  function tlSet(i, dir){
+    const sc = $('#timeline'), steps = sc.querySelectorAll('.tl-step'), stops = sc.querySelectorAll('.tl-stop');
+    if (i === tlStep && dir) return;
+    tlStep = i;
+    steps.forEach((st, k) => { st.classList.toggle('on', k === i); st.classList.remove('enter', 'back'); });
+    stops.forEach((st, k) => { st.classList.toggle('on', k === i); st.classList.toggle('done', k < i); st.setAttribute('aria-selected', k === i); });
+    $('#tlFill').style.width = (i / (steps.length - 1) * 100) + '%';
+    $('#tlPos').textContent = `${i + 1} / ${steps.length}`;
+    const st = steps[i];
+    if (dir && !reduce){ void st.offsetWidth; st.classList.add('enter'); if (dir < 0) st.classList.add('back'); animateText(st, 520, 'in').then(() => restore(st)); SFX.blip(); }
+    typeTerm(TERM[st.dataset.term] || '');
+    NODES.delete(sc);
+  }
+  document.querySelectorAll('.tl-stop').forEach(b => b.addEventListener('click', () => tlTo(+b.dataset.i)));
   /* TRANSITIONS ARE LOCKED — see BRIEF.md "Transitions — LOCKED". In and out differ per channel:
      estate IN = ssh build (data-warp) · agents IN/OUT = hologram (data-holo) · dissertation IN = red-team
-     attack, OUT = blue-team defence, each then deconstructs old / shutters / reconstructs new, no words (data-attack) · timeline = glitch, then it plays itself on one slide · else glitch.
+     attack, OUT = blue-team defence, each then deconstructs old / shutters / reconstructs new, no words (data-attack) · timeline = continuous scroll (data-steps) · else glitch.
      After any edit here run: node tools/transitions.cjs */
   async function go(n, force){
     if (typeof n === 'string') n = scenes.findIndex(s => s.id === n);
     const here = scenes[cur];
+    if (!busy && here && here.dataset.steps !== undefined && Math.abs(n - cur) === 1 && !arguments[1]){
+      const k = Math.round(TL.p);
+      if (n > cur && k < TL.max){ tlTo(k + 1); return; }
+      if (n < cur && k > 0){ tlTo(k - 1); return; }
+    }
     if (busy || n === cur || n < 0 || n >= N) return;
+    // arriving at the timeline: from above start at the beginning, from below at the end
+    if (scenes[n] && scenes[n].dataset.steps !== undefined){ const max = scenes[n].querySelectorAll('.tl-step').length - 1; TL.p = n > cur ? 0 : max; TL.over = 0; tlStep = -1; tlRender(); }
     busy = true;
     const a = scenes[cur], b = scenes[n];
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
@@ -1868,6 +1830,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   });
   addEventListener('wheel', e => {
     if (dv.open) return;
+    if (scenes[cur].dataset.steps !== undefined && !busy){ e.preventDefault(); tlScroll(e.deltaY); return; }
     const s = scenes[cur], dir = Math.sign(e.deltaY);
     if (canScroll(s, dir)) return;
     e.preventDefault();
@@ -1887,9 +1850,16 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   });
   let ty = null, tTop = false, tBot = false;
   addEventListener('touchstart', e => { const s = scenes[cur]; ty = e.touches[0].clientY; tTop = !canScroll(s, -1); tBot = !canScroll(s, 1); }, { passive:true });
+  // on the timeline a swipe moves along it, except inside a moment's list that still has more to scroll (phones)
+  let tlTy = null; addEventListener('touchmove', e => { if (scenes[cur].dataset.steps === undefined || busy || matchMedia('(max-width:600px)').matches) return; const y = e.touches[0].clientY;
+    const list = e.target.closest && e.target.closest('.tl-step .pts');
+    if (list && tlTy !== null && list.scrollHeight > list.clientHeight + 2){ const dir = Math.sign(tlTy - y); const can = dir > 0 ? list.scrollTop + list.clientHeight < list.scrollHeight - 2 : list.scrollTop > 2; if (can){ tlTy = y; return; } }
+    if (tlTy !== null) tlScroll((tlTy - y) * 2.2); tlTy = y; }, { passive:true });
+  addEventListener('touchend', () => { tlTy = null; }, { passive:true });
   addEventListener('touchend', e => {
     if (ty === null || dv.open || isPhone()) return;   // phones: see "phones" below
     const dy = ty - e.changedTouches[0].clientY; ty = null;
+    if (scenes[cur].dataset.steps !== undefined) return;   // the timeline handles its own swipes
     if (dy > 50 && tBot) go(cur + 1); else if (dy < -50 && tTop) go(cur - 1);
   }, { passive:true });
   document.addEventListener('click', e => {
@@ -2019,6 +1989,5 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }
 })();
 </script>
-<script src="assets/tl-fly.js?v=3"></script>
 </body>
 </html>
