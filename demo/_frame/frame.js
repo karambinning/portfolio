@@ -96,6 +96,11 @@
       else if (m.kbRestore) D.restore(document.body); });
   })();
 
+  /* arriving on a channel always starts at the top: the portfolio sends kbReset when the channel comes up */
+  addEventListener('message', e => { if (!e.data || !e.data.kbReset) return;
+    document.scrollingElement && (document.scrollingElement.scrollTop = 0);
+    document.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
+
   /* helpers each window can use */
   const KB = window.KB = {
     reduce,

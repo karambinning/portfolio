@@ -801,7 +801,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
-<script src="demo/_frame/dismantle.js?v=10111846"></script>
+<script src="demo/_frame/dismantle.js?v=10111850"></script>
 </head>
 <body>
 
@@ -1705,6 +1705,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     typeTerm(TERM[s.id] || '');
     if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
+    s.scrollTop = 0; s.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0 && !el.closest('.tl-step')) el.scrollTop = 0; });   // every channel starts at the top
   }
   /* ---------- the timeline as one continuous scroll: position p runs 0 → steps-1 along the rail ---------- */
   const TL = { p: 0, max: 3, over: 0, raf: 0, tween: null };
