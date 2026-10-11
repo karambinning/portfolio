@@ -44,6 +44,33 @@
   .hold{font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.2em;color:#8fe6ff;background:rgba(3,11,20,.94);border:1px solid rgba(0,212,255,.28);padding:6px 8px} .hold:hover{color:#fff}
   @media (max-width:820px){ .page{grid-template-columns:1fr;align-content:start} }
   @media (prefers-reduced-motion:reduce){ h1 .cur{animation:none} }
+  /* phones: an app page. Compact header, the three excerpts as swipeable cards, one big READ button. */
+  @media (max-width:600px){
+    body{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+    .page{display:flex;flex-direction:column;gap:12px;align-content:normal;padding:12px 16px 40px;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
+    .head{display:flex;flex-direction:column;align-items:flex-start}
+    .eyebrow{font-size:12px;line-height:1.3;letter-spacing:.07em;padding:4px 7px}
+    h1{font-size:clamp(21px,7.1vw,32px);margin:9px 0 5px;white-space:nowrap}
+    .sub{font-size:12px;line-height:1.4;letter-spacing:.02em}
+    .col:empty{display:none}
+    .cards{display:flex;align-items:stretch;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 16px;margin:0 -16px;padding:4px 16px;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+    .cards::-webkit-scrollbar{display:none}
+    .cards .ex{flex:0 0 86%;scroll-snap-align:start;scroll-snap-stop:always;background:rgba(2,12,22,.72);padding:13px 14px}
+    .cards .ex:last-child{flex-basis:92%}
+    .ex .k{font-size:12px;letter-spacing:.14em;margin-bottom:7px}
+    .q{font-size:15px;line-height:1.45}
+    .ex p{font-size:13px;line-height:1.5}
+    .ex li{font-size:13px;line-height:1.42;padding:4px 0 4px 14px}
+    .dots{display:flex;justify-content:center;gap:8px;margin-top:-4px}
+    .dots i{width:6px;height:6px;background:rgba(0,212,255,.3);transition:background .2s,width .2s}
+    .dots i.on{background:var(--k);width:18px}
+    .row{gap:8px;margin-top:0}
+    .btn{flex:1 1 100%;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 14px;font-size:12px;letter-spacing:.12em;text-align:center;-webkit-user-select:none;user-select:none;transition:transform .12s,background .12s}
+    .btn:active{background:#fff;transform:scale(.98)}
+    .note,.hold{font-size:12px;line-height:1.3;letter-spacing:.06em;padding:5px 7px}
+    .hold{flex:1 1 0;min-width:0}
+  }
+  @media (max-width:600px) and (prefers-reduced-motion:reduce){ .btn,.dots i{transition:none} .btn:active{transform:none} }
 </style>
 </head>
 <body data-channel data-mock="none">
@@ -158,17 +185,52 @@
 
   // press and hold anywhere: time stops. Drag up or down and the rain moves with you, forwards or back.
   const interactive = el => el.closest('a, button, input, textarea, select');
+  // phones: a touch only stops time once it has been held still for a moment, so a quick swipe still scrolls the cards
+  // or changes channel; once held, the finger owns the rain until it lifts.
+  const PH = matchMedia('(max-width:600px)');
+  let pend = null;
+  const unpend = () => { if (pend){ clearTimeout(pend.tm); pend = null; } };
   addEventListener('pointerdown', e => {
     if (interactive(e.target) || reduce) return;
+    if (PH.matches && e.pointerType === 'touch'){
+      unpend(); const y = e.clientY;
+      pend = { x: e.clientX, y, tm: setTimeout(() => { pend = null; holding = true; py = y; document.body.classList.add('holding'); }, 260) };
+      return;
+    }
     holding = true; py = e.clientY; document.body.classList.add('holding');
   });
   addEventListener('pointermove', e => {
+    if (pend && Math.hypot(e.clientX - pend.x, e.clientY - pend.y) > 10) unpend();
     if (!holding) return;
     const dy = e.clientY - py; py = e.clientY;
     vel = dy; t += dy / 60; scrubbing = 6;     // one screen-height drag ≈ a long stretch of rain
   });
-  const release = () => { if (!holding) return; holding = false; document.body.classList.remove('holding'); };
+  const release = e => { unpend(); if (!holding) return; holding = false;
+    // on a phone the frame reads body.holding at touchend (just after pointerup): keep it a beat so the hold is not a swipe
+    if (PH.matches && e && e.pointerType === 'touch') setTimeout(() => { if (!holding) document.body.classList.remove('holding'); }, 80);
+    else document.body.classList.remove('holding'); };
   addEventListener('pointerup', release); addEventListener('pointercancel', release); addEventListener('blur', release);
+  addEventListener('touchmove', e => { if (holding && PH.matches && e.cancelable) e.preventDefault(); }, { passive:false });
+  // phones: the three excerpts become one row of swipeable cards; back to the two columns if the window widens
+  (function(){
+    const page = document.querySelector('.page'), head = page.querySelector('.head'), cols = page.querySelectorAll('.col');
+    const ex = [...page.querySelectorAll('.ex')], row = page.querySelector('.row'), a = row.querySelector('a.btn');
+    let cards = null, dots = null;
+    const mark = () => { let i = 0, b = 1e9; ex.forEach((c, k) => { const d = Math.abs(c.offsetLeft - ex[0].offsetLeft - cards.scrollLeft); if (d < b){ b = d; i = k; } });
+      if (cards.scrollLeft + cards.clientWidth >= cards.scrollWidth - 2) i = ex.length - 1; [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i)); };
+    function lay(){
+      if (PH.matches && !cards){
+        cards = document.createElement('div'); cards.className = 'cards'; cards.append(...ex);
+        dots = document.createElement('div'); dots.className = 'dots'; dots.setAttribute('aria-hidden', 'true'); dots.innerHTML = ex.map(() => '<i></i>').join('');
+        head.after(cards, dots, row); cards.addEventListener('scroll', mark, { passive:true }); mark();
+        a.target = '_top'; a.removeAttribute('rel');      // the PDF opens in this tab; Back returns here
+      } else if (!PH.matches && cards){
+        cols[0].append(ex[0], ex[1]); cols[1].append(ex[2], row); cards.remove(); dots.remove(); cards = dots = null;
+        a.target = '_blank'; a.rel = 'noopener';
+      }
+    }
+    lay(); PH.addEventListener('change', lay);
+  })();
   document.addEventListener('selectstart', e => { if (holding) e.preventDefault(); });
 
   const ttl = document.getElementById('ttl'), T = ttl.textContent;

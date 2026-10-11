@@ -169,6 +169,38 @@
 #scr .sw{position:relative;width:22px;height:16px;display:flex;align-items:center;justify-content:center;gap:1px;flex:none}
 #scr .sw i{display:block;width:4px;height:10px}
 @media (prefers-reduced-motion:reduce){ #content.fade{animation:none} #panel{transition:none} #ticker .tk-run{animation:none} }
+/* ===phone=== */
+/* phones (≤ 600px): laptop edge to edge, controls as a segmented 3×3 pad, type ≥ 12px. Nothing here applies above 600px. */
+@media (max-width:600px){
+  .t-unit{font-size:12px}
+  #lap{margin:0 -10px}
+  .readout,.readout .ln,#note{font-size:12px}
+  .readout .trk{font-size:13px}
+  .readout .cred{font-size:12px}
+  /* the credit names its source but does not open a new tab from a phone */
+  .readout .cred a{pointer-events:none;text-decoration:none}
+  .feat li{font-size:13px}
+  .feat .t-btn{font-size:12px;min-height:44px;margin-left:2px}
+  .t-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:6px 10px 8px}
+  .t-ctl .sp{display:none}
+  .t-ctl .t-btn,.t-ctl .zoomb{display:flex;align-items:center;justify-content:center;text-align:center;min-height:44px;padding:2px 4px;
+    font-size:12.5px;line-height:1.15;border:1px solid var(--line);background:color-mix(in srgb,var(--a) 5%,transparent);
+    transition:background-color .15s,border-color .15s,transform .1s}
+  .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+  .t-ctl .t-btn[aria-pressed="true"]{border-color:var(--b);background:color-mix(in srgb,var(--b) 14%,transparent)}
+  .t-ctl .t-btn:active{transform:scale(.96);background:color-mix(in srgb,var(--a) 18%,transparent)}
+  .t-ctl [data-x="open"],.t-ctl [data-x="pin"],.t-ctl [data-x="zoom"]{order:1}
+  .t-ctl [data-x="ticker"],.t-ctl [data-x="taskbar"],.t-ctl [data-x="lyrics"]{order:2}
+  .t-ctl [data-x="play"]{border-color:color-mix(in srgb,var(--a) 55%,transparent)}
+}
+/* on a touch screen there is no hover: the demo screen's hint says tap */
+@media (max-width:600px) and (pointer:coarse){
+  #scr .hint{font-size:0}
+  #scr .hint::after{content:"tap the notch to open · tap the desktop to close";font:500 18px/1 var(--sf);color:rgba(255,255,255,.62)}
+  #scr .wm{font-size:15px}
+}
+@media (max-width:600px) and (prefers-reduced-motion:reduce){ .t-ctl .t-btn{transition:none} .t-ctl .t-btn:active{transform:none} }
+/* ===phone-end=== */
 </style>
 </head>
 <body data-self="notch" data-brand="[K·A·M]" data-icons="♪ ◖) ⌘" data-unit="K·A·M NOTCH · AUDIO TERMINAL · UNIT 05" data-status="SSH" data-status-tail="CONNECTED"
