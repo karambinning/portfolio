@@ -258,9 +258,12 @@ window.WarGlobe = (opts) => {
   });
   const end = e => {
     // a click without a drag picks an experiment marker, if one is under the pointer
-    if (drag && e && e.type === 'pointerup' && xOnPick && Math.hypot(e.clientX - drag[0], e.clientY - drag[1]) < 5){
+    // (a fingertip on a phone gets a little more slack: it wobbles more and covers more)
+    const fat = e && e.pointerType === 'touch' && matchMedia('(max-width:600px)').matches;
+    if (drag && e && e.type === 'pointerup' && xOnPick && Math.hypot(e.clientX - drag[0], e.clientY - drag[1]) < (fat ? 10 : 5)){
       const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
-      const hit = xHits.find(h => Math.hypot(h.x - px, h.y - py) < 16);
+      const hit = fat ? xHits.map(h => [Math.hypot(h.x - px, h.y - py), h]).filter(a => a[0] < 26).sort((a, b) => a[0] - b[0]).map(a => a[1])[0]
+        : xHits.find(h => Math.hypot(h.x - px, h.y - py) < 16);
       if (hit) xOnPick(hit.k);
     }
     drag = null; lastUser = performance.now();

@@ -134,6 +134,69 @@
     .xr .why{display:none}
   }
   @media (prefers-reduced-motion:reduce){ h1 .cur,.split .sweep,.xlog li.cur::after{animation:none} .tk{display:none} }
+  /* phones: the globe is the hero, sized to the width; the words become swipeable cards under it; the lab sits below */
+  @media (max-width:600px){
+    body{-webkit-tap-highlight-color:transparent}
+    .page{display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:10px 16px 40px;overscroll-behavior:contain}
+    .page > *{flex:none}
+    .ph-head{display:flex;flex-direction:column;align-items:flex-start}
+    .eyebrow{font-size:12px;line-height:1.3;letter-spacing:.06em;padding:4px 7px}
+    h1{font-size:30px;margin:8px 0 0;white-space:nowrap;line-height:1}
+    .mid{gap:8px}
+    .mid .stage,.stage{width:min(100%,calc(100vh - 192px));max-width:none;min-width:240px}
+    .stage canvas{touch-action:pan-y}
+    .tag{font-size:12px;letter-spacing:.08em}
+    .xbtn,.xc button,.tk{-webkit-user-select:none;user-select:none}
+    #xOpen{width:100%;min-height:44px;font-size:12px;letter-spacing:.16em}
+    .xbtn{transition:transform .12s,background .12s}
+    .xbtn:active:not(:disabled){transform:scale(.97);background:#ff6a6a}
+    /* the words, as cards */
+    .w{display:flex;align-items:stretch;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 16px;margin:0 -16px;padding:2px 16px;scrollbar-width:none;overscroll-behavior-x:contain}
+    .w::-webkit-scrollbar{display:none}
+    .wc{flex:0 0 86%;scroll-snap-align:start;scroll-snap-stop:always;border:1px solid #3a0000;background:rgba(30,0,0,.45);padding:12px 14px 6px}
+    .w .q{font-size:13px;margin-bottom:10px}
+    .w p{font-size:13px;line-height:1.55;margin-bottom:8px}
+    .w .tier span{font-size:12px}
+    .next{font-size:12px;margin:2px 0 8px}
+    .dots{display:flex;justify-content:center;gap:8px;margin-top:-4px}
+    .dots i{width:6px;height:6px;background:#5a0000;transition:background .2s,width .2s}
+    .dots i.on{background:var(--r);width:18px}
+    /* the lab, compact */
+    .xp{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"run run" "cur met" "dy dy";gap:8px}
+    .xp > :nth-child(1){grid-area:run} .xp > :nth-child(2){grid-area:cur} .xp > :nth-child(3){grid-area:dy} .xp > :nth-child(4){grid-area:met}
+    .lab-h{font-size:12px;letter-spacing:.08em}
+    .pg{grid-template-columns:52px 1fr;font-size:12px}
+    .feed{font-size:12px;height:90px}
+    .mets{grid-template-columns:1fr 1fr;align-content:center}
+    .mets span{font-size:12px;letter-spacing:.06em}
+    /* RUN EXPERIMENT: a bottom sheet; the globe shrinks above it so you can still pick on it */
+    body.xmode #xOpen{display:none}
+    body.xmode .stage{width:min(100%,46vh)}
+    .xc{max-height:52vh;padding:8px 14px 34px;gap:8px;overscroll-behavior:contain}
+    body.xmode .page{padding-bottom:54vh}
+    .xc-h .t{font-size:12px;letter-spacing:.1em}
+    .xc-h .x{min-width:44px;min-height:44px;font-size:12px;margin:-6px -6px -6px auto}
+    .xc-h .x:active{background:#3a0000}
+    .xwarn{font-size:12px;letter-spacing:.06em}
+    .xs-t{font-size:12px;letter-spacing:.08em;margin-bottom:6px}
+    .opts{gap:6px}
+    .opt{min-height:44px;font-size:12px;line-height:1.25;padding:5px 8px;white-space:normal;display:flex;align-items:center}
+    .opt:active{border-color:#ff3030;background:rgba(80,0,0,.6)}
+    .cond{gap:6px 8px}
+    .cond > span{font-size:12px;white-space:normal;line-height:1.25}
+    .cond > span i{display:block;margin:2px 0 0}
+    .seg .opt{min-width:46px;justify-content:center;padding:4px 6px;font-size:12px}
+    .xbtn.xgo,.xacts .xbtn{min-height:44px;font-size:12px;padding:0 14px}
+    .xsum{font-size:12px}
+    .xlog{font-size:12px;height:112px}
+    .xr-t .sc{font-size:12px;letter-spacing:.06em}
+    .xr .mets{grid-template-columns:repeat(4,1fr)}
+    .xr .why{display:block;font-size:12px}
+    /* the lab's darkest reds lifted just enough to read at phone size */
+    .lab-h,.pg,.mets span,.xs-t,.feed .f-w{color:#f03434}
+    .xs-t em,.cond > span i{color:#c06060}
+  }
+  @media (max-width:600px) and (prefers-reduced-motion:reduce){ .xbtn,.dots i{transition:none} .xbtn:active:not(:disabled){transform:none} }
 </style>
 </head>
 <body data-channel data-mock="none">
@@ -429,6 +492,46 @@
   btn.addEventListener('click', () => setOpen(!open));
   $('xClose').addEventListener('click', () => setOpen(false));
   addEventListener('keydown', e => { if (open && e.key === 'Escape') setOpen(false); });
+})();
+</script>
+<script>
+/* phones: re-lay the page around the globe. Header, then the globe and its button, then the words as swipeable cards,
+   then the lab. Undone if the window widens again; the desktop DOM is never touched. */
+(() => {
+  const PH = matchMedia('(max-width:600px)');
+  const $ = id => document.getElementById(id), page = document.querySelector('.page'), w = page.querySelector('.w'), mid = page.querySelector('.mid');
+  const kids = [...w.children], eb = w.querySelector('.eyebrow'), h1 = w.querySelector('h1'), br = h1.querySelector('br'), sp = document.createTextNode(' ');
+  const groups = [[2, 3], [4], [5], [6, 7]].map(g => g.map(i => kids[i]).filter(Boolean));
+  let head = null, dots = null, cards = [];
+  const mark = () => { let i = 0, b = 1e9; cards.forEach((c, k) => { const d = Math.abs(c.offsetLeft - cards[0].offsetLeft - w.scrollLeft); if (d < b){ b = d; i = k; } });
+    if (w.scrollLeft + w.clientWidth >= w.scrollWidth - 2) i = cards.length - 1; [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i)); };
+  function lay(){
+    if (PH.matches && !head){
+      head = document.createElement('header'); head.className = 'ph-head'; head.append(eb, h1); page.prepend(head); head.after(mid);
+      br.replaceWith(sp); fit();     // the title on one line, as large as the width allows
+      cards = groups.map(g => { const c = document.createElement('div'); c.className = 'wc'; c.append(...g); w.append(c); return c; });
+      dots = document.createElement('div'); dots.className = 'dots'; dots.setAttribute('aria-hidden', 'true'); dots.innerHTML = cards.map(() => '<i></i>').join(''); w.after(dots);
+      w.addEventListener('scroll', mark, { passive:true }); mark();
+    } else if (!PH.matches && head){
+      w.removeEventListener('scroll', mark); sp.replaceWith(br); h1.style.fontSize = ''; w.append(...kids); cards.forEach(c => c.remove()); dots.remove(); head.remove(); page.prepend(w); w.after(mid);
+      head = dots = null; cards = [];
+    }
+  }
+  function fit(){ if (!head) return; h1.style.fontSize = ''; const avail = head.clientWidth, f = parseFloat(getComputedStyle(h1).fontSize);
+    if (h1.scrollWidth > avail) h1.style.fontSize = Math.floor(f * avail / h1.scrollWidth * 10) / 10 + 'px'; }
+  lay(); PH.addEventListener('change', lay); addEventListener('resize', fit); document.fonts && document.fonts.ready.then(fit);
+  // the experiment sheet: after each pick, bring the next step into view inside the sheet
+  const xc = $('xc');
+  const show = el => { if (PH.matches && el && !xc.hidden) xc.scrollTo({ top: Math.max(0, el.offsetTop - 44), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+  const after = f => requestAnimationFrame(() => requestAnimationFrame(f));
+  xc.addEventListener('click', e => {
+    if (e.target.closest('#xHs')) after(() => show($('xs2')));
+    else if (e.target.closest('#xDy')) after(() => show($('xs3')));
+    else if (e.target.closest('#xGo,#xAgain,#xReset')) after(() => show(xc.firstElementChild));
+  });
+  const picked = () => $('xHs').querySelector('[aria-pressed="true"]')?.dataset.h;
+  let was = null; $('globe').addEventListener('pointerdown', () => { was = picked(); });
+  $('globe').addEventListener('pointerup', () => after(() => { if (picked() && picked() !== was) show($('xs2')); }));
 })();
 </script>
 </body>

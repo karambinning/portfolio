@@ -593,5 +593,18 @@
   intro();
 })();
 </script>
+<script>
+/* phones only: the panes and the drill console sit one above the other, so a segment tap brings its content into view */
+(() => {
+  const phone = () => matchMedia('(max-width:600px)').matches;
+  const tb = document.querySelector('.t-body');
+  const reveal = el => { if (!el || !tb) return; const top = el.getBoundingClientRect().top - tb.getBoundingClientRect().top + tb.scrollTop - 8;
+    tb.scrollTo({ top: Math.max(0, top), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+  document.querySelectorAll('.t-ctl .mode-btn').forEach(b => b.addEventListener('click', () => { if (phone()) reveal(document.querySelector('.right')); }));
+  document.querySelectorAll('.t-ctl [data-pane]').forEach(b => b.addEventListener('click', () => { if (phone()) reveal(document.querySelector('.panes')); }));
+  document.getElementById('doms').addEventListener('click', e => { if (phone() && e.target.closest('.dom')) reveal(document.querySelector('.panes')); });
+  document.getElementById('dBody').addEventListener('click', e => { if (phone() && e.target.closest('.go')) setTimeout(() => reveal(document.getElementById('con')), 30); });
+})();
+</script>
 </body>
 </html>
