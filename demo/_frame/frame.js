@@ -25,6 +25,8 @@
     hub.className = 't-hub'; hub.setAttribute('aria-label', 'Other windows');
     hub.innerHTML = `<button type="button" data-open="" style="--c:var(--hub-hub)">K·B HUB</button>` +
       WINDOWS.map(([id, label, c]) => `<button type="button" class="br" data-open="${id}" style="--c:${c}" ${id === d.self ? 'aria-current="true"' : ''}>${label}</button>`).join('');
+    // the window you are in is lit in the hub; on a narrow screen its row scrolls so it is in view
+    requestAnimationFrame(() => { const cur = hub.querySelector('[aria-current="true"]'); if (cur && hub.scrollWidth > hub.clientWidth) hub.scrollLeft = cur.offsetLeft - 12; });
     hub.addEventListener('click', e => {
       const b = e.target.closest('[data-open]'); if (!b) return;
       // the portfolio page listens for this and swaps windows; standalone, it does nothing

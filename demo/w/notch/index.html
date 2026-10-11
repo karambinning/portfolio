@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>K·A·M Notch — terminal</title>
 <meta name="description" content="K·A·M Notch: a now-playing app for the MacBook notch, shown on a mock MacBook screen. Mock data; one real public-domain recording.">
-<link rel="stylesheet" href="../../_frame/frame.css?v=10111830">
+<link rel="stylesheet" href="../../_frame/frame.css?v=10111846">
 <style>
 /* Fonts bundled with the app (Resources/*.ttf). System faces use the closest CSS stacks. */
 @font-face { font-family: "Silkscreen"; src: url(assets/fonts/silkscreen.ttf) format("truetype"); font-weight: 400; font-display: block; }
@@ -77,6 +77,16 @@
 #scr .menubar .l,#scr .menubar .r{display:flex;gap:18px;align-items:center;white-space:nowrap}
 #scr .menubar .l b{font-weight:700}
 #scr .hwnotch{position:absolute;top:0;left:50%;width:200px;height:32px;transform:translateX(-50%);background:#000;border-radius:0 0 10px 10px;z-index:5}
+/* a call to action until the viewer has opened the notch once */
+#scr .cta{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+#scr .cta i{width:216px;height:42px;margin-top:-6px;border-radius:0 0 16px 16px;border:2px solid #ff66cc;border-top:0;box-shadow:0 0 18px #ff66cc;animation:ctaRing 1.6s ease-in-out infinite}
+#scr .cta b{margin-top:10px;font:700 13px/1 var(--sf,-apple-system,sans-serif);letter-spacing:.06em;color:#fff;background:#ff2e88;padding:6px 11px;border-radius:999px;box-shadow:0 0 18px rgba(255,46,136,.7);animation:ctaBob 1.6s ease-in-out infinite}
+#scr .cta .cta-p{display:none}
+#scr.seen .cta{display:none}
+@keyframes ctaRing{50%{opacity:.25;transform:scale(1.04)}}
+@keyframes ctaBob{50%{transform:translateY(4px)}}
+@media (hover:none){ #scr .cta .cta-d{display:none} #scr .cta .cta-p{display:inline} }
+@media (prefers-reduced-motion:reduce){ #scr .cta i,#scr .cta b{animation:none} }
 /* ticker: full width, directly under the menu bar */
 #ticker{position:absolute;left:0;right:0;top:32px;height:20px;display:flex;align-items:stretch;z-index:6;white-space:nowrap}
 #ticker[hidden]{display:none}
@@ -223,6 +233,7 @@
               <div class="r"><span>Wi‑Fi</span><span>09:41</span></div>
             </div>
             <div class="hwnotch" aria-hidden="true"></div>
+            <div class="cta" aria-hidden="true"><i></i><b>▲ <span class="cta-d">click</span><span class="cta-p">tap</span> the notch</b></div>
             <div id="ticker" aria-label="Live ticker (mock feed)"></div>
             <div class="desk" aria-hidden="true"><span><i></i>Projects</span><span><i class="f"></i>notes.txt</span></div>
             <div id="stage">
@@ -278,7 +289,7 @@
   </div>
   <nav data-hub></nav>
 </div>
-<script src="../../_frame/frame.js?v=10111830"></script>
-<script src="assets/notch.js?v=10111700"></script>
+<script src="../../_frame/frame.js?v=10111846"></script>
+<script src="assets/notch.js?v=10111847"></script>
 </body>
 </html>

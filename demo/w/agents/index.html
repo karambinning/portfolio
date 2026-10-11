@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The agents — terminal</title>
-<link rel="stylesheet" href="../../_frame/frame.css?v=10111830">
+<link rel="stylesheet" href="../../_frame/frame.css?v=10111846">
 <style>
   body{--a:#00d4ff;--b:#8b7bff}
   .scr{display:none;flex:1;min-height:0;flex-direction:column;gap:10px}
@@ -408,8 +408,8 @@
   </div>
   <nav data-hub></nav>
 </div>
-<script src="../../_frame/frame.js?v=10111830"></script>
-<script src="../../_frame/showcase.js?v=10111830"></script>
+<script src="../../_frame/frame.js?v=10111846"></script>
+<script src="../../_frame/showcase.js?v=10111846"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -440,21 +440,21 @@
          ['Not allowed','Send anything off a machine, spend money or write to the vault’s human notes without my approval.'],
          ['Status','Live.']] },
 
-    { id:'builder', name:'BUILDER', c:'#ff7700', tier:'live', cls:'core', role:'Overnight builder', tag:'LIVE · STALLED TWICE', warn:1, sim:'builder',
+    { id:'builder', name:'BUILDER', c:'#ff7700', tier:'live', cls:'core', role:'Software developer', tag:'LIVE · STALLED TWICE', warn:1, sim:'builder',
       f:[['Lives on','<b>The iMac</b>, the lab machine.'],
          ['Runs as','<b>Claude Code, overnight</b>, on a schedule. M1 relays the work to it and watches the run.'],
          ['Does','Works through a short task list on the KAM codebase while I sleep, on <b>its own branch only</b>, and runs build checks before it reports. I review in the morning.'],
          ['Not allowed','Work on the main branch, merge its own work or deploy anything.'],
          ['Status','Live. It has <b>stalled twice</b>: runs that stopped part-way through the night. That is recorded, not hidden.']] },
 
-    { id:'sentinel', name:'SENTINEL', c:'#c41e3a', tier:'live', cls:'core', role:'Security watch', tag:'LIVE · PHASE 1', sim:'sentinel',
+    { id:'sentinel', name:'SENTINEL', c:'#c41e3a', tier:'live', cls:'core', role:'Cybersecurity agent', tag:'LIVE · PHASE 1', sim:'sentinel',
       f:[['Lives on','<b>M1</b>, with a small sensor on <b>every Mac</b>.'],
          ['Runs as','<b>Deterministic code</b>, on a schedule. No language model.'],
-         ['Does','Records a baseline for each machine (what is installed, what starts at login, what listens on the network, who can log in) and compares every new reading with it. A change sends an alert by Telegram.'],
+         ['Does','Records a baseline for each machine (what is installed, what starts at login, what listens on the network, who can log in) and compares every new reading with it. A change sends an alert by Telegram. Since the end of September it also monitors my family\u2019s home network.'],
          ['Not allowed','Change or block anything itself. It reports; I decide.'],
-         ['Status','Live, Phase 1: collect, compare, alert.']] },
+         ['Status','Live: Phase 1 on every Mac (collect, compare, alert), plus monitoring on the family home network.']] },
 
-    { id:'yerson', name:'YERSON', c:'#00ff88', tier:'live', cls:'core', role:'Intelligence engine agent', tag:'LIVE · SCHEDULED', sim:'yerson',
+    { id:'yerson', name:'YERSON', c:'#00ff88', tier:'live', cls:'core', role:'Intelligence agent', tag:'LIVE · SCHEDULED', sim:'yerson',
       f:[['Lives on','<b>The Intel MacBook</b>, which runs the intelligence engine.'],
          ['Runs as','A scheduled agent with <b>its own Telegram</b> bot.'],
          ['Does','Runs collection cycles: gathers items from public sources, classifies each one by topic and region, files it into the engine, and sends me a digest of what matters.'],
@@ -547,7 +547,7 @@
   const EVO = {
     yerdad:   [['Apr','Local agents on two laptops'],['1–3 May','The fleet merged under one director'],['5 Jul','v3: ledger, receipts, verifier gate, director loop'],['15 Jul','v4: a Claude Code agent'],['Aug','v4.6–4.7: version control, file creation, printing'],['11 Oct','v4.9: subagents on, Verifier before every “done”']],
     yerson:   [['Jun','Live'],['17–20 Jul','Audited (17 domains, 86 streams); YerDad can query it'],['Sep','Collector and search on the iMac'],['Now','9 core domains on cadences; digests to Karam']],
-    sentinel: [['Apr','Born from the security scare: decoys, tamper-evident log'],['Jun','First version on a remote server'],['15 Sep','Phase 1 on every Mac: baseline, compare, alert'],['24 Sep','Decoys retired']],
+    sentinel: [['Apr','Born from the security scare'],['Jun','First version on a remote server'],['15 Sep','Phase 1 on every Mac: baseline, compare, alert'],['End Sep','Monitoring on the family home network']],
     warden:   [['Jun','Deterministic watchdog on the server'],['Jul–Sep','Replaced by fleet-guard + agent-health on M1']],
     builder:  [['Sep','Overnight builder on KAM, branch-only, relayed by M1']],
     krabs:    [['Mar–Apr','War Room: paper, then small live tests'],['Jun','World Cup in-play model, 26 matches'],['25 Jun','Server lost · archived']],

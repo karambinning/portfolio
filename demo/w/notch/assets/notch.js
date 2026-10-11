@@ -830,6 +830,7 @@ let target = null, cur = null, lastKey = "";
 function render(fade = false) {
   const L = look(); target = targetSize(L);
   content.innerHTML = S.expanded ? expandedHTML(L, target) : collapsedHTML(L, target);
+  if (S.expanded) { const sc = document.getElementById("scr"); if (sc) sc.classList.add("seen"); }   // the call to action has done its job
   content.style.width = target.w + "px"; content.style.height = target.h + "px";
   if (fade && !REDUCED) { content.classList.remove("fade"); void content.offsetWidth; content.classList.add("fade"); }
   panel.style.backgroundColor = S.expanded ? L.t.screen : "#000";

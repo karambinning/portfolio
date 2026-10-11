@@ -98,7 +98,8 @@ body{animation:t-flicker 6s steps(1) infinite}
 .t-hub button{all:unset;cursor:pointer;color:var(--c,var(--violet));white-space:nowrap}
 .t-hub button.br::before{content:"[";} .t-hub button.br::after{content:"]";}
 .t-hub button:hover,.t-hub button:focus-visible{text-shadow:0 0 10px currentColor;text-decoration:underline}
-.t-hub button[aria-current="true"]{text-shadow:0 0 12px currentColor}
+.t-hub button[aria-current="true"]{background:var(--c,var(--violet));color:var(--screen);padding:2px 7px;text-shadow:none;box-shadow:0 0 14px color-mix(in srgb,var(--c,var(--violet)) 60%,transparent)}
+.t-hub button.br[aria-current="true"]::before{content:"▸ "} .t-hub button.br[aria-current="true"]::after{content:""}
 
 /* corner label */
 .t-hub .t-mock{position:static;margin-left:auto}
