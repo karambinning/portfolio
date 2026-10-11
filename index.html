@@ -383,18 +383,7 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 #atkLayer[hidden]{display:none}
 #atkLayer{position:fixed;inset:0;z-index:50;pointer-events:none}
 #atkLayer.dim{transition:opacity .45s;opacity:0}
-.atkw{position:absolute;width:min(290px,64vw);background:#0a0204;border:1px solid rgba(255,48,72,.55);box-shadow:0 0 28px rgba(255,48,72,.22);font:500 12.5px/1.5 var(--mono);color:#ffd6dc;animation:atkPop .14s steps(2) both;will-change:transform}
 @keyframes atkPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
-.atkw-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid rgba(255,48,72,.3);font:500 10px/1 var(--mono);letter-spacing:.04em;color:#a05060}
-.atkw-bar em{margin-left:auto;font-style:normal;color:#ff3355}
-.atkw-bar i{width:7px;height:7px;border-radius:50%;background:#3a0a14}
-.atkw-bar i:first-child{background:#ff3355}
-.atkw-bar span{margin-left:6px}
-.atkw-b{padding:10px 12px 12px;letter-spacing:.02em}
-.atkw-b .pr{color:#ff3355}
-.atkw-b b{color:#ff3355}
-.atkw-b b{animation:blink .5s steps(1) infinite}
-.atkw.close{transition:transform .18s ease-in,opacity .18s;transform:scaleY(.02);opacity:0}
 .atk-tint{position:fixed;inset:0;z-index:49;pointer-events:none;background:#5a0010;mix-blend-mode:multiply;opacity:0;transition:opacity .12s}
 .atk-tint.full{opacity:.9}
 .atk-tint.lift{transition:opacity .5s;opacity:0 !important}
@@ -407,9 +396,7 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 /* attack: shake, tears, strobing red edge */
 body.under-attack #stage{animation:shake .09s steps(2) infinite}
 @keyframes shake{0%{transform:translate3d(calc(var(--shake,3px) * -1),calc(var(--shake,3px) * .5),0)}100%{transform:translate3d(var(--shake,3px),calc(var(--shake,3px) * -.4),0)}}
-.atkw{animation:atkPop .14s steps(2) both,atkJit .22s steps(2) .14s infinite}
 @keyframes atkJit{0%{transform:translate3d(-3px,1px,0)}50%{transform:translate3d(4px,-2px,0)}100%{transform:none}}
-.atkw:nth-child(3n){animation:atkPop .14s steps(2) both,atkJit .13s steps(2) .14s infinite}
 .atk-fx[hidden]{display:none}
 .atk-fx{position:fixed;inset:0;z-index:50;pointer-events:none}
 .atk-tears i{position:absolute;left:-10%;width:120%;height:3%;background:linear-gradient(90deg,transparent,rgba(255,0,51,.7) 25%,rgba(255,140,140,.3) 60%,transparent);will-change:transform;animation:tear .14s steps(3) infinite alternate;opacity:.6}
@@ -435,14 +422,8 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 .def-ring{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:2px solid #00d4ff;border-radius:50%;opacity:0;box-shadow:0 0 30px #00d4ff}
 .def-fx.go .def-ring{animation:dring .9s .3s ease-out both}
 @keyframes dring{0%{opacity:1;transform:scale(.5)}100%{opacity:0;transform:scale(40)}}
-.atkw.quar{border-color:#00d4ff;box-shadow:0 0 22px rgba(0,212,255,.5);animation:none}
-.atkw.quar .atkw-bar{color:#3a8aa0;border-color:rgba(0,212,255,.3)}
-.atkw.quar .atkw-bar i:first-child,.atkw.quar .atkw-b .pr,.atkw.quar .atkw-bar em{background:none;color:#00d4ff}
-.atkw.quar .atkw-b{color:#9ff3ff}
 @media (prefers-reduced-motion:reduce){ body.under-attack #stage,.atkw,.atk-tears i,.atk-edge{animation:none} }
 /* the way out mirrors the way in, in blue */
-.atkw.blue{border-color:rgba(0,212,255,.55);box-shadow:0 0 28px rgba(0,212,255,.25);color:#d8f6ff;background:#020a12}
-.atkw.blue .atkw-bar{color:#3a8aa0;border-color:rgba(0,212,255,.3)} .atkw.blue .atkw-bar i:first-child{background:#00d4ff} .atkw.blue .atkw-bar em,.atkw.blue .atkw-b .pr,.atkw.blue .atkw-b b{color:#00d4ff}
 body.under-defence #stage{animation:shake .12s steps(2) 6}
 .atk-shut.blue i{background:#003a52;box-shadow:0 1px 0 #00d4ff,0 -1px 0 #002a3a}
 .atk-shut.blue i span{text-shadow:0 0 18px rgba(0,212,255,.85)}
@@ -1331,14 +1312,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }
 
 
-  // a staged red-team exercise: alert windows flood the screen, it turns from blue to red, then the dissertation broadcasts
-  const ATK_MSG = ['RED TEAM ACTIVE', 'CHANNEL 08 BREACHED', 'DISPLAY CONTROL LOST', 'SIGNAL SEIZED', 'DEFENCES OFFLINE', 'ROUTING TO WAR.SYS', 'BLUE TEAM NOT RESPONDING', 'ALL CHANNELS RED'];
-  function atkWin(layer, i){
-    const w = document.createElement('div'); w.className = 'atkw';
-    w.style.left = (4 + Math.random() * 72) + '%'; w.style.top = (6 + Math.random() * 74) + '%';
-    w.innerHTML = `<div class="atkw-bar"><i></i><i></i><i></i><span>~/red-team/0${(i % 9) + 1}</span><em>UNIT ${String(i + 1).padStart(2, '0')}</em></div><div class="atkw-b"><span class="pr">&gt;</span> ${ATK_MSG[i % ATK_MSG.length].toLowerCase()}<b>_</b></div>`;
-    layer.appendChild(w); return w;
-  }
+  // a staged red-team exercise: the screen shakes, tears and turns from blue to red (no windows, no words)
   function attackIn(){
     return new Promise(res => {
       const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
@@ -1349,7 +1323,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       let i = 0; const total = 22;
       (function spawn(){
         if (i < total){
-          atkWin(layer, i++); tint.style.opacity = (i / total * .82).toFixed(3);
+          i++; tint.style.opacity = (i / total * .82).toFixed(3);
           document.body.style.setProperty('--shake', (2 + i * .7).toFixed(1) + 'px');
           if (i === 8) fx.classList.add('hard'); if (i === 15) fx.classList.add('max');
           return setTimeout(spawn, Math.max(28, 110 - i * 5));
@@ -1359,22 +1333,15 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       })();
     });
   }
-  // leaving the dissertation: the blue team recovers, windows close one by one, red fades back to blue
-  const DEF_MSG = ['blue team online', 'threat isolated', 'channel 08 recovered', 'display control restored', 'signal secured', 'defences back up', 'routing restored', 'all channels blue'];
   function attackOut(){
-    // mirror of the attack: blue-team windows spread, each quarantining a red one; red turns to blue. No words.
+    // mirror of the attack: the screen turns from red back to blue. No words, no windows.
     return new Promise(res => {
       const layer = $('#atkLayer'), tint = $('#atkTint');
       if (reduce || layer.hidden){ layer.hidden = true; return res(); }
-      const reds = [...layer.querySelectorAll('.atkw')];
       document.body.classList.add('under-defence');
-      let i = 0; const total = Math.max(reds.length, 12);
+      let i = 0; const total = 12;
       (function spawn(){
         if (i < total){
-          const w = atkWin(layer, i); w.classList.add('blue');
-          w.querySelector('.atkw-bar span').textContent = '~/blue-team/0' + ((i % 9) + 1);
-          w.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> ' + DEF_MSG[i % DEF_MSG.length] + '<b>_</b>';
-          const r = reds[i]; if (r){ r.classList.add('quar'); r.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> quarantined ✓'; setTimeout(() => window.KBDismantle ? KBDismantle.run(r, 'out', 420, 'rgba(0,212,255,.9)').then(() => r.remove()) : r.classList.add('close'), 140); }
           i++; tint.style.background = `rgb(${Math.round(90 - 90 * i / total)},${Math.round(16 + 60 * i / total)},${Math.round(16 + 90 * i / total)})`;
           return setTimeout(spawn, Math.max(30, 100 - i * 5));
         }
@@ -1590,7 +1557,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       if (into) await attackIn();
       else {
         const layer = $('#atkLayer'), tint = $('#atkTint');
-        layer.innerHTML = ''; layer.hidden = false; for (let k = 0; k < 12; k++) atkWin(layer, k);
+        layer.innerHTML = ''; layer.hidden = false;
         tint.className = 'atk-tint full'; tint.style.opacity = '';
         await attackOut();
       }
