@@ -23,10 +23,6 @@ a{color:inherit}
 :focus-visible{outline:2px solid var(--phos);outline-offset:3px}
 
 /* ---------- the tube: fixed layers that never stop ---------- */
-.snd-t{all:unset;cursor:pointer;position:fixed;right:clamp(14px,3vw,40px);top:48px;z-index:60;font:500 10.5px/1 var(--mono);letter-spacing:.12em;color:var(--dim);padding:6px 8px;border:1px solid var(--rule)}
-.snd-t[aria-pressed="true"]{color:var(--phos);border-color:color-mix(in srgb,var(--phos) 50%,transparent)}
-.snd-t:hover,.snd-t:focus-visible{color:#fff}
-@media (max-width:600px){ .snd-t{top:auto;bottom:calc(var(--bot,64px) + 46px);right:12px} }
 #static{position:fixed;inset:0;width:100%;height:100%;z-index:45;pointer-events:none;opacity:.04;image-rendering:pixelated;mix-blend-mode:screen;transition:opacity .18s}
 .scan{position:fixed;inset:0;z-index:50;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 3px)}
@@ -825,7 +821,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 <div class="atk-fx" id="atkFx" hidden aria-hidden="true"><div class="atk-tears"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="atk-edge"></div></div>
 <div class="def-fx" id="defFx" hidden aria-hidden="true"><div class="def-hex"></div><div class="def-beam"></div><div class="def-ring"></div></div>
 <div class="atk-big" id="atkBig" aria-hidden="true"></div>
-<button type="button" class="snd-t" id="sndT" aria-pressed="false" aria-label="Sound">♪ SOUND OFF</button>
 <div class="atk-shut" id="atkShut" hidden aria-hidden="true"></div>
 <div class="sshw" id="sshTerm" hidden aria-hidden="true"><div class="ssh-bar"><i></i><i></i><i></i><span>visitor@portfolio — ssh — 80×20</span></div><div class="ssh-body"></div></div>
 
@@ -1481,22 +1476,49 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   /* ---------- sound: a small synthesised CRT set, off until the visitor interacts ---------- */
   // no sound anywhere on the site (by choice); calls are kept as no-ops so effects code stays simple
   /* ---------- sound: quiet, synthesised, off until the visitor turns it on (browsers block audio until a click) ---------- */
-  const SND = { on: false, ac: null };
-  try { SND.on = localStorage.getItem('kb-snd') === 'on'; } catch (e) {}
-  function actx(){ if (!SND.on || reduce) return null; if (!SND.ac){ try { SND.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (SND.ac.state === 'suspended') SND.ac.resume(); return SND.ac; }
-  function hiss(ms, vol){ const a = actx(); if (!a) return; const n = Math.round(a.sampleRate * ms / 1000), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n) * (Math.random() < .08 ? 1 : .35);
-    const src = a.createBufferSource(), f = a.createBiquadFilter(), gn = a.createGain(); src.buffer = buf; f.type = 'bandpass'; f.frequency.value = 2400 + Math.random() * 2400; f.Q.value = .7;
-    gn.gain.value = vol; src.connect(f).connect(gn).connect(a.destination); src.start(); }
-  function click(vol){ const a = actx(); if (!a) return; const o = a.createOscillator(), gn = a.createGain(), t = a.currentTime;
-    o.type = 'square'; o.frequency.value = 1700 + Math.random() * 900; gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(.0001, t + .025); o.connect(gn).connect(a.destination); o.start(t); o.stop(t + .03); }
-  const SFX = { channel(){ hiss(220, .05); }, glitch(ms){ hiss(Math.min(500, ms || 160), .045); }, scan(){}, open(){ hiss(120, .035); }, blip(){ click(.02); }, tick(){ click(.012); }, boot(){ hiss(300, .04); }, handshake(){} };
+  const SND = { ac: null, master: null };
+  // browsers only allow audio after the visitor's first click, tap or key; until then every sound is silently skipped
+  function unlock(){ if (SND.ac || reduce) return; try { SND.ac = new (window.AudioContext || window.webkitAudioContext)(); SND.master = SND.ac.createGain(); SND.master.gain.value = .55; SND.master.connect(SND.ac.destination); } catch (e) {} }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, unlock, { once: true, passive: true }));
+  addEventListener('message', e => { if (e.data && (e.data.kbStep || e.data.kbWheel || e.data.kbOpen)) unlock(); });
+  function A(){ const a = SND.ac; if (!a) return null; if (a.state === 'suspended') a.resume(); return a; }
+  // noise through a filter, with an envelope
+  function nz(ms, vol, f0, f1, q, type){ const a = A(); if (!a) return; const n = Math.round(a.sampleRate * ms / 1000), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < .12 ? 1 : .4);
+    const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime; src.buffer = buf; f.type = type || 'bandpass'; f.Q.value = q || .8;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(30, f1 || f0), t + ms / 1000);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + ms / 1000); src.connect(f).connect(g).connect(SND.master); src.start(t); }
+  // a tone that glides
+  function tn(ms, vol, f0, f1, wave, delay){ const a = A(); if (!a) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + (delay || 0) / 1000;
+    o.type = wave || 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1 || f0), t + ms / 1000);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + ms / 1000);
+    o.connect(g).connect(SND.master); o.start(t); o.stop(t + ms / 1000 + .02); }
+  const SFX = {
+    // ordinary channel change: a short tuning crackle
+    channel(){ nz(240, .09, 3200, 900, .9); tn(160, .02, 220, 140, 'square'); },
+    glitch(ms){ nz(Math.min(420, ms || 160), .06, 2600 + Math.random() * 1800, 1200, .7); },
+    // the timeline: a soft slide
+    slide(){ nz(260, .05, 500, 1600, 1.2, 'lowpass'); },
+    // ssh into the estate: modem-like chirps, then a confirm
+    ssh(){ [0, 90, 180, 300].forEach((d, i) => tn(70, .035, 900 + i * 260, 1100 + i * 260, 'square', d)); tn(180, .04, 660, 990, 'sine', 520); },
+    // agents: a rising hologram shimmer, and its reverse
+    holoIn(){ tn(520, .05, 180, 1400, 'sawtooth'); nz(520, .03, 4000, 9000, 3, 'highpass'); },
+    holoOut(){ tn(380, .045, 1200, 160, 'sawtooth'); },
+    // dissertation: a low hit as the infection lands, CRT off (thunk) and on (whine)
+    infect(red){ tn(700, .09, red ? 70 : 110, red ? 45 : 70, 'sawtooth'); nz(600, .05, red ? 700 : 1800, 200, .6); },
+    crtOff(){ tn(260, .07, 900, 40, 'sine'); nz(180, .05, 1500, 100, .5, 'lowpass'); },
+    crtOn(){ tn(600, .025, 9000, 15000, 'sine'); tn(140, .06, 60, 120, 'sine'); },
+    // hack to the top: fast green keys and an ascending chirp
+    hack(){ for (let i = 0; i < 8; i++) SFX.tick(i * 55); [0, 70, 140].forEach((d, i) => tn(90, .04, 520 * (i + 1), 520 * (i + 1), 'square', 520 + d)); },
+    open(){ nz(140, .05, 1200, 3000, 1); tn(120, .03, 440, 660, 'triangle'); },
+    scan(){ nz(400, .04, 800, 3000, 2); },
+    blip(){ tn(40, .03, 520, 480, 'triangle'); },
+    // typing: a low, soft key thock rather than a beep
+    tick(delay){ const a = A(); if (!a) return; setTimeout(() => nz(28, .05, 380 + Math.random() * 160, 260, 1.4, 'bandpass'), delay || 0); },
+    boot(){ tn(500, .03, 60, 120, 'sine'); }, handshake(){} };
   window.KBSFX = SFX;
 
   document.addEventListener('click', e => { if (e.target.closest('.btn, .file, .node, .app-tabs button, .dial button, [data-lab]')) SFX.blip(); });
-  const sndT = $('#sndT'), sndShow = () => { sndT.setAttribute('aria-pressed', SND.on); sndT.textContent = SND.on ? '♪ SOUND ON' : '♪ SOUND OFF'; };
-  sndT.addEventListener('click', () => { SND.on = !SND.on; try { localStorage.setItem('kb-snd', SND.on ? 'on' : 'off'); } catch (e) {} sndShow(); if (SND.on) SFX.glitch(180); });
-  sndShow();
 
   /* ---------- channels that are their own pages (built under demo/w/<id>/) ---------- */
   const BUILD = '20261011-' + Date.now().toString(36);   // version stamp so browsers never show stale embedded pages
@@ -1639,6 +1661,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     t.classList.remove('ping'); void t.offsetWidth; t.classList.add('ping'); setTimeout(() => t.email.focus({ preventScroll: true }), 250);
   });
   $('#hackTop').addEventListener('click', () => {
+    SFX.hack();
     if (busy) return;
     const box = $('#sshTerm'), out = box.querySelector('.ssh-body');
     out.innerHTML = ''; box.className = 'sshw green'; box.hidden = false;
@@ -1754,7 +1777,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     // text decodes in as you arrive at a date and decays out as you leave it
     textNodes(st).forEach(n => { const o = ORIG.get(n), L = o.length, n2 = Math.ceil(L * f);
       n.nodeValue = f >= .999 ? o : o.slice(0, n2) + o.slice(n2, n2 + Math.min(4, L - n2)).replace(/\S/g, () => TL_G[(Math.random() * TL_G.length) | 0]); });
-    if (tlStep !== k){ tlStep = k; typeTerm(TERM[st.dataset.term] || '');
+    if (tlStep !== k){ if (tlStep >= 0) SFX.slide(); tlStep = k; typeTerm(TERM[st.dataset.term] || '');
       sc.style.setProperty('--acc', ['#00d4ff', '#ff4d6d', '#ffcc00', '#00ff88'][k % 4]);   // each moment has its own colour
       st.classList.remove('arrive'); void st.offsetWidth; st.classList.add('arrive'); clearTimeout(st._arr); st._arr = setTimeout(() => st.classList.remove('arrive'), 1200); }
   }
@@ -1809,13 +1832,14 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       // dissertation, both ways: 1) a glitch of the opposing colour strikes where the takeover starts (red in, blue out);
       // 2) the old slide is infected by the opposing colour and dismantled piece by piece; 3) CRT power off / on; 4) the new one is built piece by piece. No words.
       const into = b.dataset.attack !== undefined, col = into ? 'rgba(255,48,72,.9)' : 'rgba(0,212,255,.9)';
+      SFX.infect(into);
       await chanText(a, 'out', 2300, col);   // the opposing colour infects it, then it comes apart one detail at a time
-      await crtPower(false, col);                                // then the screen switches off like an old CRT
+      SFX.crtOff(); await crtPower(false, col);                                // then the screen switches off like an old CRT
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
       const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
       b.style.visibility = 'hidden'; b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      await crtPower(true, col);                                 // and powers back up
+      SFX.crtOn(); await crtPower(true, col);                                 // and powers back up
       const built = chanText(b, 'in', 2300, col);                             // it starts blank, so show it only once the rebuild has begun
       setTimeout(() => { b.style.visibility = ''; }, 60);
       await built;
@@ -1823,7 +1847,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     }
     if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && b.dataset.warp === undefined && b.dataset.attack === undefined)){ // hologram projection: close to a line, then project open between two scan lines
       const hl = $('#holoLines');
-      a.classList.add('holo-close'); hl.hidden = false; hl.className = 'holo-lines closing';
+      (b.dataset.holo !== undefined ? SFX.holoIn : SFX.holoOut)(); a.classList.add('holo-close'); hl.hidden = false; hl.className = 'holo-lines closing';
       await new Promise(r => setTimeout(r, reduce ? 0 : 320));
       a.classList.remove('active', 'holo-close'); restore(a);
       b.scrollTop = 0; b.classList.add('active', 'holo-open'); cur = n; update();
@@ -1833,7 +1857,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       busy = false; lockUntil = performance.now() + 250; return;
     }
     if (b.dataset.warp !== undefined){ // into the second brain: one continuous dive through an ssh terminal
-      SFX.channel(); a.classList.add('crtoff');
+      SFX.ssh(); a.classList.add('crtoff');
       await new Promise(r => setTimeout(r, 200)); a.classList.remove('active', 'crtoff');
       b.scrollTop = 0; b.style.opacity = '0'; b.classList.add('active'); cur = n; update();   // ready underneath from the start
       await warpIn(() => {                                       // called near the end of the dive
