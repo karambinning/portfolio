@@ -429,6 +429,16 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 .atkw.quar .atkw-bar{background:#00d4ff}
 .atkw.quar .atkw-b{color:#9ff3ff}
 @media (prefers-reduced-motion:reduce){ body.under-attack #stage,.atkw,.atk-tears i,.atk-edge{animation:none} }
+/* the arrival into the dissertation: red shutters rip apart */
+.atk-shut[hidden]{display:none}
+.atk-shut{position:fixed;inset:0;z-index:51;pointer-events:none;overflow:hidden}
+.atk-shut i{position:absolute;left:0;right:0;background:#b0001c;overflow:hidden;box-shadow:0 1px 0 #ff3355,0 -1px 0 #600010;will-change:transform}
+.atk-shut i span{position:absolute;left:50%;height:100vh;width:100%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;
+  font:400 clamp(44px,9vw,120px)/1 var(--display);letter-spacing:.06em;color:#ff0033;text-shadow:4px 0 #600,-4px 0 #ff9090;white-space:nowrap}
+.atk-shut.go i{animation:shutter .62s cubic-bezier(.7,0,.25,1) both}
+@keyframes shutter{0%{transform:none}18%{transform:translate3d(calc(var(--dir) * 2%),0,0);filter:brightness(1.6)}100%{transform:translate3d(calc(var(--dir) * 110%),0,0)}}
+.scene.redboot{animation:redboot .8s ease-out both}
+@keyframes redboot{0%{filter:sepia(1) hue-rotate(-50deg) saturate(5) brightness(1.8)}45%{filter:sepia(.6) hue-rotate(-50deg) saturate(3) brightness(1.2)}100%{filter:none}}
 /* ---------- the ssh terminal that opens into the vault ---------- */
 .sshw{position:fixed;z-index:49;left:50%;top:50%;width:min(620px,calc(100% - 32px));transform:translate(-50%,-50%);background:#03070d;border:1px solid rgba(0,212,255,.55);box-shadow:0 0 40px rgba(0,212,255,.18);font:500 13px/1.55 var(--mono);animation:stOpen .22s cubic-bezier(.2,.8,.2,1)}
 @keyframes stOpen{from{transform:translate(-50%,-50%) scale(.9);opacity:0}}
@@ -575,6 +585,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 <div class="atk-fx" id="atkFx" hidden aria-hidden="true"><div class="atk-tears"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="atk-edge"></div></div>
 <div class="def-fx" id="defFx" hidden aria-hidden="true"><div class="def-hex"></div><div class="def-beam"></div><div class="def-ring"></div></div>
 <div class="atk-big" id="atkBig" aria-hidden="true">SYSTEM COMPROMISED</div>
+<div class="atk-shut" id="atkShut" hidden aria-hidden="true"></div>
 <div class="sshw" id="sshTerm" hidden aria-hidden="true"><div class="ssh-bar"><i></i><i></i><i></i><span>visitor@portfolio — ssh — 80×20</span></div><div class="ssh-body"></div></div>
 
 <a class="mark" href="#signal" data-go="0" aria-label="Back to the start">K·B</a>
@@ -1478,9 +1489,16 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
       await attackIn();
       a.classList.remove('active'); restore(a);
       b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      $('#atkTint').classList.add('lift'); $('#atkBig').classList.remove('on');
-      $('#atkLayer').classList.add('dim');
-      setTimeout(() => { $('#atkLayer').hidden = true; $('#atkLayer').classList.remove('dim'); $('#atkTint').className = 'atk-tint'; $('#atkTint').style.opacity = '0'; }, 500);
+      // the arrival: red shutter slices rip apart, carrying the title with them, and reveal the dissertation booting in red
+      const sh = $('#atkShut'), N = 12; sh.innerHTML = '';
+      for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
+        d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28 + Math.random() * 30).toFixed(0) + 'ms';
+        d.innerHTML = `<span style="top:${(-k / N * 100 * N).toFixed(2)}%">SYSTEM COMPROMISED</span>`; sh.appendChild(d); }
+      sh.hidden = false; sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
+      $('#atkBig').classList.remove('on'); $('#atkLayer').hidden = true; $('#atkLayer').innerHTML = '';
+      $('#atkTint').className = 'atk-tint'; $('#atkTint').style.opacity = '0';
+      b.classList.add('redboot'); burst(400);
+      setTimeout(() => { sh.hidden = true; sh.innerHTML = ''; b.classList.remove('redboot'); }, 900);
       busy = false; lockUntil = performance.now() + 300; return;
     }
     if (a.dataset.attack !== undefined){ // leaving the dissertation: red to blue

@@ -104,7 +104,7 @@
   .xsum{font:500 9.5px/1.45 'JetBrains Mono',ui-monospace,monospace;color:#f4cccc;border-left:2px solid #b00000;padding-left:8px}
   .xsum b{color:#ff3030}
   .xlog{list-style:none;font:500 10px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#f4cccc;height:126px;overflow:hidden;border:1px solid #2a0000;background:rgba(0,0,0,.35);padding:4px 6px;display:flex;flex-direction:column;justify-content:flex-end}
-  .xlog li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .xlog li{flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .xlog li::before{content:"> ";color:#c01010}
   .xlog li.ok::after{content:" OK";color:#ff5050;font-weight:700}
   .xlog li.y{color:#ffcc00}
@@ -130,7 +130,8 @@
     .mid .stage{max-height:none}
     .xc{position:fixed;left:0;right:0;bottom:0;z-index:15;max-height:54vh;overflow:auto;border-width:1px 0 0;padding:8px 12px 12px;background:rgba(14,0,0,.96)}
     body.xmode .page{padding-bottom:56vh}
-    .xlog{height:96px}
+    .xlog{height:84px}
+    .xr .why{display:none}
   }
   @media (prefers-reduced-motion:reduce){ h1 .cur,.split .sweep,.xlog li.cur::after{animation:none} .tk{display:none} }
 </style>
@@ -180,7 +181,7 @@
     </div>
   </aside>
   <section class="xc" id="xc" role="dialog" aria-modal="false" aria-labelledby="xcT" hidden>
-    <div class="xc-h"><span class="t" id="xcT">EXPERIMENT CONSOLE</span><b class="led sm" id="xRun">SIM-0000</b><button type="button" class="x" id="xClose" aria-label="Close the experiment console">[ × ]</button></div>
+    <div class="xc-h"><span class="t" id="xcT">EXPERIMENT CONSOLE</span><span class="t" style="color:#c01010">SIM-</span><b class="led sm" id="xRun" style="margin-left:-6px">0000</b><button type="button" class="x" id="xClose" aria-label="Close the experiment console">[ × ]</button></div>
     <div class="xwarn">SIMULATION · SYNTHETIC · NOT A RESEARCH RESULT</div>
     <div id="xSetup">
       <div class="xs" id="xs1"><div class="xs-t"><b>01</b>PICK A HOTSPOT<em>LIST OR GLOBE</em></div><div class="opts" id="xHs"></div></div>
@@ -291,7 +292,7 @@
     { k: 'E', name: 'SAHEL-TYPE', p: [4, 15], bias: 0 },
     { k: 'F', name: 'ANDEAN-TYPE', p: [-68, -14], bias: -.1 },
   ];
-  const OFF = [[[-8, 4], [7, -3]], [[-4, -6], [9, 3]], [[5, 7], [-7, -4]]];
+  const OFF = [[[-14, 7], [12, -5]], [[-7, -10], [15, 6]], [[10, 11], [-12, -8]]];
   HS.forEach(h => {
     h.id = syn('hot' + h.k);
     h.dy = OFF.map((o, i) => {
@@ -327,7 +328,7 @@
   const opt = (html, on, attrs = '') => `<button type="button" class="opt" aria-pressed="${on}" ${attrs}>${html}</button>`;
   function renderHs(){
     $('xHs').innerHTML = HS.map(h => opt(`<b>${h.k}</b>${h.name}`, hs === h, `data-h="${h.k}" title="Hotspot ${h.k} · ${h.name} · ${h.id} (synthetic)"`)).join('');
-    G.marks(HS.map(h => ({ k: h.k, p: h.p, label: h.k + ' · ' + h.id, sel: hs === h })), pickHs);
+    G.marks(HS.map(h => ({ k: h.k, p: h.p, label: hs === h ? h.k + ' · ' + h.id : h.k, sel: hs === h })), pickHs);
   }
   function renderDy(){
     $('xDy').innerHTML = hs ? hs.dy.map((d, i) => opt(`<b>D${i + 1}</b>${d.a} ⇄ ${d.b}<s>· SYNTHETIC</s>`, dy === d, `data-d="${i}"`)).join('') : '';
@@ -379,7 +380,7 @@
   async function run(){
     const my = ++token; runN++;
     const r = score(), T = TIER[r.t], cs = CV.map(c => `${c.name.split(' ')[0].slice(0, 4)} <b>${LV[cond[c.k]]}</b>`).join(' · ');
-    $('xRun').textContent = 'SIM-' + pad(runN, 4);
+    $('xRun').textContent = pad(runN, 4);
     $('xSetup').hidden = true; $('xRunV').hidden = false; $('xRes').hidden = true; $('xActs').hidden = true;
     $('xSum').innerHTML = `<b>${hs.k}</b> ${hs.name} · ${hs.id}<br><b>DYAD</b> ${dy.a} ⇄ ${dy.b}<br>${cs}`;
     bars.forEach(b => b.style.width = '0'); $('xLog').innerHTML = '';
