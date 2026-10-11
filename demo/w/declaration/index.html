@@ -80,6 +80,66 @@
     #status{flex-basis:100%}
   }
   @media (prefers-reduced-motion:reduce){ .sheet.print > *{animation:none} }
+
+  /* ---------- phones (≤ 600px): ABOUT · LOG · PAGE as tabs (added by the script below), the page reflowed to the width ---------- */
+  @media (max-width:600px){
+    /* tabs: a segmented control with GENERATE beside it; the status line runs underneath */
+    .t-ctl{flex-wrap:wrap;gap:0;padding:6px 12px 3px;align-items:stretch}
+    .t-ctl .sp{display:none}
+    .t-ctl .t-btn{box-sizing:border-box;min-height:46px;justify-content:center;text-align:center;font-size:12px;line-height:1.15;letter-spacing:.04em;white-space:normal}
+    .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+    .t-ctl [data-seg]{flex:1 1 0;padding:0 6px;letter-spacing:.02em;border:1px solid var(--line);margin-left:-1px;position:relative;transition:background .18s,box-shadow .18s}
+    .t-ctl [data-seg]:first-child{margin-left:0}
+    .t-ctl [data-seg][aria-pressed="true"]{z-index:1;border-color:color-mix(in srgb,var(--b) 70%,transparent);background:color-mix(in srgb,var(--b) 13%,var(--screen));box-shadow:inset 0 -3px 0 var(--b)}
+    .t-ctl #gen{flex:none;margin-left:8px;padding:0 11px;border:1px solid color-mix(in srgb,var(--a) 60%,transparent);background:color-mix(in srgb,var(--a) 10%,transparent)}
+    .t-ctl .t-btn:active,.ph-acts .t-btn:active{transform:none;opacity:1;background:color-mix(in srgb,var(--a) 22%,var(--screen))}
+    #status{flex-basis:100%;font-size:12px;line-height:1.35;padding:5px 2px 2px;letter-spacing:.04em}
+
+    /* one tab at a time; the title stays as the header of every tab */
+    body[data-ph="about"] .decl > .col:nth-of-type(n+2),
+    body[data-ph="log"] .decl > .col:nth-of-type(3),
+    body[data-ph="page"] .decl > .col:nth-of-type(2),
+    body[data-ph="log"] .about > :not(.t-title):not(.t-sub):not(.t-sub2),
+    body[data-ph="page"] .about > :not(.t-title):not(.t-sub):not(.t-sub2){display:none}
+    .decl{gap:14px}
+
+    /* about */
+    .about .t-title{font-size:20px}
+    .about .t-sub{font-size:14px}
+    .about .t-sub2{font-size:12.5px}
+    .about .t-label{margin:14px 0 6px}
+    .about .t-p{font-size:13.5px;line-height:1.5}
+    .steps{gap:8px}
+    .steps li{font-size:13px;line-height:1.5;grid-template-columns:30px 1fr}
+    .use{margin-top:16px}
+    .use .t-p{font-size:13px}
+
+    /* the log form: thumb-sized fields, 16px type so iOS does not zoom */
+    .panel-h{font-size:12.5px;margin-bottom:12px} .panel-h small{font-size:12px;letter-spacing:.06em}
+    .form{gap:10px}
+    .row3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .f label{font-size:12px;letter-spacing:.06em;margin-bottom:5px}
+    .in{box-sizing:border-box;min-height:44px;font-size:16px;line-height:1.4;padding:9px 10px}
+    select.in{padding-right:28px}
+    .f.grow textarea{height:auto;min-height:76px}
+    .ledger{font-size:12px;line-height:1.6}
+    .ph-acts{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px}
+    .ph-acts .t-btn{box-sizing:border-box;min-height:46px;justify-content:center;text-align:center;font-size:12px;line-height:1.15;padding:0 6px;
+      border:1px solid color-mix(in srgb,var(--a) 45%,transparent);white-space:normal}
+    .ph-acts .t-btn::before,.ph-acts .t-btn::after{content:none}
+
+    /* the generated page, reflowed to the phone's width at a legible size: complete, nothing cut */
+    .sheet{font-size:12.5px;line-height:1.5;padding:14px 14px 16px;overflow:visible;flex:none}
+    .sheet .doc-h{font-size:27px;line-height:1.05}
+    .sheet .stamp{position:static;display:inline-block;margin:0 0 10px;font-size:12px;letter-spacing:.08em;transform:rotate(-2deg)}
+    .sheet .meta{grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:12px}
+    .sheet .lead,.sheet .ref,.sheet .foot{font-size:12px}
+    .sheet h3{font-size:13px;margin:1em 0 .4em}
+    .sheet .sess{margin-bottom:.7em}
+    .sheet .ref{overflow-wrap:anywhere}
+    .sheet .sign .who{flex-wrap:wrap}
+  }
+  @media (max-width:374px){ .ph-acts{grid-template-columns:1fr 1fr} .ph-acts #save{grid-column:1/-1} }
 </style>
 </head>
 <body data-self="declaration" data-brand="[AI·DECL]" data-unit="AI DECLARATION · LOUGHBOROUGH FORMAT · UNIT 05" data-status="LEDGER" data-status-tail="OPEN"
@@ -259,6 +319,43 @@
 
   fill(EXAMPLE); ledger(); generate(false);
   document.fonts && document.fonts.ready.then(fit);
+})();
+</script>
+<script>
+/* phones only (≤ 600px): ABOUT · LOG · PAGE tabs, the form's own buttons under the form, GENERATE opens the page.
+   On a wider screen everything goes back where it was. Nothing here runs on a desktop. */
+(() => {
+  const PH = matchMedia('(max-width:600px)'), B = document.body, $ = id => document.getElementById(id);
+  const ctl = document.querySelector('.t-ctl'), body = document.querySelector('.t-body'), cols = document.querySelectorAll('.decl > .col');
+  let segs = null, acts = null;
+  function show(t, scroll){
+    B.dataset.ph = t; segs.forEach(s => s.setAttribute('aria-pressed', s.dataset.seg === t));
+    if (scroll !== false) body.scrollTo({ top: 0, behavior: 'auto' });
+    KB.twitch(cols[{ about:0, log:1, page:2 }[t]]);
+  }
+  function setup(){
+    if (!PH.matches){
+      if (!segs) return;
+      segs.forEach(s => s.remove()); segs = null;
+      $('gen').before($('save')); $('gen').after($('clear')); $('clear').after($('example'));
+      acts.remove(); acts = null; delete B.dataset.ph; return;
+    }
+    if (segs) return;
+    segs = [['about', 'ABOUT'], ['log', 'LOG'], ['page', 'PAGE']].map(([k, l]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 't-btn'; b.dataset.seg = k; b.innerHTML = `<span>${l}</span>`;
+      b.addEventListener('click', () => show(k)); return b; });
+    ctl.prepend(...segs);
+    acts = document.createElement('div'); acts.className = 'ph-acts'; acts.append($('save'), $('clear'), $('example'));
+    $('ledger').before(acts);
+    show('about', false);
+  }
+  $('gen').addEventListener('click', () => {
+    if (!segs) return; const s = $('status').textContent;
+    if (/GENERATED/.test(s)) show('page');
+    else if (/^✗/.test(s)){ show('log', false); const f = ['tool', 'date', 'assessment', 'purpose', 'output', 'adapted'].map($).find(e => !e.value.trim()) || ($(/DATE/.test(s) ? 'date' : 'assessment')); f && f.focus(); }
+  });
+  PH.addEventListener && PH.addEventListener('change', setup);
+  setup();
 })();
 </script>
 </body>
