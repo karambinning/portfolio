@@ -56,7 +56,7 @@ body{animation:flicker 5s steps(1) infinite}
 .scene > .in-wrap{width:100%;max-width:1180px;margin:auto 0}
 /* big screens: the composition is designed at about 1280x800; above that it scales up as a whole to fill the screen
    (--z is 1 at or below 1280x800, so half-screen windows and phones are untouched) */
-.scene > .in-wrap{zoom:var(--z,1)}
+html{zoom:var(--z,1)}
 .ch-id{display:block;font:500 12px/1 var(--mono);color:var(--phos);letter-spacing:.1em;margin-bottom:20px}
 h2.big{font:400 clamp(52px,9vw,124px)/.88 var(--display);margin-bottom:26px}
 /* Get in touch: the K·A·M title treatment (wide tracking, glow, blinking cursor), kept white */
@@ -1735,7 +1735,8 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   setInterval(() => { const s = (performance.now() - t0) / 1000; tc.textContent = `${pad(s/3600)}:${pad(s/60%60)}:${pad(s%60)}:${pad(s*25%25)}`; }, 40);
 
   /* ---------- big screens: scale the composition to fill them ---------- */
-  const fitZ = () => document.documentElement.style.setProperty('--z', Math.max(1, Math.min(innerWidth / 1280, innerHeight / 800, 2)).toFixed(3));
+  const fitZ = () => { const w = document.documentElement.clientWidth * (+getComputedStyle(document.documentElement).getPropertyValue('--z') || 1);
+    document.documentElement.style.setProperty('--z', Math.max(1, Math.min(outerWidth && innerWidth ? innerWidth / 1280 : w / 1280, innerHeight / 800, 2)).toFixed(3)); };
   fitZ(); addEventListener('resize', fitZ);
 
   /* ---------- start: deep links, then the boot ---------- */
