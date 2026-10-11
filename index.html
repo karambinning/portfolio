@@ -56,6 +56,10 @@ body{animation:flicker 5s steps(1) infinite}
 .scene > .in-wrap{width:100%;max-width:1180px;margin:auto 0}
 .ch-id{display:block;font:500 12px/1 var(--mono);color:var(--phos);letter-spacing:.1em;margin-bottom:20px}
 h2.big{font:400 clamp(52px,9vw,124px)/.88 var(--display);margin-bottom:26px}
+/* Get in touch: the K·A·M title treatment (wide tracking, glow, blinking cursor), kept white */
+h2.kamh{text-transform:uppercase;letter-spacing:.09em;color:#fff;text-shadow:0 0 30px rgba(255,255,255,.32),0 0 2px rgba(255,255,255,.6)}
+h2.kamh .cur{font-weight:400;color:#fff;animation:kbcur 1.05s steps(1) infinite}
+@media (prefers-reduced-motion:reduce){ h2.kamh .cur{animation:none} }
 .copy{max-width:62ch;color:var(--body);font-size:clamp(14px,1.25vw,16.5px)}
 .copy + .copy{margin-top:12px}
 .flag{color:var(--amber)}
@@ -833,7 +837,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 <section class="scene" id="contact" data-name="CONTACT" aria-label="Contact">
   <div class="in-wrap ct">
     <div>
-      <h2 class="big">Get in touch</h2>
+      <h2 class="big kamh">Get in touch<b class="cur" aria-hidden="true">_</b></h2>
       <p class="copy">Open to internships for winter 2026/27 and summer 2027. Type a message into the terminal and it goes straight to my university inbox.</p>
       <p style="margin-top:22px"><a class="mail" href="mailto:K.S.Binning1-24@student.lboro.ac.uk">K.S.Binning1-24@student.lboro.ac.uk</a></p>
       <div class="actions" style="margin-top:24px">
