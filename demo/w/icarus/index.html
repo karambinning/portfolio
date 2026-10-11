@@ -52,13 +52,18 @@
   .tele{display:flex;flex-wrap:wrap;gap:4px 14px;font:700 10.5px/1.2 var(--mono);color:var(--dim);letter-spacing:.06em}
   .tele b{color:var(--text);font-weight:700}
   .tele .on{color:var(--a)}
-  .log{font:500 11px/1.5 var(--mono);color:var(--body);max-height:170px;overflow:auto;border:1px solid var(--line);padding:6px 8px;background:var(--screen);white-space:pre-wrap;scrollbar-width:thin}
+  .log{font:500 11px/1.5 var(--mono);color:var(--body);border:1px solid var(--line);padding:6px 8px;background:var(--screen);white-space:pre-wrap;
+    /* a rolling flight log: newest line at the bottom, the oldest roll off the top like a real terminal. It never scrolls. */
+    flex:1;min-height:64px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+  .log > div{flex:none}
+  #p-sim.on{flex:1;min-height:0}
   .log .W{color:var(--ink)} .log .E{color:#ff3355} .log .V{color:var(--b)}
   .keys{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:11.5px;color:var(--body)}
   .keys b{color:var(--a);font-weight:700}
   @media (max-width:760px){
     .ica{grid-template-columns:1fr;flex:none} .left{overflow:visible;padding-right:0}
     .cv{flex:none;height:300px} .rules{grid-template-columns:1fr}
+    .log{flex:none;height:150px}
   }
   @media (max-width:640px){ .t-ctl{gap:8px 12px} .t-ctl .t-btn{font-size:12.5px} }
   @media (max-height:600px) and (min-width:761px){ .t-sub2{display:none} }
