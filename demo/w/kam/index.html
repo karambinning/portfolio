@@ -51,8 +51,9 @@
     .left{display:contents}
     .pane{order:1} .stats{order:2} .orbit{order:3} .readout{order:4}
     .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .stats .t-stat{border:1px solid var(--line);padding:8px 10px 7px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
-    .stats .t-stat strong{font-size:32px}
+    .stats .t-stat{flex-direction:row;align-items:center;gap:9px;min-height:48px;border:1px solid var(--line);padding:4px 10px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
+    .stats .t-stat strong{font-size:28px;flex:none}
+    .stats .t-stat span{line-height:1.2}
     .readout{min-height:96px}
     .readout .k{font-size:12px;line-height:1.3}
     /* the constellation, sized for a phone: two staggered rings (set in the script), every node a 44px target */

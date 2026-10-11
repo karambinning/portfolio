@@ -175,6 +175,7 @@
     .xc{max-height:52vh;padding:8px 14px 34px;gap:8px;overscroll-behavior:contain}
     .xc > *{flex:none}
     .xc{background:#0e0000}
+    .xc-h{position:sticky;top:-8px;z-index:2;background:#0e0000;margin:-8px -14px 0;padding:8px 14px 4px;border-bottom:1px solid #2a0000}
     body.xmode .page{padding-bottom:54vh}
     .xc-h .t{font-size:12px;letter-spacing:.1em}
     .xc-h .x{min-width:44px;min-height:44px;font-size:12px;margin:-6px -6px -6px auto}
@@ -524,7 +525,7 @@
   lay(); PH.addEventListener('change', lay); addEventListener('resize', fit); document.fonts && document.fonts.ready.then(fit);
   // the experiment sheet: after each pick, bring the next step into view inside the sheet
   const xc = $('xc');
-  const show = el => { if (PH.matches && el && !xc.hidden) xc.scrollTo({ top: Math.max(0, el.offsetTop - 44), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+  const show = el => { if (PH.matches && el && !xc.hidden) xc.scrollTo({ top: Math.max(0, el.offsetTop - 64), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
   const after = f => requestAnimationFrame(() => requestAnimationFrame(f));
   xc.addEventListener('click', e => {      // (the pickers re-render on click, so test the path, not the detached target)
     const on = id => e.composedPath().includes($(id));
