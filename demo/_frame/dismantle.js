@@ -11,6 +11,15 @@
   const SKIP = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'BR', 'NOSCRIPT', 'TEMPLATE', 'HEAD', 'TITLE', 'OPTION']);
   const state = new WeakMap();   // root -> { anims, texts, job }
 
+  // does this element draw anything itself? plain layout wrappers do not, so they are never animated or waited on
+  function draws(c, cs){
+    if (/^(IMG|CANVAS|svg|VIDEO|INPUT|BUTTON|TEXTAREA|SELECT|HR|IFRAME)$/.test(c.tagName)) return true;
+    if (cs.backgroundImage !== 'none' || !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) return true;
+    if (parseFloat(cs.borderTopWidth) || parseFloat(cs.borderLeftWidth) || parseFloat(cs.borderBottomWidth) || parseFloat(cs.borderRightWidth)) return true;
+    if (cs.boxShadow !== 'none' || cs.outlineStyle !== 'none') return true;
+    for (const n of c.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return true;
+    return false;
+  }
   function collect(root){
     const vw = innerWidth, vh = innerHeight, els = [], idx = new Map();
     const walk = (el, parentIdx, depth) => {
@@ -21,7 +30,7 @@
         const r = c.getBoundingClientRect();
         const on = r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw && cs.display !== 'contents';
         let me = parentIdx;
-        if (on && els.length < 1400){ me = els.length; els.push({ el: c, r, parent: parentIdx, depth, inline: cs.display.startsWith('inline') && c.tagName !== 'IMG' && c.tagName !== 'CANVAS' && c.tagName !== 'svg' }); idx.set(c, me); }
+        if (on && els.length < 1400){ me = els.length; els.push({ el: c, r, parent: parentIdx, depth, vis: draws(c, cs), inline: cs.display.startsWith('inline') && c.tagName !== 'IMG' && c.tagName !== 'CANVAS' && c.tagName !== 'svg' }); idx.set(c, me); }
         if (c.tagName.toLowerCase() !== 'svg' && c.tagName !== 'CANVAS') walk(c, me, depth + 1);
       }
     };
@@ -43,8 +52,8 @@
     const y = v => Math.min(1, Math.max(0, v / vh));
     const t = els.map(e => (mode === 'out' ? 1 - y(e.r.bottom) : y(e.r.top)) * W);
     const gap = 55;
-    if (mode === 'out'){ for (let i = els.length - 1; i >= 0; i--){ const p = els[i].parent; if (p >= 0) t[p] = Math.max(t[p], t[i] + gap); } }
-    else { for (let i = 0; i < els.length; i++){ const p = els[i].parent; if (p >= 0) t[i] = Math.max(t[i], t[p] + gap); } }
+    if (mode === 'out'){ for (let i = els.length - 1; i >= 0; i--){ const p = els[i].parent; if (p >= 0 && els[p].vis) t[p] = Math.max(t[p], t[i] + gap); } }
+    else { for (let i = 0; i < els.length; i++){ const p = els[i].parent; if (p >= 0 && els[p].vis) t[i] = Math.max(t[i], t[p] + gap); else if (p >= 0) t[i] = Math.max(t[i], t[p]); } }
     return t.map(x => Math.min(W, x));
   }
 
@@ -63,7 +72,7 @@
     const st = { anims: [], texts: [], job: Math.random() }; state.set(root, st);
     const { els, texts, vh } = collect(root);
     const D = Math.max(260, Math.min(520, ms * .2)), W = Math.max(300, ms - D);
-    const T0s = schedule(els, vh, mode, W), m0 = T0s.length ? Math.min(...T0s) : 0, T = T0s.map(x => x - m0), Wr = W - m0;   // start at the content, not at the empty edge
+    const T0s = schedule(els, vh, mode, W), Tv = T0s.filter((x, i) => els[i].vis), m0 = Tv.length ? Math.min(...Tv) : 0, T = T0s.map(x => x - m0), Wr = W - m0;   // start at the content, not at the empty edge
     const wire = `1px solid ${color}`, clear = '1px solid transparent';
     els.forEach((e, i) => {
       const dx = (Math.random() * 2 - 1) * 9, tf = !e.inline;
@@ -84,6 +93,7 @@
         { ...T0, opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined }
       ];
       kf.forEach(k => { if (k.transform === undefined) delete k.transform; });
+      if (!e.vis) return;   // a plain wrapper: its contents do the work
       try { st.anims.push(e.el.animate(kf, { duration: D, delay: T[i], easing: 'steps(6,end)', fill: mode === 'out' ? 'forwards' : 'both' })); } catch (_){}
     });
     // the text: decays as its element is torn down, types back in once its element has formed
@@ -91,7 +101,7 @@
     st.texts = texts;
     beam(color, mode, Wr, m0 / W);
     const t0 = performance.now(), job = st.job;
-    const end = mode === 'out' ? Wr + D : Wr + D * .35 + 540;
+    const last = Math.max(0, ...T.filter((x, i) => els[i].vis)), end = mode === 'out' ? last + D : last + D * .35 + 540;
     return new Promise(res => {
       (function f(now){
         if (state.get(root) !== st || st.job !== job) return res();
