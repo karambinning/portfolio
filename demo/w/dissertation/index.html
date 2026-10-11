@@ -328,7 +328,7 @@
   const opt = (html, on, attrs = '') => `<button type="button" class="opt" aria-pressed="${on}" ${attrs}>${html}</button>`;
   function renderHs(){
     $('xHs').innerHTML = HS.map(h => opt(`<b>${h.k}</b>${h.name}`, hs === h, `data-h="${h.k}" title="Hotspot ${h.k} · ${h.name} · ${h.id} (synthetic)"`)).join('');
-    G.marks(HS.map(h => ({ k: h.k, p: h.p, label: hs === h ? h.k + ' · ' + h.id : h.k, sel: hs === h })), pickHs);
+    G.marks(HS.map(h => ({ k: h.k, p: h.p, label: hs === h && !dy ? h.k + ' · ' + h.id : h.k, sel: hs === h })), pickHs);
   }
   function renderDy(){
     $('xDy').innerHTML = hs ? hs.dy.map((d, i) => opt(`<b>D${i + 1}</b>${d.a} ⇄ ${d.b}<s>· SYNTHETIC</s>`, dy === d, `data-d="${i}"`)).join('') : '';
@@ -349,7 +349,7 @@
   $('xHs').addEventListener('click', e => { const b = e.target.closest('[data-h]'); b && pickHs(b.dataset.h); });
   $('xDy').addEventListener('click', e => {
     const b = e.target.closest('[data-d]'); if (!b) return;
-    dy = hs.dy[+b.dataset.d]; renderDy(); sync(); G.dyad(dy);
+    dy = hs.dy[+b.dataset.d]; renderHs(); renderDy(); sync(); G.dyad(dy);
   });
   $('xCo').addEventListener('click', e => {
     const b = e.target.closest('[data-c]'); if (!b) return;

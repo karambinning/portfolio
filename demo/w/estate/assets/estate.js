@@ -789,7 +789,9 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
 addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!closeReadout()) home(); } });
 
 /* callouts and machine cards fade in once the build has placed the hubs */
+const calloutsEl = document.getElementById('callouts');
 function reveal(){
+  calloutsEl.style.visibility = '';
   cos.forEach((c, i) => setTimeout(() => { if (!sel){ c.classList.remove('hide'); c._lt = performance.now(); } dirty = true; }, reduce ? 0 : i * 90));
   IDS.forEach((id, i) => setTimeout(() => nodeBtns[id].classList.remove('pre'), reduce ? 0 : 150 + i * 90));
 }
@@ -907,7 +909,8 @@ function startBuild(){
   live = filings = false;
   while (firings.length) kill(firings.pop());
   PENDING.length = 0; FL.forEach(f => f.el.remove()); FL.length = 0;
-  nextFire = T + 99; nextEvent = T + 99; nextLint = T + 99;
+  nextFire = T + 99; nextEvent = T + 99; nextLint = T + 99; lintT = -99; lintRing.material.opacity = 0;
+  calloutsEl.style.visibility = 'hidden'; leaders.innerHTML = '';
   bigEl.textContent = ''; cos.forEach(c => c.classList.add('hide'));
   IDS.forEach(id => nodeBtns[id].classList.add('pre'));
   for (const id of IDS) MX[id].spawn = 0;
