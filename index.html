@@ -379,19 +379,19 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 #atkLayer[hidden]{display:none}
 #atkLayer{position:fixed;inset:0;z-index:50;pointer-events:none}
 #atkLayer.dim{transition:opacity .45s;opacity:0}
-.atkw{position:absolute;width:min(260px,62vw);background:#140003;border:1px solid #ff2a3d;box-shadow:0 0 22px rgba(255,0,51,.45);font:600 12px/1.4 var(--mono);color:#ff5a5a;animation:atkPop .14s steps(2) both;will-change:transform}
+.atkw{position:absolute;width:min(270px,62vw);background:rgba(20,0,2,.92);border:1px solid #5a0000;box-shadow:0 0 22px rgba(255,48,48,.3);font:700 12px/1.4 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#ff5050;animation:atkPop .14s steps(2) both;will-change:transform}
 @keyframes atkPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
-.atkw-bar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:#ff0033;color:#140003;font-size:10px;letter-spacing:.14em}
+.atkw-bar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:#ff3030;color:#140003;font:700 10.5px/1.35 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.18em}
 .atkw-bar i{width:6px;height:6px;border-radius:50%;background:#140003}
 .atkw-bar span{margin-left:6px}
-.atkw-b{padding:10px 10px 12px;letter-spacing:.08em}
+.atkw-b{padding:10px 10px 12px;color:#f4cccc;letter-spacing:.06em}
 .atkw-b b{animation:blink .5s steps(1) infinite}
 .atkw.close{transition:transform .18s ease-in,opacity .18s;transform:scaleY(.02);opacity:0}
-.atk-tint{position:fixed;inset:0;z-index:49;pointer-events:none;background:#b0001c;mix-blend-mode:multiply;opacity:0;transition:opacity .12s}
+.atk-tint{position:fixed;inset:0;z-index:49;pointer-events:none;background:#6a0008;mix-blend-mode:multiply;opacity:0;transition:opacity .12s}
 .atk-tint.full{opacity:.9}
 .atk-tint.lift{transition:opacity .5s;opacity:0 !important}
 .atk-tint.recover{transition:opacity .6s,background-color .35s;background:#00d4ff;opacity:0 !important}
-.atk-big{position:fixed;left:50%;top:50%;z-index:51;transform:translate(-50%,-50%) scale(.7);opacity:0;pointer-events:none;font:400 clamp(44px,9vw,120px)/1 var(--display);letter-spacing:.06em;color:#ff0033;text-shadow:4px 0 #600,-4px 0 #ff9090,0 0 40px rgba(255,0,51,.8);white-space:nowrap}
+.atk-big{position:fixed;left:50%;top:50%;z-index:51;transform:translate(-50%,-50%) scale(.7);opacity:0;pointer-events:none;font:400 clamp(44px,9vw,120px)/.95 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em;color:#ff3030;text-shadow:0 0 26px rgba(255,48,48,.55);white-space:nowrap}
 .atk-big.on{opacity:1;transform:translate(-50%,-50%) scale(1);transition:transform .12s steps(3),opacity .1s}
 .atk-big.blue{color:#00d4ff;text-shadow:3px 0 #003a4a,-3px 0 #9ff3ff,0 0 40px rgba(0,212,255,.7)}
 /* attack: shake, tears, strobing red edge */
@@ -407,7 +407,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 .atk-tears i:nth-child(4){top:58%;height:8%;animation-duration:.12s} .atk-tears i:nth-child(5){top:73%;animation-duration:.09s} .atk-tears i:nth-child(6){top:88%;height:5%;animation-duration:.15s}
 @keyframes tear{from{transform:translate3d(-8%,0,0)}to{transform:translate3d(8%,0,0)}}
 .atk-fx.hard .atk-tears i{opacity:.85} .atk-fx.max .atk-tears i{opacity:1;animation-duration:.07s}
-.atk-edge{position:absolute;inset:0;border:6px solid #ff0033;box-shadow:inset 0 0 60px rgba(255,0,51,.7);animation:edge .18s steps(2) infinite}
+.atk-edge{position:absolute;inset:0;border:4px solid #ff3030;box-shadow:inset 0 0 60px rgba(255,48,48,.55);animation:edge .18s steps(2) infinite}
 @keyframes edge{50%{opacity:.25}}
 .atk-tint.strobe{animation:strobe .12s steps(2) 3}
 @keyframes strobe{50%{opacity:.4}}
@@ -432,9 +432,9 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 /* the arrival into the dissertation: red shutters rip apart */
 .atk-shut[hidden]{display:none}
 .atk-shut{position:fixed;inset:0;z-index:51;pointer-events:none;overflow:hidden}
-.atk-shut i{position:absolute;left:0;right:0;background:#b0001c;overflow:hidden;box-shadow:0 1px 0 #ff3355,0 -1px 0 #600010;will-change:transform}
+.atk-shut i{position:absolute;left:0;right:0;background:#6a0008;overflow:hidden;box-shadow:0 1px 0 #ff3355,0 -1px 0 #600010;will-change:transform}
 .atk-shut i span{position:absolute;left:50%;height:100vh;width:100%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;
-  font:400 clamp(44px,9vw,120px)/1 var(--display);letter-spacing:.06em;color:#ff0033;text-shadow:4px 0 #600,-4px 0 #ff9090;white-space:nowrap}
+  font:400 clamp(44px,9vw,120px)/.95 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em;color:#ff3030;text-shadow:0 0 26px rgba(255,48,48,.55);white-space:nowrap}
 .atk-shut.go i{animation:shutter .62s cubic-bezier(.7,0,.25,1) both}
 @keyframes shutter{0%{transform:none}18%{transform:translate3d(calc(var(--dir) * 2%),0,0);filter:brightness(1.6)}100%{transform:translate3d(calc(var(--dir) * 110%),0,0)}}
 .scene.redboot{animation:redboot .8s ease-out both}
@@ -1301,7 +1301,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
   function atkWin(layer, i){
     const w = document.createElement('div'); w.className = 'atkw';
     w.style.left = (4 + Math.random() * 72) + '%'; w.style.top = (6 + Math.random() * 74) + '%';
-    w.innerHTML = `<div class="atkw-bar"><i></i><i></i><i></i><span>⚠ RED TEAM · ${String(i + 1).padStart(2, '0')}</span></div><div class="atkw-b">${ATK_MSG[i % ATK_MSG.length]}<b>_</b></div>`;
+    w.innerHTML = `<div class="atkw-bar"><span>⚠ RED TEAM · ${String(i + 1).padStart(2, '0')}</span></div><div class="atkw-b">${ATK_MSG[i % ATK_MSG.length]}<b>_</b></div>`;
     layer.appendChild(w); return w;
   }
   function attackIn(){
