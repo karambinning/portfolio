@@ -47,9 +47,36 @@
     });
     let ty = null; addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive:true });
     addEventListener('touchend', e => { if (ty === null) return; const dy = ty - e.changedTouches[0].clientY; ty = null;
+      if (PHONE()) return;   // phones use the handler below
       if (document.body.classList.contains('holding')) return; // a press-and-hold is not a swipe
       if (Math.abs(dy) > 60 && !canScroll(e.target, Math.sign(dy))) parent.postMessage({ kbStep: Math.sign(dy) }, '*'); }, { passive:true });
+    /* phones: like a feed. A vertical swipe changes channel only if, when the finger went down, the content under it
+       was already at that end; a horizontal swipe (carousels, wheels, drags) never does; a long press never does. */
+    let g = null;
+    addEventListener('touchstart', e => { if (!PHONE() || e.touches.length > 1){ g = null; return; } const t = e.touches[0];
+      g = { x: t.clientX, y: t.clientY, t: performance.now(), up: !canScroll(e.target, -1), down: !canScroll(e.target, 1), el: e.target }; }, { passive:true });
+    addEventListener('touchend', e => { if (!g) return; const t = e.changedTouches[0], dx = t.clientX - g.x, dy = g.y - t.clientY, s = g; g = null;
+      if (document.body.classList.contains('holding') || s.el.closest('[data-noswipe],input,textarea,select,canvas[data-drag]')) return;
+      if (Math.abs(dy) < 60 || Math.abs(dy) < Math.abs(dx) * 1.3 || performance.now() - s.t > 900) return;
+      if (dy > 0 ? s.down : s.up) parent.postMessage({ kbStep: Math.sign(dy) }, '*'); }, { passive:true });
   }
+  /* phones: the page itself never rubber-bands; only things that can scroll, scroll */
+  function PHONE(){ return matchMedia('(max-width:600px)').matches; }
+  (function(){
+    let sx = 0, sy = 0;
+    const scroller = (el, ax, d) => { for (let n = el; n && n !== document.documentElement && n !== document.body; n = n.parentElement){
+      const cs = getComputedStyle(n), ov = ax === 'x' ? cs.overflowX : cs.overflowY; if (!/(auto|scroll)/.test(ov)) continue;
+      if (ax === 'x' ? n.scrollWidth > n.clientWidth + 1 : (d > 0 ? n.scrollTop + n.clientHeight < n.scrollHeight - 1 : n.scrollTop > 0)) return n; } return null; };
+    addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive:true });
+    addEventListener('touchmove', e => {
+      if (!PHONE() || e.touches.length > 1 || !e.cancelable) return;
+      const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy, el = e.target;
+      if (el.closest && el.closest('input,textarea,select,[data-touch]')) return;
+      if (getComputedStyle(el).touchAction === 'none') return;
+      if (Math.abs(dx) > Math.abs(dy)) { if (!scroller(el, 'x')) e.preventDefault(); }
+      else if (!scroller(el, 'y', dy < 0 ? 1 : -1)) e.preventDefault();
+    }, { passive:false });
+  })();
 
   /* deconstruct / reconstruct on request from the portfolio (the dissertation transitions): every element, see dismantle.js */
   (function(){

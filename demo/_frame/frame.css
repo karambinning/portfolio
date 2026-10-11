@@ -129,3 +129,39 @@ body{animation:t-flicker 6s steps(1) infinite}
   body,.term .roll,.term.on,.t-title::after,.t-unit .live i,.t-twitch{animation:none}
   .term .roll{display:none}
 }
+
+/* ---------- phones (≤ 600px): the same terminal, laid out for a thumb ----------
+   Nothing here applies above 600px. Type stays ≥ 12px, controls are ≥ 44px tall, the page never
+   scrolls sideways, and the hub bar becomes one swipeable row instead of three wrapped lines. */
+@media (max-width:600px){
+  html,body{overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  a,button,[role="button"],label{-webkit-tap-highlight-color:transparent}
+  .t-head,.t-unit,.t-ctl,.t-hub,.t-btn,.t-tag,.t-label,.t-mock{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input,textarea,select{font-size:16px}
+  .t-head{padding:10px 14px 2px;gap:10px}
+  .t-brand{font-size:16px}
+  .t-unit{padding:2px 14px 6px;font-size:11px;gap:8px}
+  .t-unit > span:first-child{min-width:0}
+  .t-unit .live{white-space:nowrap;flex:none}
+  .t-title{font-size:19px}
+  .t-sub{font-size:14px;margin-top:4px}
+  .t-sub2{font-size:13px}
+  .t-body{padding:8px 14px 10px;gap:12px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .t-p{font-size:13.5px}
+  .t-label{font-size:12px;letter-spacing:.1em}
+  .t-list li{font-size:13px}
+  .t-stat span{font-size:12px;letter-spacing:.04em}
+  .t-tag{font-size:12px}
+  .t-mock{font-size:12px;letter-spacing:.06em;padding:3px 6px}
+  /* bracketed controls: thumb-sized, pressed state like a native button */
+  .t-ctl{gap:2px 14px;padding:4px 14px 6px}
+  .t-btn{display:inline-flex;align-items:center;min-height:44px;font-size:14px}
+  .t-btn:active{opacity:.7;transform:scale(.96)}
+  /* the hub bar: one row you can swipe through */
+  .t-hub{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;gap:0 16px;padding:0 14px calc(env(safe-area-inset-bottom) * .5);font-size:13px}
+  .t-hub::-webkit-scrollbar{display:none}
+  .t-hub button{display:inline-flex;align-items:center;min-height:44px;scroll-snap-align:start;flex:none}
+  .t-hub button:active{opacity:.7}
+  .t-hub .t-mock{flex:none;align-self:center;margin-left:8px}
+}
