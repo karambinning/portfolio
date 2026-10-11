@@ -268,6 +268,7 @@
     .card{top:47%;padding:8px 6px 9px;gap:4px;-webkit-tap-highlight-color:transparent}
     /* the neighbours are previews: sprite and name only, so nothing is shrunk below a readable size */
     .card.side .ccls,.card.side .bdg,.card.side .cr{visibility:hidden}
+    .stage.compact{min-height:196px} .stage.compact .card .cr{display:none} .stage.compact .card{top:46%}
     .card .press{font-size:0}
     .card .press::after{content:"TAP ▸ PICK";font-size:12px}
     .card .ccls{font-size:12px;letter-spacing:.04em;line-height:1.2}
@@ -865,7 +866,8 @@
     const tb = document.querySelector('.t-body'), tr = tb.getBoundingClientRect(), cs = getComputedStyle(tb);
     const top = stage.getBoundingClientRect().top - tr.top + tb.scrollTop;
     const avail = tb.clientHeight - parseFloat(cs.paddingBottom) - top - document.querySelector('#sScr .banner').offsetHeight - 10;
-    stage.style.height = Math.max(236, Math.round(avail)) + 'px';
+    stage.style.height = Math.max(196, Math.round(avail)) + 'px';
+    stage.classList.toggle('compact', avail < 236);   // short screens: the role line moves to the banner only
   }
   function layout(){
     if (PHONE()){ layoutPhone(); return; }
