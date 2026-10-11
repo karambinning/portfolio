@@ -599,6 +599,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 @keyframes tlLi{from{opacity:0;transform:translateX(16px)}}
 .tl-hint .arw{display:inline-block;color:var(--acc);animation:tlArw 1.2s ease-in-out infinite;margin-right:4px}
 @keyframes tlArw{50%{transform:translateY(3px)}}
+.tl-hint .h-p{display:none} @media (max-width:600px){ .tl-hint .h-p{display:inline} .tl-hint .h-d{display:none} }
 @media (max-width:900px){ .tl-stop .tl-ttl{display:none} #timeline .tl-rail{height:54px} }
 @media (prefers-reduced-motion:reduce){ #timeline .tl-step.arrive .pts li,.tl-hint .arw{animation:none} }
 /* short laptop screens: tighten so the longest moment still fits without scrolling */
@@ -921,7 +922,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     </ul>
   </div>
     </div>
-    <div class="tl-hint"><span class="arw" aria-hidden="true">↓</span>scroll to slide along the timeline · <b id="tlPos">1 / 4</b></div>
+    <div class="tl-hint"><span class="arw" aria-hidden="true">↓</span><span class="h-d">scroll</span><span class="h-p">swipe</span> to slide along the timeline · <b id="tlPos">1 / 4</b></div>
   </div>
 </section>
 
