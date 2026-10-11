@@ -627,7 +627,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     </div>
     <p class="lede">I study conflict, security and the international order. With Claude as my main tool, I build applications, software and small-scale infrastructure. Everything here was built since March 2026, alongside the degree, with no programming background.</p>
     <div class="actions">
-      <a class="btn" href="cv/Karam-Binning-CV.pdf?v=37639e55" target="_blank" rel="noopener">Download CV</a>
+      <a class="btn" href="cv/Karam-Binning-CV.pdf?v=8ed74404" target="_blank" rel="noopener">Download CV</a>
       <a class="btn quiet" href="#contact" data-go="contact">Get in touch</a>
       <span class="howto">Scroll, swipe or use ↑ ↓ to change channel</span>
     </div>
@@ -822,7 +822,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <p class="copy">Open to internships for winter 2026/27 and summer 2027. Type a message into the terminal and it goes straight to my university inbox.</p>
       <p style="margin-top:22px"><a class="mail" href="mailto:K.S.Binning1-24@student.lboro.ac.uk">K.S.Binning1-24@student.lboro.ac.uk</a></p>
       <div class="actions" style="margin-top:24px">
-        <a class="btn" href="cv/Karam-Binning-CV.pdf?v=37639e55" target="_blank" rel="noopener">Download CV</a>
+        <a class="btn" href="cv/Karam-Binning-CV.pdf?v=8ed74404" target="_blank" rel="noopener">Download CV</a>
         <a class="btn quiet" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the research proposal</a>
         <button class="btn hack" type="button" id="hackTop">[ HACK TO TOP ]</button>
       </div>
@@ -1319,17 +1319,17 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       if (reduce){ return res(); }
       layer.innerHTML = ''; layer.hidden = false; tint.className = 'atk-tint'; big.classList.remove('on');
       const fx = $('#atkFx'); fx.hidden = false; fx.className = 'atk-fx';
-      document.body.classList.add('under-attack'); burst(1600);
-      let i = 0; const total = 22;
+      document.body.classList.add('under-attack'); burst(600);   // short and sharp: the transfer is the main event
+      let i = 0; const total = 10;
       (function spawn(){
         if (i < total){
           i++; tint.style.opacity = (i / total * .82).toFixed(3);
-          document.body.style.setProperty('--shake', (2 + i * .7).toFixed(1) + 'px');
-          if (i === 8) fx.classList.add('hard'); if (i === 15) fx.classList.add('max');
-          return setTimeout(spawn, Math.max(28, 110 - i * 5));
+          document.body.style.setProperty('--shake', (3 + i * 1.2).toFixed(1) + 'px');
+          if (i === 4) fx.classList.add('hard'); if (i === 7) fx.classList.add('max');
+          return setTimeout(spawn, 45);
         }
-        tint.classList.add('full', 'strobe'); burst(500);
-        setTimeout(() => { document.body.classList.remove('under-attack'); fx.hidden = true; res(); }, 420);
+        tint.classList.add('full', 'strobe'); burst(200);
+        setTimeout(() => { document.body.classList.remove('under-attack'); fx.hidden = true; res(); }, 140);
       })();
     });
   }
@@ -1339,13 +1339,13 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       const layer = $('#atkLayer'), tint = $('#atkTint');
       if (reduce || layer.hidden){ layer.hidden = true; return res(); }
       document.body.classList.add('under-defence');
-      let i = 0; const total = 12;
+      let i = 0; const total = 8;
       (function spawn(){
         if (i < total){
           i++; tint.style.background = `rgb(${Math.round(90 - 90 * i / total)},${Math.round(16 + 60 * i / total)},${Math.round(16 + 90 * i / total)})`;
-          return setTimeout(spawn, Math.max(30, 100 - i * 5));
+          return setTimeout(spawn, 40);
         }
-        document.body.classList.remove('under-defence'); setTimeout(res, 240);
+        document.body.classList.remove('under-defence'); setTimeout(res, 80);
       })();
     });
   }
@@ -1562,7 +1562,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         await attackOut();
       }
       const settled = atkSettle(col);                            // the attack / defence windows come apart detail by detail
-      await new Promise(r => setTimeout(r, 420));                // as they go, the page underneath starts to come apart too
+      await new Promise(r => setTimeout(r, 120));                // as they go, the page underneath starts to come apart too
       await Promise.all([settled, chanText(a, 'out', 2300, col)]);   // the opposing colour infects it, then it comes apart one detail at a time
       await crtPower(false, col);                                // then the screen switches off like an old CRT
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
