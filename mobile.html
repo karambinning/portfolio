@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karam Binning — Portfolio</title>
+<meta name="description" content="Karam Binning — final-year History & Politics at Loughborough, and a self-taught builder of working AI systems. Open to internships for winter 2026/27 and summer 2027.">
+<meta name="theme-color" content="#02060c">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="K·B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/app/kb-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/app/kb-192.png">
+<link rel="canonical" href="https://karambinning.github.io/portfolio/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Phone app version of the portfolio: the KAM CRT tokens and type from index.html, in an app shell. */
+:root{
+  --void:#04080f; --shell:#02060c; --glass:#070e1c; --rule:#142338; --dim:#5f7d99; --text:#d8ecff;
+  --body:#b4cbe2; --phos:#00d4ff; --amber:#f5c518; --red:#ff3355;
+  --display:'Bebas Neue',Impact,sans-serif; --mono:'IBM Plex Mono','SF Mono',Menlo,monospace;
+  --gx:max(16px,env(safe-area-inset-left)); --gxr:max(16px,env(safe-area-inset-right));
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;overflow:hidden;background:var(--shell);-webkit-text-size-adjust:100%}
+body{position:fixed;inset:0;overflow:hidden;overscroll-behavior:none;background:var(--void);color:var(--text);font:400 15px/1.65 var(--mono);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+button{font:inherit;color:inherit}
+::selection{background:var(--phos);color:var(--void)}
+:focus-visible{outline:2px solid var(--phos);outline-offset:2px}
+@keyframes kbcur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes blink{50%{opacity:.2}}
+
+/* ---------- the shell ---------- */
+.app{position:fixed;inset:0;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--void)}
+.scan{position:absolute;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+
+.top{position:relative;z-index:30;display:flex;align-items:center;gap:6px;min-height:calc(52px + env(safe-area-inset-top));padding:env(safe-area-inset-top) var(--gxr) 0 calc(var(--gx) - 12px);
+  background:var(--shell);border-bottom:1px solid var(--rule)}
+.top .mark,.top .back{display:flex;align-items:center;justify-content:center;min-width:48px;height:48px;padding:0 12px;text-decoration:none;background:none;border:0;cursor:pointer}
+.top .mark{font:400 23px/1 var(--display);letter-spacing:.14em;color:var(--text)}
+.top .back{font:500 22px/1 var(--mono);color:var(--phos)}
+.top .back[hidden],.top .mark[hidden]{display:none}
+.top .now{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim);white-space:nowrap;overflow:hidden}
+.top .now b{color:var(--phos);font-weight:500}
+.top .now span{overflow:hidden;text-overflow:ellipsis}
+.rec{flex:none;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.6s steps(1) infinite}
+
+.view{position:relative;overflow:hidden;touch-action:pan-y}
+.screen{position:absolute;inset:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:22px var(--gxr) 40px var(--gx);visibility:hidden;background:var(--void)}
+.screen.on{visibility:visible}
+.sweep{position:absolute;left:0;right:0;top:0;height:18%;z-index:40;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent,rgba(0,212,255,.16) 45%,rgba(216,246,255,.35) 50%,rgba(0,212,255,.16) 55%,transparent)}
+
+.tabs{position:relative;z-index:30;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:0 calc(var(--gxr) - 12px) env(safe-area-inset-bottom) calc(var(--gx) - 12px);
+  background:var(--shell);border-top:1px solid var(--rule)}
+.tabs a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;padding:6px 0 5px;text-decoration:none;color:var(--dim);
+  font:500 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tabs a[aria-current="page"]{color:var(--phos);text-shadow:0 0 10px rgba(0,212,255,.6)}
+.tabs a[aria-current="page"] svg{filter:drop-shadow(0 0 5px rgba(0,212,255,.7))}
+.tabs a[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:2px;background:var(--phos);box-shadow:0 0 10px var(--phos)}
+body.typing .tabs{display:none}
+
+/* ---------- shared type ---------- */
+.ch-id{display:block;font:500 11px/1.4 var(--mono);color:var(--phos);letter-spacing:.12em;margin-bottom:14px;text-transform:uppercase}
+h2.mid{font:400 clamp(46px,14vw,64px)/.9 var(--display);margin-bottom:16px}
+.copy{color:var(--body);font-size:14.5px}
+.copy + .copy{margin-top:12px}
+.q{font:400 clamp(24px,7vw,30px)/1.12 var(--display);letter-spacing:.02em;color:var(--phos);margin:0 0 16px}
+.pts{list-style:none;border-top:1px solid var(--rule);margin-top:18px}
+.pts li{padding:11px 0 11px 22px;border-bottom:1px solid var(--rule);position:relative;color:var(--body);font-size:14px;line-height:1.55}
+.pts li::before{content:"›";position:absolute;left:4px;color:var(--phos)}
+.pts li.minor{color:var(--dim);font-size:13px}
+.pts b{color:var(--text);font-weight:500}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:50px;padding:12px 18px;border:1px solid var(--phos);color:var(--phos);background:transparent;letter-spacing:.06em;font:400 14px/1.2 var(--mono);text-decoration:none;cursor:pointer;text-align:center}
+.btn:active{background:var(--phos);color:var(--void)}
+.btn.quiet{border-color:var(--rule);color:var(--text)}
+.btn.quiet:active{background:transparent;border-color:var(--text)}
+.btn.solid{background:var(--phos);color:#02060c;font-weight:700;letter-spacing:.1em;box-shadow:0 0 22px rgba(0,212,255,.3)}
+.cta{position:sticky;bottom:-40px;margin:26px calc(-1 * var(--gxr)) -40px calc(-1 * var(--gx));padding:12px var(--gxr) 16px var(--gx);background:linear-gradient(180deg,rgba(4,8,15,0),var(--void) 30%)}
+.cta .btn{width:100%}
+
+/* list rows: the app's tappable cards */
+.rows{display:grid;gap:10px}
+.row{position:relative;display:block;padding:14px 44px 14px 14px;border:1px solid var(--rule);background:var(--glass);text-decoration:none;min-height:64px}
+.row::after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-50%);font:400 26px/1 var(--mono);color:var(--phos)}
+.row:active{border-color:var(--phos);background:#0a1628}
+.row .k{display:block;font:500 10.5px/1.3 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.row .t{display:block;font:400 30px/1 var(--display);letter-spacing:.03em;color:var(--text);margin-top:6px}
+.row .d{display:block;font-size:13px;color:var(--body);line-height:1.5;margin-top:6px}
+.sub-h{display:block;font:600 11px/1 var(--mono);letter-spacing:.14em;color:var(--phos);margin:30px 0 10px;text-transform:uppercase}
+
+/* ---------- home ---------- */
+.kb-logo{border-left:3px solid var(--phos);padding-left:14px;margin:4px 0 20px}
+.name{font:400 clamp(68px,22vw,104px)/.84 var(--display);letter-spacing:.09em;color:var(--phos);text-shadow:0 0 34px rgba(0,212,255,.45);margin-bottom:12px}
+.name span{display:block}
+.name .cur{font-weight:400;animation:kbcur 1.05s steps(1) infinite;color:var(--phos)}
+.kb-sub{font:500 10px/1.5 var(--mono);color:#3a6080;letter-spacing:.26em}
+.kb-net{display:flex;align-items:center;gap:10px;margin-top:10px;font:500 10px/1.4 var(--mono);letter-spacing:.2em;color:#2a7050}
+.kb-net i{flex:none;width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:blink 1.8s steps(1) infinite}
+.kb-status{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #0d1e35;margin-bottom:20px}
+.kb-status div{padding:10px 12px;border-bottom:1px solid #0d1e35;display:flex;flex-direction:column;gap:4px}
+.kb-status div:nth-child(odd){border-right:1px solid #0d1e35;padding-left:0}
+.kb-status span{font:500 9px/1 var(--mono);letter-spacing:.2em;color:#2a4a6a}
+.kb-status b{font:500 12px/1.3 var(--mono);color:var(--text);letter-spacing:.06em}
+.kb-status b.g{color:#00ff88}
+.lede{color:var(--body);font-size:15px}
+.chans .row{padding-top:12px;padding-bottom:12px;min-height:56px}
+.chans .row .t{font-size:24px;margin-top:4px}
+
+/* ---------- timeline ---------- */
+.rail{position:sticky;top:-22px;z-index:5;display:flex;gap:6px;margin:-22px calc(-1 * var(--gxr)) 8px calc(-1 * var(--gx));padding:10px var(--gxr) 10px var(--gx);
+  overflow-x:auto;scrollbar-width:none;touch-action:pan-x;background:rgba(4,8,15,.96);border-bottom:1px solid var(--rule)}
+.rail::-webkit-scrollbar{display:none}
+.rail a{flex:none;display:flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--rule);font:400 20px/1 var(--display);letter-spacing:.06em;color:var(--dim);text-decoration:none}
+.rail a.on{border-color:var(--phos);color:var(--phos);box-shadow:0 0 14px rgba(0,212,255,.2)}
+.moment{margin-top:16px;padding:18px 14px 6px;border:1px solid var(--rule);background:var(--glass);scroll-margin-top:72px}
+.date{font:400 clamp(54px,17vw,76px)/.82 var(--display);color:var(--phos);margin-bottom:12px;text-shadow:0 0 30px rgba(0,212,255,.25)}
+.moment h3{font:500 17px/1.35 var(--mono);margin-bottom:10px;color:var(--text)}
+.moment .pts{margin-top:14px;border-top:1px solid var(--rule)}
+.moment .pts li:last-child{border-bottom:0}
+
+/* ---------- work ---------- */
+.wk-chip{display:inline-block;font:600 10px/1.3 var(--mono);letter-spacing:.18em;color:#001018;background:var(--phos);padding:5px 8px}
+.wk-title{font:800 clamp(28px,9vw,40px)/1 var(--mono);color:#fff;letter-spacing:-.01em;margin:12px 0 6px;text-shadow:0 0 18px rgba(0,212,255,.7),0 0 2px #00d4ff}
+.wk-title .br,.wk-title .cur{color:var(--phos)}
+.wk-title .cur{animation:blink 1.05s steps(1) infinite}
+.wk-hint{display:block;font:500 12px/1.4 var(--mono);color:var(--dim);letter-spacing:.04em;margin-bottom:18px}
+.proj{position:relative;display:block;text-decoration:none;background:#03070d;border:1px solid color-mix(in srgb,var(--acc) 34%,#0d1e35);overflow:hidden}
+.proj:active{border-color:var(--acc);box-shadow:0 0 22px color-mix(in srgb,var(--acc) 30%,transparent)}
+.wt-bar{display:flex;align-items:center;gap:5px;padding:7px 10px;border-bottom:1px solid color-mix(in srgb,var(--acc) 25%,#0d1e35);font:500 10px/1 var(--mono);color:#3a6080;letter-spacing:.04em}
+.wt-bar i{flex:none;width:7px;height:7px;border-radius:50%;background:#1e3a5f}
+.wt-bar i:first-child{background:var(--acc)}
+.wt-bar span:first-of-type{margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.wt-u{margin-left:auto;flex:none;color:var(--acc);opacity:.75}
+.wt-body{display:block;padding:12px 44px 14px 14px;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 3px)}
+.proj .wt-body::after{content:"›";position:absolute;right:16px;bottom:22px;font:400 26px/1 var(--mono);color:var(--acc)}
+.kind{display:block;font-size:11px;color:var(--dim);letter-spacing:.06em}
+.flag{color:var(--amber)}
+.proj h3{font:700 18px/1.2 var(--mono);color:var(--acc);margin:8px 0 6px;letter-spacing:.01em;text-shadow:0 0 14px color-mix(in srgb,var(--acc) 40%,transparent);text-transform:uppercase}
+.wt-p{color:#6c5cff}
+.proj p{font-size:13.5px;color:#b9cfe4;line-height:1.5}
+.also ul{list-style:none;border-top:1px solid var(--rule)}
+.also li{padding:12px 0;border-bottom:1px solid var(--rule)}
+.also li b{display:block;font:700 12.5px/1.3 var(--mono);color:var(--c);letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px}
+.also li span{display:block;font-size:13.5px;color:var(--body);line-height:1.55}
+
+/* project detail */
+.pd-head{border:1px solid color-mix(in srgb,var(--acc) 40%,#0d1e35);background:#03070d;margin-bottom:18px}
+.pd-head .wt-body{padding:14px}
+.pd-head h2{font:700 clamp(24px,7.5vw,32px)/1.1 var(--mono);color:var(--acc);text-transform:uppercase;margin:8px 0 0;text-shadow:0 0 16px color-mix(in srgb,var(--acc) 45%,transparent);overflow-wrap:anywhere}
+.pd-head h2 .cur{animation:blink 1.05s steps(1) infinite}
+.pd-line{font-size:16px;line-height:1.55;color:var(--text);margin-bottom:14px}
+.pd .pts li::before{color:var(--acc)}
+.proof{margin-top:16px;padding:10px 12px;border-left:2px solid var(--acc);background:rgba(255,255,255,.02);font-size:12.5px;color:var(--dim);line-height:1.5}
+.pd .btn{border-color:var(--acc);color:var(--acc)}
+.pd .btn.solid{background:var(--acc);color:#02060c;box-shadow:0 0 22px color-mix(in srgb,var(--acc) 35%,transparent)}
+
+/* ---------- estate / dissertation ---------- */
+.data{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:20px}
+.data div{background:var(--void);padding:12px}
+.data strong{display:block;font:400 32px/1 var(--display);color:var(--phos);letter-spacing:.02em}
+.data span{font-size:11.5px;color:var(--dim);line-height:1.4}
+.lab{margin-top:20px;border:1px solid var(--rule);background:var(--glass)}
+.lab-bar{padding:8px 12px;border-bottom:1px solid var(--rule);font:500 11px/1 var(--mono);letter-spacing:.12em;color:var(--phos);text-transform:uppercase}
+.lab img{display:block;width:100%;height:auto;background:#03070d}
+.lab-note{padding:10px 12px;font-size:12px;color:var(--dim);line-height:1.5}
+
+/* ---------- contact ---------- */
+h2.kamh{font:400 clamp(44px,14vw,64px)/.9 var(--display);text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:16px;
+  text-shadow:0 0 30px rgba(255,255,255,.32),0 0 2px rgba(255,255,255,.6)}
+h2.kamh .cur{font-weight:400;color:#fff;animation:kbcur 1.05s steps(1) infinite}
+.mail{display:inline-flex;align-items:center;min-height:44px;margin-top:14px;font:400 clamp(20px,6.4vw,28px)/1.15 var(--display);letter-spacing:.02em;text-decoration:none;border-bottom:2px solid var(--phos);overflow-wrap:anywhere}
+.tx{margin-top:24px;border:1px solid color-mix(in srgb,var(--phos) 40%,var(--rule));background:#03070d;box-shadow:0 0 30px rgba(0,212,255,.08)}
+.tx-bar{display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(#0b1828,#071120);border-bottom:1px solid color-mix(in srgb,var(--phos) 40%,var(--rule));font-size:11px;letter-spacing:.08em;color:var(--dim)}
+.tx-dots{display:flex;gap:6px;flex:none}.tx-dots i{width:9px;height:9px;border-radius:50%;background:#16273a}.tx-dots i:first-child{background:#ff3355}.tx-dots i:nth-child(2){background:#ffcc00}.tx-dots i:nth-child(3){background:#00ff88}
+.tx-title{flex:1;min-width:0;text-align:center;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-live{color:#00ff88;white-space:nowrap;flex:none} .tx-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;margin-right:5px;animation:blink 1.6s steps(1) infinite}
+.tx-body{padding:12px 12px 14px}
+.tx-boot{color:var(--phos);font-size:12px;margin-bottom:6px}
+.tx-lead{margin:2px 0 10px;color:var(--text);font-size:13px;line-height:1.5}
+.tx-f{display:flex;flex-direction:column;gap:4px;padding:6px 0}
+.tx-f span{color:var(--phos);font-size:11.5px;letter-spacing:.06em}
+/* 16px inputs: iOS zooms the page on focus for anything smaller */
+.tx-f input,.tx-f textarea{width:100%;min-height:48px;background:rgba(0,212,255,.04);border:1px solid var(--rule);border-radius:0;color:#fff;font:400 16px/1.4 var(--mono);padding:11px 10px;caret-color:var(--phos);resize:none;-webkit-appearance:none;appearance:none}
+.tx-f textarea{min-height:130px}
+.tx-f input::placeholder,.tx-f textarea::placeholder{color:#3b5568}
+.tx-f input:focus,.tx-f textarea:focus{outline:none;border-color:var(--phos);box-shadow:0 0 0 1px var(--phos),0 0 14px rgba(0,212,255,.2)}
+.tx-hp{position:absolute;left:-9999px}
+.tx-ctl{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.tx-btn{min-height:50px;cursor:pointer;font:700 12px/1 var(--mono);letter-spacing:.12em;padding:0 16px;border:1px solid var(--rule);background:transparent;color:var(--dim);border-radius:0;-webkit-appearance:none;appearance:none}
+.tx-btn.go{flex:1;border-color:var(--phos);background:var(--phos);color:#02060c;box-shadow:0 0 18px rgba(0,212,255,.3)}
+.tx-btn.go:active{background:#fff;border-color:#fff}
+.tx-count{width:100%;font-size:11px;color:var(--dim);letter-spacing:.08em;text-align:right}
+.tx-out{min-height:1.6em;margin-top:10px;color:var(--dim);white-space:pre-wrap;font-size:13px;overflow-wrap:anywhere}
+.tx-out .ok{color:#00ff88} .tx-out .err{color:var(--red)} .tx-out .k{color:var(--phos)}
+.sh{margin-top:24px;border:1px solid var(--rule);padding:12px}
+.sh-h{display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;font-size:10.5px;letter-spacing:.14em;color:var(--phos);margin-bottom:8px}
+.sh-hint{color:#2a4a6a;letter-spacing:.08em}
+.sh-link{display:flex;align-items:center;gap:8px;border-bottom:1px dashed #1e3a5f;margin-bottom:4px}
+.sh-link span{color:var(--phos)}
+.sh-link input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);font:400 16px/1 var(--mono);min-height:44px}
+.sh-link input:focus{outline:none}
+.sh-row{display:flex;flex-wrap:wrap;gap:0 16px}
+.sh-b{display:inline-flex;align-items:center;min-height:44px;background:none;border:0;cursor:pointer;color:var(--c);font:500 13px/1 var(--mono);letter-spacing:.06em;white-space:nowrap;text-decoration:none;padding:0}
+.sh-b:focus-visible{outline:1px dashed var(--c);outline-offset:3px}
+.sh-qr{display:flex;align-items:center;gap:14px;margin-top:10px;font-size:11px;color:var(--dim)}
+.sh-qr[hidden]{display:none}
+.sh-qr #shQrBox{flex:none;border:1px solid var(--phos);line-height:0;box-shadow:0 0 18px rgba(0,212,255,.35)}
+.sh-out{min-height:1.4em;margin-top:6px;font-size:11px;color:#00ff88}
+.foot{margin-top:26px;display:flex;flex-direction:column}
+.foot a{display:inline-flex;align-items:center;min-height:44px;color:var(--dim);text-decoration:none;font-size:12px;letter-spacing:.06em}
+
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+<noscript><style>.app{position:static;display:block;height:auto}body,html{position:static;overflow:auto;height:auto}.view{overflow:visible}.screen{position:static;visibility:visible;overflow:visible}.tabs,.top .back{display:none}.cta{position:static}</style></noscript>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="mark" id="mark" href="#signal" aria-label="Back to the start">K·B</a>
+    <button class="back" id="back" type="button" aria-label="Back" hidden>←</button>
+    <div class="now" aria-live="polite"><i class="rec" aria-hidden="true"></i><b id="nowCh">CH 01</b><span id="nowName">SIGNAL</span></div>
+  </header>
+
+  <main class="view" id="view">
+
+<!-- ================= HOME ================= -->
+<section class="screen" id="s-signal" data-ch="CH 01" data-name="SIGNAL" aria-label="Introduction">
+  <div class="kb-logo">
+    <h1 class="name" aria-label="Karam Binning"><span>KARAM</span><span>BINNING<b class="cur" aria-hidden="true">_</b></span></h1>
+    <div class="kb-sub">FINAL YEAR · HISTORY &amp; POLITICS · LOUGHBOROUGH UNIVERSITY</div>
+    <div class="kb-net"><i></i><span>OPEN TO INTERNSHIPS · WINTER 2026/27 · SUMMER 2027</span></div>
+  </div>
+  <div class="kb-status" aria-label="At a glance">
+    <div><span>STUDY</span><b>HUMANITIES</b></div>
+    <div><span>MAIN TOOL</span><b class="g">CLAUDE</b></div>
+    <div><span>BUILDS</span><b>APPS · SOFTWARE · INFRA</b></div>
+    <div><span>SINCE</span><b>MARCH 2026</b></div>
+  </div>
+  <p class="lede">I study conflict, security and the international order. With Claude as my main tool, I build applications, software and small-scale infrastructure. Everything here was built since March 2026, alongside the degree, with no programming background.</p>
+  <div class="actions">
+    <a class="btn" href="cv/Karam-Binning-CV.pdf?v=8ed74404" target="_blank" rel="noopener">Download CV</a>
+    <a class="btn quiet" href="#contact">Get in touch</a>
+  </div>
+  <span class="sub-h">Channels</span>
+  <nav class="rows chans" aria-label="Channels">
+    <a class="row" href="#timeline"><span class="k">CH 02</span><span class="t">March to now</span></a>
+    <a class="row" href="#work"><span class="k">CH 03</span><span class="t">The work</span></a>
+    <a class="row" href="#estate"><span class="k">CH 04</span><span class="t">The estate</span></a>
+    <a class="row" href="#agents"><span class="k">CH 05</span><span class="t">The agents</span></a>
+    <a class="row" href="#proposal"><span class="k">CH 06</span><span class="t">Research design</span></a>
+    <a class="row" href="#dissertation"><span class="k">CH 07</span><span class="t">Dissertation</span></a>
+    <a class="row" href="#contact"><span class="k">CH 08</span><span class="t">Contact</span></a>
+  </nav>
+</section>
+
+<!-- ================= TIMELINE ================= -->
+<section class="screen" id="s-timeline" data-ch="CH 02" data-name="MARCH TO NOW" aria-label="March 2026 to now">
+  <nav class="rail" id="rail" aria-label="Timeline">
+    <a href="#tl-0" class="on">Mar</a><a href="#tl-1">Apr</a><a href="#tl-2">May–Jun</a><a href="#tl-3">Jul – now</a>
+  </nav>
+  <article class="moment" id="tl-0">
+    <div class="date">Mar 2026</div>
+    <h3>First line of code</h3>
+    <p class="copy">A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.</p>
+    <ul class="pts">
+      <li>First Claude session, after a year on ChatGPT, without ever having written a line of code</li>
+      <li>First build: an in-browser AI analyst for live Polymarket data</li>
+      <li>9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
+      <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
+      <li>The War Room conceived: a seven-agent trading team, run on paper</li>
+    </ul>
+  </article>
+  <article class="moment" id="tl-1">
+    <div class="date">Apr 2026</div>
+    <h3>A security scare, turned into a curriculum</h3>
+    <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
+    <ul class="pts">
+      <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
+      <li>Learned to read the logs properly; the evidence showed a false alarm</li>
+      <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
+      <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
+      <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
+      <li>It later grew into Future Warfare, a wider curriculum on modern conflict</li>
+      <li>Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis</li>
+    </ul>
+  </article>
+  <article class="moment" id="tl-2">
+    <div class="date">May–Jun 2026</div>
+    <h3>A small, semi-autonomous agent fleet</h3>
+    <p class="copy">I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me. Alongside it, the summer brought more tools for study, work and outreach.</p>
+    <ul class="pts">
+      <li>May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
+      <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
+      <li>June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
+      <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
+      <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
+      <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
+      <li class="minor">Anthropic Academy: three AI Fluency courses</li>
+    </ul>
+  </article>
+  <article class="moment" id="tl-3">
+    <div class="date">Jul 2026 – now</div>
+    <h3>The estate comes together</h3>
+    <p class="copy">Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.</p>
+    <ul class="pts">
+      <li>July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day</li>
+      <li>A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion</li>
+      <li>The intelligence engine audited and made queryable by my director agent</li>
+      <li>September: one canonical vault with written rules and a checker; Sentinel watching every machine</li>
+      <li>Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop</li>
+      <li>Final year: a dissertation on great-power war as a process, with its own forecasting lab</li>
+    </ul>
+  </article>
+</section>
+
+<!-- ================= WORK ================= -->
+<section class="screen" id="s-work" data-ch="CH 03" data-name="THE WORK" aria-label="The work">
+  <span class="wk-chip">PROJECTS · 8 TERMINALS · MARCH 2026 – NOW</span>
+  <h2 class="wk-title"><span class="br">[ </span>THE WORK<span class="br"> ]</span><span class="cur" aria-hidden="true">_</span></h2>
+  <span class="wk-hint">&gt; ls ~/work · select one to open its terminal</span>
+  <div class="rows" id="files"></div>
+  <div class="also">
+    <span class="sub-h">ALSO BUILT ›</span>
+    <ul>
+      <li style="--c:#ff3355"><b>Mission OS</b><span>A reusable app for running missions: any objective, from an event to a project, gets its own research, plan, targets, dossier and debrief, with Mission, an analyst I can question about that mission's notes. London Tech Week was the first.</span></li>
+      <li style="--c:#38bdf8"><b>Motion Coach</b><span>Webcam biomechanics scoring with MediaPipe: four movement tests scored live in the browser, reviewed with two Loughborough academics.</span></li>
+      <li style="--c:#22d3ee"><b>FISH</b><span>An offline field app for beginner anglers, driven by live river levels, weather and species data, with a bankside mode for cold hands.</span></li>
+      <li style="--c:#00d4ff"><b>The Dataset</b><span>About 47 million time-synced prediction-market trade prints from the trading work, catalogued with a data dictionary as a research dataset.</span></li>
+      <li style="--c:#00ff88"><b>Morning system</b><span>An alarm that checks I am actually up, switches the room on through smart plugs and prints a morning paper with the day’s brief.</span></li>
+      <li style="--c:#ff7a00"><b>KAM Travel</b><span>A trip planner for a group road trip around Scotland, in the KAM orange style, that works offline on the road.</span></li>
+      <li style="--c:#34d399"><b>KAM Caddy</b><span>A voiced golf caddy that uses GPS, the compass and live weather to solve for wind, with a four-player mode.</span></li>
+      <li style="--c:#ff7700"><b>Binning.AI HQ</b><span>An isometric ops console in TypeScript and Phaser, where each agent is a character in a room.</span></li>
+      <li style="--c:#00bcd4"><b>The Academy</b><span>The learning tools I built for myself. An AI academy: a four-stage path from Anthropic’s courses to papers and code, and an AI-engineering track with a local tutor. A French tutor with spaced repetition and role-play. Maths, physics and economics courses where a skill only counts as mastered after a check three days later. A lab notebook, a reading room and a lecture companion.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= MORE ================= -->
+<section class="screen" id="s-more" data-ch="CH 04–07" data-name="MORE" aria-label="More: estate, agents and research">
+  <nav class="rows" aria-label="More channels">
+    <a class="row" href="#estate"><span class="k">CH 04</span><span class="t">The estate</span><span class="d">Four Macs on a private mesh and the apps they run.</span></a>
+    <a class="row" href="#agents"><span class="k">CH 05</span><span class="t">The agents</span><span class="d">Agents run as Claude Code sessions: a director that splits the goal, a scout, a builder, a reviewer and an archivist, with a security agent watching every machine.</span></a>
+    <a class="row" href="#proposal"><span class="k">CH 06 · Research · 1 of 2 · submitted April 2026</span><span class="t">The proposal</span><span class="d">How can an AI-assisted OSINT platform provide expert geopolitical and security capabilities, through human-machine teaming, to the civilian across both peacetime and conflict?</span></a>
+    <a class="row" href="#dissertation"><span class="k">CH 07 · Research · 2 of 2 · final year, in progress</span><span class="t">The dissertation</span><span class="d">Great Power War as a Process: what structural indicators of systemic conflict can, and cannot, predict.</span></a>
+  </nav>
+  <div class="actions">
+    <a class="btn" href="cv/Karam-Binning-CV.pdf?v=8ed74404" target="_blank" rel="noopener">Download CV</a>
+    <a class="btn quiet" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the research proposal</a>
+  </div>
+  <div class="foot"><a href="index.html?full=1" target="_blank" rel="noopener">› view the full site</a></div>
+</section>
+
+<section class="screen" id="s-estate" data-ch="CH 04" data-name="THE ESTATE" data-parent="more" aria-label="The estate: hardware and apps">
+  <h2 class="mid">The estate</h2>
+  <p class="copy">Four Macs on a private mesh and the apps they run.</p>
+  <div class="data">
+    <div><strong>~46.8M</strong><span>trade prints collected</span></div>
+    <div><strong>4.24M</strong><span>World Cup collector rows</span></div>
+    <div><strong>1.87M</strong><span>market snapshots</span></div>
+    <div><strong>12 TB</strong><span>canonical archive</span></div>
+  </div>
+  <div class="cta"><a class="btn solid" href="demo/w/estate/" target="_blank" rel="noopener">Open the estate ↗</a></div>
+</section>
+
+<section class="screen" id="s-agents" data-ch="CH 05" data-name="THE AGENTS" data-parent="more" aria-label="The agents">
+  <h2 class="mid">The agents</h2>
+  <p class="copy">Agents run as Claude Code sessions: a director that splits the goal, a scout, a builder, a reviewer and an archivist, with a security agent watching every machine. A deterministic supervisor probes every node every sixty seconds and restarts what has failed.</p>
+  <ul class="pts">
+    <li>No agent may mark its own work complete; an independent reviewer decides</li>
+    <li>Failures are kept on the record: 1,054 tasks passed and 91 failed</li>
+    <li>Nothing sends externally, moves money or writes to the vault without my approval</li>
+    <li>Sentinel, born from April, baselines each machine and alerts on any change</li>
+  </ul>
+  <div class="cta"><a class="btn solid" href="demo/w/agents/" target="_blank" rel="noopener">Open the agents ↗</a></div>
+</section>
+
+<section class="screen" id="s-proposal" data-ch="CH 06" data-name="RESEARCH DESIGN" data-parent="more" aria-label="Research proposal">
+  <span class="ch-id">Research · 1 of 2 · submitted April 2026</span>
+  <h2 class="mid">The proposal</h2>
+  <p class="q">How can an AI-assisted OSINT platform provide expert geopolitical and security capabilities, through human-machine teaming, to the civilian across both peacetime and conflict?</p>
+  <p class="copy">My second-year research proposal. It argues that no open-source intelligence platform gives a civilian one unified system for geopolitical and security analysis, and that a shift to a multipolar order makes that gap matter. KAM is the designed instrument: the proposal assesses its NEWS, WORLD, SIGNAL and COUNCIL modules against the academic literature, then uses what it finds to improve them.</p>
+  <ul class="pts">
+    <li><b>Method:</b> design-based research, iterating the platform against the literature rather than writing about it at a distance</li>
+    <li><b>Four literatures:</b> OSINT methodology, war studies and historical context, AI and human-machine teaming, and information resilience in conflict</li>
+    <li><b>Sub-questions:</b> how OSINT democratises intelligence capability, how human-machine teaming augments rather than replaces judgement, and the ethics of a civilian intelligence platform</li>
+    <li><b>Ethics:</b> source bias, dual use and the security of the user, addressed in the proposal itself</li>
+    <li><b>AI use declared</b> on its first page: what Claude was used for, and what was mine</li>
+  </ul>
+  <div class="actions"><a class="btn" href="demo/w/research/" target="_blank" rel="noopener">Open the proposal ↗</a></div>
+  <div class="cta"><a class="btn solid" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the full proposal</a></div>
+</section>
+
+<section class="screen" id="s-dissertation" data-ch="CH 07" data-name="DISSERTATION" data-parent="more" aria-label="Dissertation">
+  <span class="ch-id">Research · 2 of 2 · final year, in progress</span>
+  <h2 class="mid">The dissertation</h2>
+  <p class="q">Great Power War as a Process: what structural indicators of systemic conflict can, and cannot, predict.</p>
+  <p class="copy">Major war read as a long structural process rather than a dated event. A systemic tier measures the condition of the international system from 1816 to 2022 against the build-ups to 1914 and 1939, without attaching a probability. A dyadic tier asks whether a pair of states will start a militarised dispute the following year, trained on 1816–1989 and tested on 1990–2014, split by time and never at random.</p>
+  <p class="copy">Every result reports base rate, AUROC, AUPR and Brier score together, against honest baselines, because predicting "no war" is almost always right, so accuracy rewards silence. Next year: a master's in International Security.</p>
+  <figure class="lab">
+    <div class="lab-bar">Dissertation lab</div>
+    <img src="demo/lab-theatre.jpg" alt="The dissertation lab's Theatre view: a globe of hotspots with dyad risk tables" loading="lazy" decoding="async" width="1440" height="900">
+    <figcaption class="lab-note">The lab I built for the dissertation, shown here on synthetic data. Nothing on screen is a research result.</figcaption>
+  </figure>
+  <div class="cta"><a class="btn solid" href="demo/w/dissertation/" target="_blank" rel="noopener">Open the dissertation ↗</a></div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section class="screen" id="s-contact" data-ch="CH 08" data-name="CONTACT" aria-label="Contact">
+  <h2 class="kamh">Get in touch<b class="cur" aria-hidden="true">_</b></h2>
+  <p class="copy">Open to internships for winter 2026/27 and summer 2027. Type a message into the terminal and it goes straight to my university inbox.</p>
+  <a class="mail" href="mailto:K.S.Binning1-24@student.lboro.ac.uk">K.S.Binning1-24@student.lboro.ac.uk</a>
+
+  <form class="tx" id="tx" novalidate aria-label="Send me a message">
+    <div class="tx-bar"><span class="tx-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tx-title">ssh karam@inbox</span><span class="tx-live"><i></i> CONNECTED</span></div>
+    <div class="tx-body">
+      <div class="tx-boot" aria-hidden="true">$ ssh karam@inbox · connected ✓</div>
+      <p class="tx-lead">Write to me here. It goes straight to my university inbox and I reply from there.</p>
+      <label class="tx-f"><span>&gt; your email</span><input name="email" type="email" required autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@company.com" enterkeyhint="next"></label>
+      <label class="tx-f"><span>&gt; subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27" enterkeyhint="next"></label>
+      <label class="tx-f"><span>&gt; message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
+      <input type="checkbox" name="botcheck" class="tx-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="tx-ctl"><button class="tx-btn go" type="submit">SEND MESSAGE ⏎</button><button class="tx-btn" type="reset">CLEAR</button><span class="tx-count" id="txCount">0 / 4000</span></div>
+      <div class="tx-out" id="txOut" aria-live="polite"></div>
+    </div>
+  </form>
+
+  <div class="actions">
+    <a class="btn" href="cv/Karam-Binning-CV.pdf?v=8ed74404" target="_blank" rel="noopener">Download CV</a>
+    <a class="btn quiet" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the research proposal</a>
+  </div>
+
+  <div class="sh" id="sh" aria-label="Share this portfolio">
+    <div class="sh-h"><span>[K·B] SHARE · PASS IT ON</span><span class="sh-hint">for a colleague, a manager, anyone</span></div>
+    <div class="sh-link"><span>&gt;</span><input id="shUrl" readonly aria-label="Portfolio link" value="https://karambinning.github.io/portfolio/"><button type="button" class="sh-b" data-s="copy" style="--c:#00d4ff">[ COPY ]</button></div>
+    <div class="sh-row">
+      <a class="sh-b" id="shEmail" style="--c:#00ff88" href="mailto:?subject=Worth%20a%20look%3A%20Karam%20Binning%20%E2%80%94%20portfolio">[ EMAIL ]</a>
+      <a class="sh-b" id="shIn" style="--c:#3388ff" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fkarambinning.github.io%2Fportfolio%2F" target="_blank" rel="noopener">[ LINKEDIN ]</a>
+      <a class="sh-b" id="shWa" style="--c:#25d366" href="https://wa.me/?text=https%3A%2F%2Fkarambinning.github.io%2Fportfolio%2F" target="_blank" rel="noopener">[ WHATSAPP ]</a>
+      <a class="sh-b" id="shX" style="--c:#e6e6e6" href="https://x.com/intent/post?url=https%3A%2F%2Fkarambinning.github.io%2Fportfolio%2F" target="_blank" rel="noopener">[ X ]</a>
+      <button type="button" class="sh-b" data-s="qr" style="--c:#aa66ff" aria-expanded="false" aria-controls="shQr">[ QR ]</button>
+      <button type="button" class="sh-b" data-s="native" style="--c:#ff66cc">[ MORE ]</button>
+    </div>
+    <div class="sh-qr" id="shQr" hidden><div id="shQrBox" aria-label="QR code linking to the portfolio" role="img"></div><span>Point a phone camera here to open the portfolio.</span></div>
+    <div class="sh-out" id="shareNote" aria-live="polite"></div>
+  </div>
+  <div class="foot"><a href="index.html?full=1" target="_blank" rel="noopener">› view the full site</a></div>
+</section>
+
+    <div class="sweep" id="sweep" aria-hidden="true"></div>
+  </main>
+
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <a href="#signal" data-tab="signal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 3l4 4 4-4"/></svg>Home</a>
+    <a href="#timeline" data-tab="timeline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><path d="M11 7h9M11 17h6"/></svg>Timeline</a>
+    <a href="#work" data-tab="work"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 10l3 2-3 2M12 15h5"/></svg>Work</a>
+    <a href="#more" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg>More</a>
+    <a href="#contact" data-tab="contact"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>Contact</a>
+  </nav>
+  <div class="scan" aria-hidden="true"></div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- projects: the same FILES data as index.html ---------- */
+  const FILES = [
+    { acc:'#ff8a3d', name:'ICARUS', win:'icarus', app:'icarus', kind:'Autonomous drone flight',
+      line:'A consumer drone flown as an autonomous reconnaissance aircraft, on my own software, at zero cost.',
+      body:['A DJI Mini 2 flown autonomously, with a 2019 Android handset as the flight computer and my own software in between: 14,455 lines of Java across 28 files.',
+            'The airframe has no obstacle sensing and nothing downstream will stop a bad setpoint, so the control law carries its own safety envelope.'],
+      points:['552 self-test assertions in 8 suites run on the physical handset at every launch, and have repeatedly caught regressions before flight','Three crashes documented, each with the specific fault it exposed','One feature paused on a measured physical limit: the camera cannot resolve a hand beyond 5.8 m, so it waits rather than pretends'],
+      proof:'14,455 lines · 552 on-device assertions, all passing · 3 documented crashes' },
+    { acc:'#00d4ff', name:'KAM', win:'kam', app:'kam', kind:'Personal intelligence platform', flag:'private beta',
+      line:'Knowledge Analysis Monitor: one terminal for the world, knowledge, AI and a person\u2019s own life.',
+      body:['The first thing I built, and the platform everything since grew from: a single-page app that brings world news, maps, markets, AI tools and personal records into one dark terminal. Eighteen modules sit behind a hub. WORLD is a globe with switchable layers for weather, alliances, trade routes, infrastructure, biomes and travel. NEWS reads live feeds and filters them by region and by the outlet\u2019s orientation. COUNCIL puts one question to eight AI personas, each on its own model, and a secretariat drafts a resolution, while the person still makes the decision. OFFICE dispatches tasks to six agent roles.',
+            'Its principles are written down: data stays local, privacy is the default, only real data is shown, and AI is an input to the user\u2019s judgement rather than a replacement for it. Honest status: WORLD, NEWS, COUNCIL, OFFICE, FINANCE and several life modules work; LIBRARY, SCHOOL and a handful of others are still mostly scaffolding. It is the instrument my research proposal was built around.'],
+      points:['WORLD: an orthographic globe with weather, alliance, trade, infrastructure and biome layers','COUNCIL: eight personas on separate models deliberate, a secretariat resolves, the person decides','NEWS: live feeds filtered by region and outlet orientation','Local-first and real-data-only, by written principle','First commit 9 March 2026; my first build'],
+      proof:'18 modules · scaffolding labelled as scaffolding · first commit 9 March 2026' },
+    { acc:'#f5c518', name:'THEMIS', win:'themis', app:'themis', demo:'themis', kind:'Cautious legal research',
+      line:'A legal-research agent designed to refuse rather than guess.',
+      body:['A legal-research system over UK capacity law, built for a setting where a wrong answer has real consequences, so the design priority is restraint. Fully local: SQLite and local models, no cloud, no web data ingested.',
+            'It went through a deliberate narrowing, from a nine-layer architecture to one small, cautious agent.'],
+      points:['Abstains when retrieval confidence is low, and refuses advice and prediction questions outright','Quotes the source verbatim before every point, or says the answer is not in its documents','Hybrid retrieval (dense and keyword) that cites the paragraph, not just the page','Only official legislation sources can add law; each document is hashed into an append-only chain of custody'],
+      proof:'1,289 chunks across 612 pages of statute and guidance' },
+    { acc:'#ff3355', name:'Quant Trading', win:'quant', app:'markets', kind:'Market models, paper-traded', flag:'paper only',
+      line:'Two trading models, and the fill check that invalidated my own best result.',
+      body:['War Room: a multi-agent engine for five-minute crypto prediction markets, iterated against fixed baselines over 10,023 strategy cycles. Its best paper run went from $50 to $106.56 over 289 trades at a 64.7% win rate.',
+            'Then I built an honest fill engine that checks every paper trade against the real order book. At the price that run had assumed, an order filled 2 times in 304. The profit was phantom, so I marked the result invalid and kept only what survived: the direction calls. Krabs, an in-play World Cup football model with a computable fair value, was then scored against the market instead: closing-line value and Brier score.'],
+      points:['$50 to $106.56 (+113%) on paper, then invalidated by my own order-book check: 2 fills in 304 at the assumed price','Krabs Brier score improved from 0.24 to about 0.12 across 7 World Cup matches, paper-traded','Closing-line value: the market moved +2.24 points toward Krabs\u2019 prices on average','The lasting output is a ~46.8M-print market-microstructure dataset'],
+      proof:'No capital was ever at risk · the invalidation is in the project\u2019s own record' },
+    { acc:'#c084fc', name:'AI Declaration', win:'declaration', app:'declaration', demo:'declaration', kind:'Academic integrity tool',
+      line:'A tool that states how AI was used in a piece of academic work, on its front page.',
+      body:['Built in Claude Code to govern my own academic AI use. It logs how AI was involved in a piece of work and generates a declaration page for the front of the submission, written to sit inside Loughborough’s AI-use guidelines.',
+            'For my first essay with Claude, on British India, Claude built a reading guide while I read the sources; I wrote the essay entirely myself and the declaration says so.'],
+      points:['Logs AI sessions and dates them','Generates the declaration from a template','Houses the formal declaration for my research proposal'],
+      proof:'In use on my own coursework' },
+    { acc:'#e879f9', name:'K\u00b7A\u00b7M Notch', win:'notch', app:'notch', kind:'Music player for the MacBook notch', demo:'notch',
+      line:'A music player that lives in the MacBook\u2019s notch, as a set of skeuomorphic devices.',
+      body:['A native macOS app that turns the notch into a now-playing display. It reads what is playing and controls Spotify, and draws it as a turntable, a cassette deck, a CD player, a Game Boy, an iOS player or a pixel display.',
+            'It shows synced lyrics, and its equaliser moves to the real audio rather than a canned animation. It runs on my daily machines, built and deployed from one script.'],
+      points:['Swift, with an Objective-C helper to read what is playing','Six device modes in one shared design system','An equaliser driven by a real audio tap','Synced lyrics in the expanded view'],
+      proof:'In daily use on two Macs · 22 design states archived' },
+    { acc:'#facc15', name:'K\u00b7A\u00b7M RIDE', win:'ride', app:'ride', kind:'Offline bike computer',
+      line:'An offline, retro-pixel bike computer that turns a ride into a game.',
+      body:['An Android bike computer built in Kotlin with Jetpack Compose. It records GPS rides and exports them as GPX or TCX, with offline vector maps of the UK and offline route planning, so it works with no signal.',
+            'Over the top sits a game layer in a pixel style: a character who rides with you, bosses on the climbs, a turbo mode and a shop.'],
+      points:['Records rides and exports GPX and TCX','Offline UK vector maps and on-device routing','A game layer: a pixel character, climb bosses and a turbo','Built and installed on my own phone'],
+      proof:'Three Android builds to date' },
+    { acc:'#ff4444', name:'Future Warfare', win:'futurewarfare', kind:'Curriculum and learning game', app:'futurewarfare', flag:'2 of 15 domains live',
+      line:'A 15-domain civilian curriculum on modern conflict, built as a learning game.',
+      body:['A curriculum for civilians and students rather than militaries, on the premise that the modern conflict surface reaches civilians first. It runs as a learning game inside my Command dashboard\u2019s academy: fifteen domains, each with five zones and a hands-on drill, from Civilian Survival through cyber, information and electronic warfare to space, maritime, economic warfare and strategic studies.',
+            'Theory and practice run together. My own cyber security learning was taught this way, with paired defensive and offensive drills against my own infrastructure.'],
+      points:['Civilian Survival is the entry point: threat assessment, shelter, navigation, first aid and communications','Cyber Security is live: five zones from the threat landscape to geopolitics and law','Every domain has a drill: a scenario engine, a deepfake court, a spectrum analyst, a targeting committee and more','Drone and pilot simulators are planned; the other eleven domains are scaffolded with their zones defined','Strategic Studies is the capstone, and connects to my dissertation'],
+      proof:'15 domains · 75 zones · 2 live, 2 awaiting simulators, 11 scaffolded' },
+  ];
+
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const bar = (f, unit) => { const b = el('div', 'wt-bar'); b.setAttribute('aria-hidden', 'true'); b.append(el('i'), el('i'), el('i'), el('span', '', '~/work/' + f.win), el('span', 'wt-u', 'UNIT ' + unit)); return b; };
+  const kind = f => { const k = el('span', 'kind', f.kind); if (f.flag){ k.append(' · '); k.append(el('span', 'flag', f.flag)); } return k; };
+  const list = $('#files'), view = $('#view'), contact = $('#s-contact');
+  FILES.forEach((f, i) => {
+    const unit = String(i + 1).padStart(2, '0');
+    // the card on the work screen
+    const a = el('a', 'proj'); a.href = '#work/' + f.win; a.style.setProperty('--acc', f.acc);
+    const body = el('div', 'wt-body'); body.append(kind(f));
+    const h = el('h3'); h.append(el('span', 'wt-p', '>'), ' ' + f.name); body.append(h, el('p', '', f.line));
+    a.append(bar(f, unit), body); list.append(a);
+    // its detail screen
+    const s = el('section', 'screen pd'); s.id = 's-work-' + f.win; s.style.setProperty('--acc', f.acc);
+    s.dataset.ch = 'UNIT ' + unit; s.dataset.name = '~/WORK/' + f.win.toUpperCase(); s.dataset.parent = 'work'; s.setAttribute('aria-label', f.name);
+    const head = el('div', 'pd-head'), hb = el('div', 'wt-body'); hb.append(kind(f));
+    const h2 = el('h2'); h2.append(el('span', 'wt-p', '> '), f.name, el('span', 'cur', '_')); hb.append(h2); head.append(bar(f, unit), hb);
+    s.append(head, el('p', 'pd-line', f.line));
+    f.body.forEach(p => s.append(el('p', 'copy', p)));
+    const ul = el('ul', 'pts'); f.points.forEach(p => ul.append(el('li', '', p))); s.append(ul);
+    s.append(el('div', 'proof', f.proof));
+    const cta = el('div', 'cta'), go = el('a', 'btn solid'); go.href = 'demo/w/' + f.win + '/'; go.target = '_blank'; go.rel = 'noopener';
+    const lbl = el('span'); lbl.append('[ ', el('b', '', 'OPEN TERMINAL'), ' ] ↗'); go.append(lbl); cta.append(go); s.append(cta);
+    view.insertBefore(s, contact);
+  });
+
+  /* ---------- router: tabs are screens, details slide in over them ---------- */
+  const TABS = ['signal', 'timeline', 'work', 'more', 'contact'];
+  const screenOf = r => document.getElementById('s-' + r.replace('/', '-'));
+  const parse = h => { const r = (h || '').replace(/^#/, ''); return r && screenOf(r) ? r : 'signal'; };
+  const tabOf = r => { const s = screenOf(r); return s.dataset.parent || r; };
+  const isDetail = r => !!screenOf(r).dataset.parent;
+  let cur = null, pushed = false;
+  const sweep = $('#sweep');
+  function show(r, dir){
+    const next = screenOf(r), prev = cur && screenOf(cur);
+    if (prev === next) return;
+    if (prev){ prev.classList.remove('on'); prev.inert = true; prev.setAttribute('aria-hidden', 'true'); }
+    next.classList.add('on'); next.inert = false; next.removeAttribute('aria-hidden');
+    cur = r;
+    $('#nowCh').textContent = next.dataset.ch; $('#nowName').textContent = next.dataset.name;
+    const det = isDetail(r); $('#back').hidden = !det; $('#mark').hidden = det;
+    const tab = tabOf(r);
+    document.querySelectorAll('#tabs a').forEach(a => { if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    document.title = (r === 'signal' ? 'Karam Binning — Portfolio' : next.dataset.name.replace(/^~\/WORK\//, '') + ' · Karam Binning');
+    if (!reduce && dir && next.animate){
+      next.animate([{ transform: `translateX(${dir * 34}px)`, opacity: 0, filter: 'brightness(2.2) contrast(1.4)' },
+                    { transform: `translateX(${dir * -3}px)`, opacity: 1, filter: 'brightness(1.25)', offset: .55 },
+                    { transform: 'none', opacity: 1, filter: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      sweep.animate([{ transform: 'translateY(-100%)', opacity: .9 }, { transform: 'translateY(560%)', opacity: 0 }], { duration: 260, easing: 'ease-in' });
+    }
+  }
+  function dirTo(r){
+    if (!cur) return 0;
+    if (isDetail(r) && !isDetail(cur)) return 1;
+    if (!isDetail(r) && isDetail(cur)) return tabOf(cur) === r ? -1 : Math.sign(TABS.indexOf(r) - TABS.indexOf(tabOf(cur))) || -1;
+    return Math.sign(TABS.indexOf(tabOf(r)) - TABS.indexOf(tabOf(cur))) || 1;
+  }
+  function go(r){
+    if (r === cur){ const s = screenOf(r); s.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); return; }
+    if (isDetail(r)){ pushed = true; history.pushState({ r }, '', '#' + r); }
+    else { pushed = false; history.replaceState({ r }, '', '#' + r); }
+    show(r, dirTo(r));
+  }
+  function back(){
+    if (!cur || !isDetail(cur)) return;
+    if (pushed){ pushed = false; history.back(); }
+    else go(tabOf(cur));
+  }
+  // every in-page link goes through the router (no reloads, no document scrolling)
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]'); if (!a) return;
+    const id = a.getAttribute('href').slice(1);
+    if (id.startsWith('tl-')){ e.preventDefault(); const t = document.getElementById(id); $('#s-timeline').scrollTo({ top: t.offsetTop - 64, behavior: reduce ? 'auto' : 'smooth' }); return; }
+    e.preventDefault();
+    const r = parse('#' + id);
+    // tapping the tab you are in (from one of its details) returns to it
+    go(a.closest('#tabs') && tabOf(cur) === r && isDetail(cur) ? r : r);
+  });
+  $('#back').addEventListener('click', back);
+  window.addEventListener('popstate', () => { const r = parse(location.hash); pushed = false; show(r, dirTo(r)); });
+  window.addEventListener('hashchange', () => { const r = parse(location.hash); if (r !== cur) show(r, dirTo(r)); });
+  document.querySelectorAll('.screen').forEach(s => { s.inert = true; s.setAttribute('aria-hidden', 'true'); });
+  const first = parse(location.hash);
+  if (isDetail(first)){ history.replaceState({ r: tabOf(first) }, '', '#' + tabOf(first)); history.pushState({ r: first }, '', '#' + first); pushed = true; }
+  show(first, 0);
+
+  /* ---------- swipe: left/right between tabs, right to go back from a detail ---------- */
+  let sx = 0, sy = 0, st = 0, on = false;
+  view.addEventListener('pointerdown', e => {
+    on = e.pointerType !== 'mouse' && !e.target.closest('input,textarea,.rail,.sh-link');
+    sx = e.clientX; sy = e.clientY; st = e.timeStamp;
+  });
+  view.addEventListener('pointercancel', () => { on = false; });
+  view.addEventListener('pointerup', e => {
+    if (!on) return; on = false;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.7 || e.timeStamp - st > 700) return;
+    if (isDetail(cur)){ if (dx > 0) back(); return; }
+    const i = TABS.indexOf(cur) + (dx < 0 ? 1 : -1);
+    if (i >= 0 && i < TABS.length) go(TABS[i]);
+  });
+
+  /* ---------- timeline: the date rail follows the reading position ---------- */
+  const railLinks = [...document.querySelectorAll('#rail a')];
+  if ('IntersectionObserver' in window){
+    const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return;
+      railLinks.forEach(a => { const hit = a.getAttribute('href') === '#' + e.target.id; a.classList.toggle('on', hit); if (hit) a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }); }),
+      { root: $('#s-timeline'), rootMargin: '-30% 0px -60% 0px' });
+    document.querySelectorAll('.moment').forEach(m => io.observe(m));
+  }
+
+  /* ---------- the keyboard: hide the tab bar while typing ---------- */
+  document.addEventListener('focusin', e => { if (e.target.matches('input:not([readonly]),textarea')) document.body.classList.add('typing'); });
+  // brought back a beat later, so a tap on SEND is not moved out from under the finger as the keyboard closes
+  document.addEventListener('focusout', () => setTimeout(() => { if (!document.activeElement || !document.activeElement.matches('input:not([readonly]),textarea')) document.body.classList.remove('typing'); }, 300));
+
+  /* ---------- contact terminal: FormSubmit delivers to the university inbox (same code as index.html) ---------- */
+  const INBOX = 'K.S.Binning1-24@student.lboro.ac.uk';
+  const tx = $('#tx'), txOut = $('#txOut');
+  const txSay = (t, cls) => { txOut.className = 'tx-out'; txOut.innerHTML = ''; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); };
+  const txLog = (t, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); return d; };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const txCount = $('#txCount'); tx.message.addEventListener('input', () => { txCount.textContent = tx.message.value.length + ' / 4000'; });
+  tx.addEventListener('reset', () => { setTimeout(() => { txCount.textContent = '0 / 4000'; txOut.innerHTML = ''; }); });
+  tx.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); const nx = e.target.name === 'email' ? tx.subject : tx.message; nx.focus(); } });
+  tx.addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = new FormData(tx), email = (f.get('email') || '').trim(), subject = (f.get('subject') || '').trim(), message = (f.get('message') || '').trim();
+    if (f.get('botcheck')) return;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return txSay('✗ error: that email address doesn’t look right.', 'err');
+    if (!subject || !message) return txSay('✗ error: add a subject and a message.', 'err');
+    txOut.innerHTML = ''; txLog('$ send --to university-inbox', 'k'); await wait(160); txLog('packing message · ' + message.length + ' characters ✓', 'ok'); await wait(160); const tr = txLog('sending over https …');
+    try {
+      const r = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(INBOX), {
+        method:'POST', headers:{ 'Content-Type':'application/json', Accept:'application/json' },
+        body: JSON.stringify({ name: email, email, _replyto: email, _subject: 'Portfolio: ' + subject, message, _template: 'box', _captcha: 'false' }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && (j.success === 'true' || j.success === true)){ tr.textContent = 'sending over https ✓'; tr.className = 'ok'; txLog('delivered ✓ thank you. I’ll reply from my university email.', 'ok'); tx.email.value = tx.subject.value = tx.message.value = ''; txCount.textContent = '0 / 4000'; }
+      else if (/activ/i.test(j.message || '')) txLog('✗ this inbox link is still being switched on. For now, email me directly at ' + INBOX + '.', 'err');
+      else txLog('✗ error: the message didn’t send. Please email me directly at ' + INBOX + '.', 'err');
+    } catch (err) { txLog('✗ error: no connection. Please email me directly at ' + INBOX + '.', 'err'); }
+  });
+
+  /* ---------- share: the public address, same text and routes as index.html ---------- */
+  const SITE = 'https://karambinning.github.io/portfolio/';
+  const SHARE_TITLE = 'Karam Binning — portfolio';
+  const SHARE_TEXT = 'A humanities student at Loughborough who builds applications, software and small-scale infrastructure with Claude. Worth a look:';
+  const u = encodeURIComponent(SITE), t = encodeURIComponent(SHARE_TEXT);
+  $('#shUrl').value = SITE;
+  $('#shEmail').href = `mailto:?subject=${encodeURIComponent('Worth a look: ' + SHARE_TITLE)}&body=${encodeURIComponent(SHARE_TEXT + '\n\n' + SITE)}`;
+  $('#shWa').href = `https://wa.me/?text=${t}%20${u}`;
+  $('#shX').href = `https://x.com/intent/post?text=${t}&url=${u}`;
+  const shSay = s => { $('#shareNote').textContent = s; };
+  let qrDone = false, qrLoading = null;
+  const loadQr = () => qrLoading || (qrLoading = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+    s.onload = res; s.onerror = rej; document.head.appendChild(s);
+  }));
+  document.getElementById('sh').addEventListener('click', async e => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    const k = b.dataset.s;
+    if (k === 'copy'){ try { await navigator.clipboard.writeText(SITE); shSay('> link copied. paste it anywhere.'); } catch (err) { $('#shUrl').select(); shSay('> select the link and copy it.'); } }
+    else if (k === 'native'){
+      if (navigator.share){ try { await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SITE }); } catch (err) {} }
+      else shSay('> this browser has no share sheet. use copy or a button above.');
+    }
+    else if (k === 'qr'){
+      const box = $('#shQr'), open = box.hidden; box.hidden = !open; b.setAttribute('aria-expanded', open);
+      if (!open || qrDone) return;
+      try { await loadQr(); } catch (err) {}
+      if (window.qrcode){
+        const q = qrcode(0, 'M'); q.addData(SITE); q.make();
+        const n = q.getModuleCount(), cell = 5, pad = 3, size = (n + pad * 2) * cell;
+        let r = ''; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) r += `<rect x="${(x + pad) * cell}" y="${(y + pad) * cell}" width="${cell}" height="${cell}"/>`;
+        $('#shQrBox').innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="140" height="140"><rect width="${size}" height="${size}" fill="#d8f6ff"/><g fill="#04080f">${r}</g></svg>`;
+        qrDone = true;
+      } else $('#shQrBox').textContent = SITE;
+    }
+  });
+})();
+</script>
+</body>
+</html>
