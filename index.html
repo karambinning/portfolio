@@ -599,7 +599,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
-<script src="demo/_frame/dismantle.js?v=10111151"></script>
+<script src="demo/_frame/dismantle.js?v=10111224"></script>
 </head>
 <body>
 
@@ -1332,14 +1332,16 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     const fr = scene.querySelector('.chan-app');
     if (fr && fr.contentWindow){
       return new Promise(res => {
-        const on = e => { if (e.source === fr.contentWindow && e.data && e.data.kbDismantled === mode){ off(); res(); } };
+        const on = e => { if (e.source !== fr.contentWindow || !e.data) return;
+          if (e.data.kbSeed){ const o = fr.getBoundingClientRect(), r = e.data.kbSeed; seedGlitch({ x: r.x + o.left, y: r.y + o.top, w: r.w, h: r.h }, color); }
+          if (e.data.kbDismantled === mode){ off(); res(); } };
         const off = () => { removeEventListener('message', on); clearTimeout(tm); };
         const tm = setTimeout(() => { off(); res(); }, ms + 900);
         addEventListener('message', on);
         fr.contentWindow.postMessage(mode === 'out' ? { kbDecon: ms, color, infect: color } : { kbRecon: ms, color }, '*');
       });
     }
-    return window.KBDismantle ? KBDismantle.run(scene, mode, ms, color, mode === 'out' ? color : null) : Promise.resolve();
+    return window.KBDismantle ? KBDismantle.run(scene, mode, ms, color, mode === 'out' ? color : null, mode === 'out' ? r => seedGlitch(r, color) : null) : Promise.resolve();
   }
 
 
@@ -1349,15 +1351,26 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   // after the attack or defence: the windows fold away and the light drops, so the page underneath can be seen coming apart
   // a classic CRT power cycle: the screen flashes, collapses to a line, then to a dot, and goes dark (off),
   // or the reverse (on). Red into the dissertation, blue out of it.
-  // the infection's entry point: a single ring of the opposing colour expands from the centre of the screen
-  function seedPulse(col){
-    const d = document.createElement('div');
-    d.style.cssText = `position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;z-index:60;pointer-events:none;
-      border:2px solid ${col};box-shadow:0 0 30px 6px ${col},inset 0 0 30px 6px ${col}`;
-    document.body.appendChild(d);
-    d.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(60)', opacity: 0 }], { duration: 650, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' })
-      .finished.then(() => d.remove());
+  // the infection's entry point: a short, sharp glitch strikes exactly where the takeover begins (the first piece to go)
+  function seedGlitch(r, col){
+    if (reduce) return;
+    const box = document.createElement('div'), pad = 18;
+    box.style.cssText = `position:fixed;left:${r.x - pad}px;top:${r.y - pad}px;width:${r.w + pad * 2}px;height:${r.h + pad * 2}px;z-index:60;pointer-events:none`;
+    for (let k = 0; k < 7; k++){
+      const b = document.createElement('i'), y = Math.random() * 100, h = 2 + Math.random() * 10;
+      b.style.cssText = `position:absolute;left:0;right:0;top:${y}%;height:${h}px;background:${col};box-shadow:0 0 12px ${col};mix-blend-mode:screen`;
+      box.appendChild(b);
+      b.animate([{ transform: 'translateX(0)', opacity: 0 }, { transform: `translateX(${(Math.random() * 2 - 1) * 30}px)`, opacity: .9, offset: .2 },
+        { transform: `translateX(${(Math.random() * 2 - 1) * 50}px)`, opacity: .6, offset: .5 }, { transform: 'translateX(0)', opacity: 0 }],
+        { duration: 380 + Math.random() * 160, delay: Math.random() * 120, easing: 'steps(5,end)', fill: 'forwards' });
+    }
+    const ring = document.createElement('i');
+    ring.style.cssText = `position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:2px solid ${col};box-shadow:0 0 18px ${col}`;
+    box.appendChild(ring);
+    ring.animate([{ transform: 'scale(.3)', opacity: 1 }, { transform: 'scale(9)', opacity: 0 }], { duration: 520, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
+    document.body.appendChild(box); setTimeout(() => box.remove(), 700);
   }
+
   function crtPower(on, col){
     return new Promise(res => {
       const d = document.createElement('div');
@@ -1549,12 +1562,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
     if (b.dataset.attack !== undefined || a.dataset.attack !== undefined){
-      // dissertation, both ways: 1) a pulse of the opposing colour (red in, blue out);
+      // dissertation, both ways: 1) a glitch of the opposing colour strikes where the takeover starts (red in, blue out);
       // 2) the old slide is infected by the opposing colour and dismantled piece by piece; 3) CRT power off / on; 4) the new one is built piece by piece. No words.
       const into = b.dataset.attack !== undefined, col = into ? 'rgba(255,48,72,.9)' : 'rgba(0,212,255,.9)';
-      // the opening: one pulse of the opposing colour ripples out from the centre and the infection spreads from it
-      seedPulse(col);
-      await new Promise(r => setTimeout(r, 180));
       await chanText(a, 'out', 2300, col);   // the opposing colour infects it, then it comes apart one detail at a time
       await crtPower(false, col);                                // then the screen switches off like an old CRT
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible

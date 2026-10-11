@@ -63,13 +63,15 @@
 
 
 
-  function run(root, mode, ms, color, infect){
+  function run(root, mode, ms, color, infect, onSeed){
     root = root || document.body; color = color || 'rgba(0,212,255,.9)';
     restore(root);
     const st = { anims: [], texts: [], job: Math.random() }; state.set(root, st);
     const { els, texts, vh } = collect(root);
     const D = Math.max(260, Math.min(520, ms * .2)), W = Math.max(300, ms - D);
     const T = schedule(els, vh, mode, W);
+    // report where the takeover begins (the first piece to go), so the opening glitch can strike right there
+    if (onSeed){ let f = -1; els.forEach((e, i) => { if (e.vis && (f < 0 || T[i] < T[f])) f = i; }); if (f >= 0){ const r = els[f].r; onSeed({ x: r.left, y: r.top, w: r.width, h: r.height }); } }
     const wire = `1px solid ${color}`, clear = '1px solid transparent';
     els.forEach((e, i) => {
       const dx = (Math.random() * 2 - 1) * 9, tf = !e.inline;
