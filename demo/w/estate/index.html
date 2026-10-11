@@ -260,6 +260,17 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
     .stat-row{font-size:12px;gap:10px 16px} .stat-row small{font-size:12px}
     .p-log-in{font-size:12px;white-space:normal}
     .p-open{font-size:12px}
+    /* the app showcases, at a readable size: cards two by two */
+    .p-screen .kbs{font-size:12px;padding:.8em .9em;gap:.6em}
+    .p-screen .kbs .g{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .p-screen .kbs .h span,.p-screen .kbs .c small{font-size:12px;letter-spacing:.06em}
+    .p-screen .kbs .c b{font-size:14px}
+    .t-unit{font-size:12px}
+  }
+  @media (max-width:360px){
+    .term>.t-ctl{padding:2px 4px calc(4px + env(safe-area-inset-bottom) * .5)}
+    .term>.t-ctl .t-btn{font-size:12px;padding:0 2px;letter-spacing:0}
+    .p-top .t-btn{font-size:13px}
   }
   @media (prefers-reduced-motion:reduce){
     .p-log-in .cur{animation:none}

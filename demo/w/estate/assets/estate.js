@@ -701,7 +701,7 @@ function fitProfile(){
   if (PHONE()){
     if (!scr) return;
     const fw = scr.parentElement.getBoundingClientRect().width;
-    const hh = isShow ? fw / 1.45 : isLog ? scr.firstElementChild.getBoundingClientRect().height + 14 : fw * SCR_H / SCR_W;
+    const hh = isShow ? fw * 1.02 : isLog ? scr.firstElementChild.getBoundingClientRect().height + 14 : fw * SCR_H / SCR_W;
     scr.style.height = Math.round(hh) + 'px'; scr.style.width = '100%'; scr.style.setProperty('--s', (fw / SCR_W).toFixed(4));
     return;
   }
@@ -739,7 +739,7 @@ function go(id){
   if (PHONE()){ const ctl = document.getElementById('ctl'); profile.style.bottom = Math.max(0, Math.round(termEl.getBoundingClientRect().bottom - ctl.getBoundingClientRect().top)) + 'px'; }
   profile.style.setProperty('--c', m.c); profile.classList.add('open'); profile.setAttribute('aria-hidden', 'false');
   if (PHONE()) profile.querySelector('.p-scroll').scrollTop = 0;
-  pTag.textContent = `INTELLIGENCE PROFILE · ${m.name.toUpperCase()}`;
+  pTag.textContent = PHONE() ? `PROFILE · ${m.name.toUpperCase()}` : `INTELLIGENCE PROFILE · ${m.name.toUpperCase()}`;
   pBody.classList.remove('in'); stopShow(); pBody.innerHTML = render(m); requestAnimationFrame(fitProfile);
   const sh = pBody.querySelector('[data-show]'); if (sh && window.KBShow) stopShow = KBShow.mount(sh, sh.dataset.show);
   pSsh.innerHTML = '<div><span class="pr">visitor@estate ~ %</span> <span class="cmd"></span></div><div class="l1"></div><div class="l2 ok"></div>';

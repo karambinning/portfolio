@@ -118,6 +118,62 @@
   .notsim b{color:var(--a);display:block;letter-spacing:.04em;margin-bottom:2px}
   .right .notsim{flex:none}
   .panes .t-list li{font-size:12px;line-height:1.4;padding:3px 0 3px 18px}
+/* ===phone=== */
+/* phones (≤ 600px): panes and teams as a segmented control, drills thumb-sized, type ≥ 12px. Nothing here applies above 600px. */
+@media (max-width:600px){
+  .t-unit{font-size:12px}
+  .fw{gap:16px}
+  .tl li{font-size:13px}
+  .tl .k{font-size:12px;letter-spacing:.12em}
+  .panes .t-list li{font-size:13px}
+  .doms{gap:5px}
+  .dom{min-height:44px;font-size:12px;line-height:1.2;padding:4px 8px;-webkit-tap-highlight-color:transparent}
+  .dom span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .dom:active{transform:scale(.97)}
+  .legend{font-size:12px;letter-spacing:.04em}
+  .srow{font-size:12px;grid-template-columns:minmax(0,118px) 1fr 24px}
+  .dz .k,.dz .dr{font-size:12px}
+  .dz li{font-size:13px}
+  .notsim{font-size:12px}
+  .con{min-height:0}
+  .con-h{padding:8px 10px}
+  .con-h .nm{font-size:13px}
+  .con-h .sub{font-size:12px;letter-spacing:.06em}
+  .con-h .sc{font-size:12px;letter-spacing:.1em}
+  .con-b{padding:10px;gap:9px}
+  .warn{font-size:12px;letter-spacing:.06em}
+  .ctx,.ev p{font-size:13px}
+  .q,.ev .k{font-size:12px}
+  .go{min-height:44px;display:flex;align-items:center;font-size:15px;line-height:1.25;-webkit-tap-highlight-color:transparent}
+  .go:active span{color:var(--b)}
+  .net{height:236px}
+  .node{min-width:60px;min-height:44px;font-size:12px;padding:4px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .node small{font-size:12px;letter-spacing:.04em}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .act{min-height:44px;font-size:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px 8px;-webkit-tap-highlight-color:transparent}
+  .act:last-child{grid-column:1/-1}
+  .act:not([disabled]):active{background:color-mix(in srgb,var(--a) 28%,transparent)}
+  .opt{min-height:44px;font-size:13px;padding:8px 10px;-webkit-tap-highlight-color:transparent}
+  .opt:not([disabled]):active{background:color-mix(in srgb,var(--a) 22%,transparent)}
+  .log{max-height:110px}
+  .log div{font-size:12px}
+  .grade strong{font-size:56px}
+  /* ORIGIN · THE SOFTWARE · STATUS over RED TEAM · BLUE TEAM: one segmented control, current one lit */
+  .t-ctl{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:6px 10px 8px}
+  .t-ctl .sp{display:none}
+  .t-ctl .t-btn{grid-column:span 2;justify-content:center;text-align:center;min-height:44px;padding:2px 4px;font-size:12.5px;line-height:1.15;
+    border:1px solid var(--line);background:color-mix(in srgb,var(--a) 4%,transparent);transition:background-color .15s,border-color .15s,transform .1s}
+  .t-ctl .t-btn.mode-btn{grid-column:span 3}
+  .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+  .t-ctl .t-btn[aria-pressed="true"]{border-color:var(--a);background:color-mix(in srgb,var(--a) 16%,transparent)}
+  .t-ctl .t-btn.mode-btn[data-mode="red"] span{color:#ff6b6b}
+  .t-ctl .t-btn.mode-btn[data-mode="blue"] span{color:#6cb6ff}
+  .t-ctl .t-btn[aria-pressed="true"] span{color:var(--b)}
+  .t-ctl .t-btn:active{transform:scale(.96);background:color-mix(in srgb,var(--a) 22%,transparent)}
+}
+@media (max-width:360px){ .doms{grid-template-columns:1fr 1fr} .dom{padding:4px 6px} }
+@media (max-width:600px) and (prefers-reduced-motion:reduce){ .t-ctl .t-btn{transition:none} .t-ctl .t-btn:active,.dom:active{transform:none} }
+/* ===phone-end=== */
 </style>
 </head>
 <body data-self="futurewarfare" data-brand="[F·W]" data-unit="FUTURE WARFARE · TRAINING TERMINAL · UNIT 08" data-status="CURRICULUM" data-status-tail="RED TEAM"

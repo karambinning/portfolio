@@ -92,7 +92,10 @@
     .crash .k{font-size:12px} .crash p{font-size:13px}
     .slot .wait{font-size:13px} .slot .wait small,.slot .rec{font-size:12px;letter-spacing:.06em}
     .keys{font-size:12.5px}
-    .log{font-size:12px;height:170px}
+    .log{font-size:12px;height:150px}
+    /* the flight log sits straight under the map on the SIM tab, the notes after it */
+    #p-sim > .t-label{order:-2} #p-sim > .log{order:-1;margin-bottom:6px}
+    .where{font-size:0} .where::after{content:"on the SIM tab";font-size:13.5px}
 
     /* the simulation shows on the SIM tab, above its notes and flight log */
     .sim{display:none;padding:8px;gap:8px}
@@ -182,7 +185,7 @@
             <span class="rec">● REC · CH 01</span>
             <div class="wait">FLIGHT FOOTAGE<br>COMING SOON<small>a recorded ICARUS flight will play here</small></div>
           </div>
-          <p class="t-p">A flight filmed from the ground, with the deck's view beside it, goes here. Until then, the simulation on the right runs the same guard and control law the phone runs.</p>
+          <p class="t-p">A flight filmed from the ground, with the deck's view beside it, goes here. Until then, the simulation <span class="where">on the right</span> runs the same guard and control law the phone runs.</p>
         </section>
 
         <section class="pane" id="p-sim" aria-label="How the simulation works">
