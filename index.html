@@ -1584,7 +1584,8 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   const ORIG = new WeakMap(), NODES = new Map();
   function textNodes(root){
     if (NODES.has(root)) return NODES.get(root);
-    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+    // the timeline's hidden source list (#tlSrc) is never animated: the fly-through reads its text at any moment
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.trim() && !n.parentElement.closest('.tl-src') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
     const out = []; let n; while ((n = w.nextNode())) { ORIG.set(n, n.nodeValue); out.push(n); }
     NODES.set(root, out); return out;
   }
@@ -1800,6 +1801,6 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }
 })();
 </script>
-<script src="assets/tl-fly.js?v=1"></script>
+<script src="assets/tl-fly.js?v=2"></script>
 </body>
 </html>
