@@ -92,6 +92,8 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
   .ticker div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ticker div:nth-child(1){opacity:.5}
   .ticker b{color:var(--c,var(--a));font-weight:800;display:inline-block;min-width:58px}
+  /* below ~1280px wide the dock, centred, would run into the SSH buttons that share its row: lift it (and the note readout above it) clear of the control bar */
+  @media (min-width:761px) and (max-width:1279px){ .dock{bottom:50px} .readout{bottom:122px} }
 
   .tip{position:absolute;z-index:9;pointer-events:none;display:none;max-width:280px;padding:6px 8px;border:1px solid var(--c,var(--a));background:color-mix(in srgb,var(--screen) 92%,var(--c,var(--a)));
     font:600 10.5px/1.45 var(--mono);color:var(--text);box-shadow:0 0 16px color-mix(in srgb,var(--c,var(--a)) 35%,transparent)}
