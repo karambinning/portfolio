@@ -110,7 +110,7 @@ function log(id, text, c){
 
 /* ---------- HUD + domain key ---------- */
 hud.innerHTML = `<div class="big">THE ESTATE</div><span class="l1"><span class="top" id="hTop">~/VAULT</span> <span id="hTail">· inside the second brain</span><br></span>
-  NODES <em id="hN">0</em> · LINKS <em id="hL">0</em> · FIRING <em id="hF">0</em><span class="demo"> · demo graph, invented notes</span>`;
+  NODES <em id="hN">0</em> · LINKS <em id="hL">0</em> · FIRING <em id="hF">0</em><span class="demo"> · a sample, titles invented</span>`;
 const hN = $('#hN'), hL = $('#hL'), hF = $('#hF'), hTop = $('#hTop'), hTail = $('#hTail');
 $('#chips').innerHTML = `<span><i style="--k:#00f0ff"></i>my note</span><span><i class="o"></i>agent output</span>` +
   Object.entries(DOM).map(([g, d]) => `<span><i style="--k:${d.col}"></i>${g.slice(3)}</span>`).join('');
