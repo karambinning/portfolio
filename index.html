@@ -23,6 +23,10 @@ a{color:inherit}
 :focus-visible{outline:2px solid var(--phos);outline-offset:3px}
 
 /* ---------- the tube: fixed layers that never stop ---------- */
+.snd-t{all:unset;cursor:pointer;position:fixed;right:clamp(14px,3vw,40px);top:48px;z-index:60;font:500 10.5px/1 var(--mono);letter-spacing:.12em;color:var(--dim);padding:6px 8px;border:1px solid var(--rule)}
+.snd-t[aria-pressed="true"]{color:var(--phos);border-color:color-mix(in srgb,var(--phos) 50%,transparent)}
+.snd-t:hover,.snd-t:focus-visible{color:#fff}
+@media (max-width:600px){ .snd-t{top:auto;bottom:calc(var(--bot,64px) + 46px);right:12px} }
 #static{position:fixed;inset:0;width:100%;height:100%;z-index:45;pointer-events:none;opacity:.04;image-rendering:pixelated;mix-blend-mode:screen;transition:opacity .18s}
 .scan{position:fixed;inset:0;z-index:50;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 3px)}
@@ -816,6 +820,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 <div class="atk-fx" id="atkFx" hidden aria-hidden="true"><div class="atk-tears"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="atk-edge"></div></div>
 <div class="def-fx" id="defFx" hidden aria-hidden="true"><div class="def-hex"></div><div class="def-beam"></div><div class="def-ring"></div></div>
 <div class="atk-big" id="atkBig" aria-hidden="true"></div>
+<button type="button" class="snd-t" id="sndT" aria-pressed="false" aria-label="Sound">♪ SOUND OFF</button>
 <div class="atk-shut" id="atkShut" hidden aria-hidden="true"></div>
 <div class="sshw" id="sshTerm" hidden aria-hidden="true"><div class="ssh-bar"><i></i><i></i><i></i><span>visitor@portfolio — ssh — 80×20</span></div><div class="ssh-body"></div></div>
 
@@ -1470,9 +1475,23 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
   /* ---------- sound: a small synthesised CRT set, off until the visitor interacts ---------- */
   // no sound anywhere on the site (by choice); calls are kept as no-ops so effects code stays simple
-  const SFX = { channel(){}, scan(){}, open(){}, blip(){}, tick(){}, boot(){}, handshake(){} };
+  /* ---------- sound: quiet, synthesised, off until the visitor turns it on (browsers block audio until a click) ---------- */
+  const SND = { on: false, ac: null };
+  try { SND.on = localStorage.getItem('kb-snd') === 'on'; } catch (e) {}
+  function actx(){ if (!SND.on || reduce) return null; if (!SND.ac){ try { SND.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (SND.ac.state === 'suspended') SND.ac.resume(); return SND.ac; }
+  function hiss(ms, vol){ const a = actx(); if (!a) return; const n = Math.round(a.sampleRate * ms / 1000), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n) * (Math.random() < .08 ? 1 : .35);
+    const src = a.createBufferSource(), f = a.createBiquadFilter(), gn = a.createGain(); src.buffer = buf; f.type = 'bandpass'; f.frequency.value = 2400 + Math.random() * 2400; f.Q.value = .7;
+    gn.gain.value = vol; src.connect(f).connect(gn).connect(a.destination); src.start(); }
+  function click(vol){ const a = actx(); if (!a) return; const o = a.createOscillator(), gn = a.createGain(), t = a.currentTime;
+    o.type = 'square'; o.frequency.value = 1700 + Math.random() * 900; gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(.0001, t + .025); o.connect(gn).connect(a.destination); o.start(t); o.stop(t + .03); }
+  const SFX = { channel(){ hiss(220, .05); }, glitch(ms){ hiss(Math.min(500, ms || 160), .045); }, scan(){}, open(){ hiss(120, .035); }, blip(){ click(.02); }, tick(){ click(.012); }, boot(){ hiss(300, .04); }, handshake(){} };
+  window.KBSFX = SFX;
 
   document.addEventListener('click', e => { if (e.target.closest('.btn, .file, .node, .app-tabs button, .dial button, [data-lab]')) SFX.blip(); });
+  const sndT = $('#sndT'), sndShow = () => { sndT.setAttribute('aria-pressed', SND.on); sndT.textContent = SND.on ? '♪ SOUND ON' : '♪ SOUND OFF'; };
+  sndT.addEventListener('click', () => { SND.on = !SND.on; try { localStorage.setItem('kb-snd', SND.on ? 'on' : 'off'); } catch (e) {} sndShow(); if (SND.on) SFX.glitch(180); });
+  sndShow();
 
   /* ---------- channels that are their own pages (built under demo/w/<id>/) ---------- */
   const BUILD = '20261011-' + Date.now().toString(36);   // version stamp so browsers never show stale embedded pages
@@ -1647,8 +1666,10 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
   /* ---------- static: a low-res noise field, louder during a channel change ---------- */
   const cv = $('#static'), cx = cv.getContext('2d');
-  cv.width = 160; cv.height = 100;
-  const img = cx.createImageData(cv.width, cv.height);
+  // fine grain at any screen size: one noise pixel is about 3 screen pixels, never stretched into big squares
+  let img;
+  function sizeNoise(){ cv.width = Math.max(160, Math.min(900, Math.round(innerWidth / 3))); cv.height = Math.max(100, Math.min(560, Math.round(innerHeight / 3))); img = cx.createImageData(cv.width, cv.height); }
+  sizeNoise(); addEventListener('resize', sizeNoise);
   let loud = 0, lastNoise = 0;
   function noise(t){
     const fps = loud ? 30 : 10;
@@ -1660,7 +1681,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     }
     if (!reduce) requestAnimationFrame(noise);
   }
-  function burst(ms){ if (reduce) return; loud++; cv.style.opacity = .32; setTimeout(() => { if (--loud <= 0){ loud = 0; cv.style.opacity = .04; } }, ms); }
+  function burst(ms){ if (reduce) return; SFX.glitch(ms); loud++; cv.style.opacity = .32; setTimeout(() => { if (--loud <= 0){ loud = 0; cv.style.opacity = .04; } }, ms); }
   if (!reduce) requestAnimationFrame(noise);
 
   /* ---------- text decay and decode, on the real text nodes ---------- */
@@ -1902,7 +1923,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     const job = ++termJob;
     if (reduce){ term.textContent = text; return; }
     let i = 0; term.textContent = '';
-    const tick = () => { if (job !== termJob) return; term.textContent = text.slice(0, ++i); if (i < text.length) setTimeout(tick, 18 + Math.random() * 40); };
+    const tick = () => { if (job !== termJob) return; term.textContent = text.slice(0, ++i); if (i % 2) SFX.tick(); if (i < text.length) setTimeout(tick, 18 + Math.random() * 40); };
     tick();
   }
   if (!reduce) setInterval(() => { if (!busy && !dv.open) typeTerm(IDLE[Math.random() * IDLE.length | 0]); }, 7000);
