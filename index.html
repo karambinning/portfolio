@@ -379,21 +379,27 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 #atkLayer[hidden]{display:none}
 #atkLayer{position:fixed;inset:0;z-index:50;pointer-events:none}
 #atkLayer.dim{transition:opacity .45s;opacity:0}
-.atkw{position:absolute;width:min(270px,62vw);background:rgba(20,0,2,.92);border:1px solid #5a0000;box-shadow:0 0 22px rgba(255,48,48,.3);font:700 12px/1.4 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#ff5050;animation:atkPop .14s steps(2) both;will-change:transform}
+.atkw{position:absolute;width:min(290px,64vw);background:#0a0204;border:1px solid rgba(255,48,72,.55);box-shadow:0 0 28px rgba(255,48,72,.22);font:500 12.5px/1.5 var(--mono);color:#ffd6dc;animation:atkPop .14s steps(2) both;will-change:transform}
 @keyframes atkPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
-.atkw-bar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:#ff3030;color:#140003;font:700 10.5px/1.35 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.18em}
-.atkw-bar i{width:6px;height:6px;border-radius:50%;background:#140003}
+.atkw-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid rgba(255,48,72,.3);font:500 10px/1 var(--mono);letter-spacing:.04em;color:#a05060}
+.atkw-bar em{margin-left:auto;font-style:normal;color:#ff3355}
+.atkw-bar i{width:7px;height:7px;border-radius:50%;background:#3a0a14}
+.atkw-bar i:first-child{background:#ff3355}
 .atkw-bar span{margin-left:6px}
-.atkw-b{padding:10px 10px 12px;color:#f4cccc;letter-spacing:.06em}
+.atkw-b{padding:10px 12px 12px;letter-spacing:.02em}
+.atkw-b .pr{color:#ff3355}
+.atkw-b b{color:#ff3355}
 .atkw-b b{animation:blink .5s steps(1) infinite}
 .atkw.close{transition:transform .18s ease-in,opacity .18s;transform:scaleY(.02);opacity:0}
-.atk-tint{position:fixed;inset:0;z-index:49;pointer-events:none;background:#6a0008;mix-blend-mode:multiply;opacity:0;transition:opacity .12s}
+.atk-tint{position:fixed;inset:0;z-index:49;pointer-events:none;background:#5a0010;mix-blend-mode:multiply;opacity:0;transition:opacity .12s}
 .atk-tint.full{opacity:.9}
 .atk-tint.lift{transition:opacity .5s;opacity:0 !important}
 .atk-tint.recover{transition:opacity .6s,background-color .35s;background:#00d4ff;opacity:0 !important}
-.atk-big{position:fixed;left:50%;top:50%;z-index:51;transform:translate(-50%,-50%) scale(.7);opacity:0;pointer-events:none;font:400 clamp(44px,9vw,120px)/.95 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em;color:#ff3030;text-shadow:0 0 26px rgba(255,48,48,.55);white-space:nowrap}
+.atk-big{position:fixed;left:50%;top:50%;z-index:51;transform:translate(-50%,-50%) scale(.85);opacity:0;pointer-events:none;font:800 clamp(28px,4.4vw,60px)/1 var(--mono);letter-spacing:-.01em;color:#fff;text-shadow:0 0 18px rgba(255,48,72,.85),0 0 2px #ff3355;white-space:nowrap}
+.atk-big::before{content:'[ ';color:#ff3355} .atk-big::after{content:' ]_';color:#ff3355}
 .atk-big.on{opacity:1;transform:translate(-50%,-50%) scale(1);transition:transform .12s steps(3),opacity .1s}
-.atk-big.blue{color:#00d4ff;text-shadow:3px 0 #003a4a,-3px 0 #9ff3ff,0 0 40px rgba(0,212,255,.7)}
+.atk-big.blue{text-shadow:0 0 18px rgba(0,212,255,.8),0 0 2px #00d4ff}
+.atk-big.blue::before,.atk-big.blue::after{color:#00d4ff}
 /* attack: shake, tears, strobing red edge */
 body.under-attack #stage{animation:shake .09s steps(2) infinite}
 @keyframes shake{0%{transform:translate3d(calc(var(--shake,3px) * -1),calc(var(--shake,3px) * .5),0)}100%{transform:translate3d(var(--shake,3px),calc(var(--shake,3px) * -.4),0)}}
@@ -426,7 +432,8 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 .def-fx.go .def-ring{animation:dring .9s .3s ease-out both}
 @keyframes dring{0%{opacity:1;transform:scale(.5)}100%{opacity:0;transform:scale(40)}}
 .atkw.quar{border-color:#00d4ff;box-shadow:0 0 22px rgba(0,212,255,.5);animation:none}
-.atkw.quar .atkw-bar{background:#00d4ff}
+.atkw.quar .atkw-bar{color:#3a8aa0;border-color:rgba(0,212,255,.3)}
+.atkw.quar .atkw-bar i:first-child,.atkw.quar .atkw-b .pr,.atkw.quar .atkw-bar em{background:none;color:#00d4ff}
 .atkw.quar .atkw-b{color:#9ff3ff}
 @media (prefers-reduced-motion:reduce){ body.under-attack #stage,.atkw,.atk-tears i,.atk-edge{animation:none} }
 /* the arrival into the dissertation: red shutters rip apart */
@@ -434,7 +441,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 .atk-shut{position:fixed;inset:0;z-index:51;pointer-events:none;overflow:hidden}
 .atk-shut i{position:absolute;left:0;right:0;background:#6a0008;overflow:hidden;box-shadow:0 1px 0 #ff3355,0 -1px 0 #600010;will-change:transform}
 .atk-shut i span{position:absolute;left:50%;height:100vh;width:100%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;
-  font:400 clamp(44px,9vw,120px)/.95 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em;color:#ff3030;text-shadow:0 0 26px rgba(255,48,48,.55);white-space:nowrap}
+  font:800 clamp(28px,4.4vw,60px)/1 var(--mono);letter-spacing:-.01em;color:#fff;text-shadow:0 0 18px rgba(255,48,72,.85);white-space:nowrap}
 .atk-shut.go i{animation:shutter .62s cubic-bezier(.7,0,.25,1) both}
 @keyframes shutter{0%{transform:none}18%{transform:translate3d(calc(var(--dir) * 2%),0,0);filter:brightness(1.6)}100%{transform:translate3d(calc(var(--dir) * 110%),0,0)}}
 .scene.redboot{animation:redboot .8s ease-out both}
@@ -1301,7 +1308,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
   function atkWin(layer, i){
     const w = document.createElement('div'); w.className = 'atkw';
     w.style.left = (4 + Math.random() * 72) + '%'; w.style.top = (6 + Math.random() * 74) + '%';
-    w.innerHTML = `<div class="atkw-bar"><span>⚠ RED TEAM · ${String(i + 1).padStart(2, '0')}</span></div><div class="atkw-b">${ATK_MSG[i % ATK_MSG.length]}<b>_</b></div>`;
+    w.innerHTML = `<div class="atkw-bar"><i></i><i></i><i></i><span>~/red-team/0${(i % 9) + 1}</span><em>UNIT ${String(i + 1).padStart(2, '0')}</em></div><div class="atkw-b"><span class="pr">&gt;</span> ${ATK_MSG[i % ATK_MSG.length].toLowerCase()}<b>_</b></div>`;
     layer.appendChild(w); return w;
   }
   function attackIn(){
@@ -1509,7 +1516,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
       const sh = $('#atkShut'), N = 12; sh.innerHTML = '';
       for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
         d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28 + Math.random() * 30).toFixed(0) + 'ms';
-        d.innerHTML = `<span style="top:${(-k / N * 100 * N).toFixed(2)}%">SYSTEM COMPROMISED</span>`; sh.appendChild(d); }
+        d.innerHTML = `<span style="top:${(-k / N * 100 * N).toFixed(2)}%"><em style="color:#ff3355;font-style:normal">[&nbsp;</em>SYSTEM COMPROMISED<em style="color:#ff3355;font-style:normal">&nbsp;]_</em></span>`; sh.appendChild(d); }
       sh.hidden = false; sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
       $('#atkBig').classList.remove('on'); $('#atkLayer').hidden = true; $('#atkLayer').innerHTML = '';
       $('#atkTint').className = 'atk-tint'; $('#atkTint').style.opacity = '0';
