@@ -1867,6 +1867,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   }, { passive:false });
   addEventListener('keydown', e => {
     if (dv.open) return;
+    // on the agents channel, left / right turn the wheel and Space / Enter pick: pass them to the window
+    if (scenes[cur].id === 'agents' && !busy && ['ArrowLeft','ArrowRight',' ','Enter','Escape'].includes(e.key)){
+      const fr = scenes[cur].querySelector('.chan-app'); if (fr && fr.contentWindow){ e.preventDefault(); fr.contentWindow.postMessage({ kbKey: e.key }, '*'); return; } }
     const fwd = ['ArrowDown','ArrowRight','PageDown',' '], back = ['ArrowUp','ArrowLeft','PageUp'];
     if (fwd.includes(e.key) && !canScroll(scenes[cur], 1)){ e.preventDefault(); go(cur + 1); }
     else if (back.includes(e.key) && !canScroll(scenes[cur], -1)){ e.preventDefault(); go(cur - 1); }

@@ -44,7 +44,7 @@
     addEventListener('wheel', e => { if (!canScroll(e.target, Math.sign(e.deltaY))){ e.preventDefault(); parent.postMessage({ kbWheel: e.deltaY }, '*'); } }, { passive:false });
     addEventListener('keydown', e => {
       if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-      const f = ['ArrowDown','PageDown',' '].includes(e.key), b = ['ArrowUp','PageUp'].includes(e.key);
+      const f = ['ArrowDown','PageDown',' '].includes(e.key) && !(e.key === ' ' && document.body.dataset.spaceSelect !== undefined), b = ['ArrowUp','PageUp'].includes(e.key);   // some windows use Space to select
       if ((f || b) && !canScroll(e.target, f ? 1 : -1)){ e.preventDefault(); parent.postMessage({ kbStep: f ? 1 : -1 }, '*'); }
     });
     let ty = null; addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive:true });

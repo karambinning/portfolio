@@ -347,7 +347,7 @@
   }
 </style>
 </head>
-<body data-channel data-self="agents" data-brand="[K·B AGENTS]" data-unit="K·B AGENT FLEET · SMALL-SCALE · SEMI-AUTONOMOUS" data-status="FLEET" data-status-tail="LIVE"
+<body data-channel data-space-select data-self="agents" data-brand="[K·B AGENTS]" data-unit="K·B AGENT FLEET · SMALL-SCALE · SEMI-AUTONOMOUS" data-status="FLEET" data-status-tail="LIVE"
       data-mock="mock data · illustration">
 <div class="term on">
   <header data-frame></header>
@@ -1019,13 +1019,15 @@
     if (mode === 'select'){
       if (e.key === 'ArrowLeft'){ e.preventDefault(); step(-1); }
       else if (e.key === 'ArrowRight'){ e.preventDefault(); step(1); }
-      else if (e.key === 'Enter' && !e.target.closest('button')){ e.preventDefault(); open(WHEEL[sel]); }
+      else if ((e.key === 'Enter' || e.key === ' ') && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); open(WHEEL[sel]); }
     } else {
       if (e.key === 'Escape' || e.key === 'Backspace'){ e.preventDefault(); back(); }
       else if (e.key === 'ArrowLeft'){ e.preventDefault(); show(-1); }
       else if (e.key === 'ArrowRight'){ e.preventDefault(); show(1); }
     }
   });
+  // keys passed in by the portfolio when this page is a channel (it keeps focus on itself)
+  addEventListener('message', e => { const k = e.data && e.data.kbKey; if (k) document.body.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })); });
   addEventListener('resize', () => { drawSprites(); fitStage(); layout(); (window._fitters || []).forEach(f => f()); });
   banner(); layout();
   if (PHONE()){ fitStage(); layout(); setTimeout(() => { fitStage(); layout(); }, 400); if (document.fonts) document.fonts.ready.then(() => { fitStage(); layout(); }); }

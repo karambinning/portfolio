@@ -200,7 +200,7 @@
               <li><b>Planned:</b> drone and pilot simulators with a phone as the controller.</li>
             </ul>
           </div>
-          <div class="pane on" id="p-origin">
+          <div class="pane" id="p-origin">
             <div class="t-label">Where it came from</div>
             <ol class="tl">
               <li><span class="k">APRIL 2026</span>A <b>suspected security incident</b> on my own machines. It turned out to be a <b>false alarm</b>.</li>
@@ -219,6 +219,17 @@
             </div>
             <p class="t-p">Each domain has five zones and its own drill. <b>Civilian Survival</b> and <b>Cyber Security</b> are live. <b>Drone</b> and <b>Pilot</b> wait on simulators. The other eleven are laid out with zones and drills named, but not yet written.</p>
             <div id="statusRows"></div>
+          </div>
+          <div class="pane on" id="p-record">
+            <div class="t-label">My cyber session · from the record, 4 May 2026</div>
+            <p class="t-p">Zone 1, <b>Cyber Threat Landscape</b>, then the three Level 1 drills, all done against <b>my own machines and servers</b>. Taught in short steps by my AI tutor; every conclusion below I reached before it was named.</p>
+            <ul class="t-list">
+              <li><b>D101 · Audit my own infrastructure</b> (NIST CSF Identify): every machine and server mapped. Found that a dormant server is more dangerous than one switched off, that stored keys plus shell history can be harvested in about a minute, and that one reused password opens several doors.</li>
+              <li><b>D102 · Fleet check</b> (Identify and Detect): found the gap between design and reality: my private network had never been installed on the remote servers.</li>
+              <li><b>D103 · Intrusion log zero</b> (Detect): worked through spoofing and “living off the land” evasion, then designed a small security-operations setup and defence in depth.</li>
+              <li><b>Frameworks used:</b> NIST CSF 2.0, MITRE ATT&amp;CK (six tactics, from reconnaissance to defence evasion), MITRE D3FEND and the NCSC Cyber Assessment Framework.</li>
+              <li><b>Outcome:</b> five real risks rated amber on my own setup, each with an action: credentials on servers, the missing private network, password logins to replace with keys, no intrusion detection, and an overdue server. That work led to Sentinel.</li>
+            </ul>
           </div>
           <div class="pane dz" id="p-domain"></div>
         </div>
@@ -242,9 +253,10 @@
     </div>
   </main>
   <div class="t-ctl">
-    <button class="t-btn" data-pane="origin" aria-pressed="true"><span>ORIGIN</span></button>
+    <button class="t-btn" data-pane="origin"><span>ORIGIN</span></button>
     <button class="t-btn" data-pane="software"><span>THE SOFTWARE</span></button>
     <button class="t-btn" data-pane="status"><span>STATUS</span></button>
+    <button class="t-btn" data-pane="record" aria-pressed="true"><span>MY SESSION</span></button>
     <span class="sp"></span>
     <button class="t-btn mode-btn" data-mode="red" aria-pressed="true"><span>RED TEAM</span></button>
     <button class="t-btn mode-btn" data-mode="blue" aria-pressed="false"><span>BLUE TEAM</span></button>
