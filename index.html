@@ -350,6 +350,7 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 .tx-out{min-height:1.6em;margin-top:10px;color:var(--dim);white-space:pre-wrap}
 .tx-out .ok{color:#00ff88} .tx-out .err{color:var(--red)} .tx-out .k{color:var(--phos)}
 @media (prefers-reduced-motion:reduce){ .tx-live i{animation:none} }
+@media (max-width:560px){ .tx-title{display:none} .tx-live{margin-left:auto} .tx-unit span:last-child{display:none} .tx-f span b{display:none} .tx-body{padding:10px 12px 12px} .tx-line.dim{font-size:11px} }
 .ct .mail{font-size:clamp(20px,2.5vw,34px)}
 .share-note{margin-top:10px;font-size:12px;color:var(--dim);min-height:1.2em}
 /* ---------- the quick channel: a cyan CRT scan-in (no glitch, no static) ---------- */
@@ -863,9 +864,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <div class="tx-body">
         <div class="tx-boot" id="txBoot" aria-hidden="true"></div>
         <div class="tx-line dim">fill in the fields · enter moves on · ⌘/ctrl + enter sends</div>
-        <label class="tx-f"><span><b>visitor@karam</b>:<em>~</em>$ from</span><input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
-        <label class="tx-f"><span><b>visitor@karam</b>:<em>~</em>$ subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
-        <label class="tx-f tx-m"><span><b>visitor@karam</b>:<em>~</em>$ message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
+        <label class="tx-f"><span><b>visitor@karam:</b><em>~</em>$ from</span><input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
+        <label class="tx-f"><span><b>visitor@karam:</b><em>~</em>$ subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
+        <label class="tx-f tx-m"><span><b>visitor@karam:</b><em>~</em>$ message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
         <input type="checkbox" name="botcheck" class="tx-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="tx-ctl"><button class="tx-btn go" type="submit"><span>SEND ⏎</span></button><button class="tx-btn" type="reset"><span>CLEAR</span></button><span class="tx-count" id="txCount">0 / 4000</span></div>
         <div class="tx-out" id="txOut" aria-live="polite"></div>
