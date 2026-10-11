@@ -1373,9 +1373,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     // the windows themselves are taken apart detail by detail (bars, dots, labels, text, frames), and the tint drains away
     const layer = $('#atkLayer'), tint = $('#atkTint');
     layer.querySelectorAll('.atkw').forEach(w => { if (w.classList.contains('close')) w.remove(); else w.style.animation = 'none'; });
-    const run = window.KBDismantle ? KBDismantle.run(layer, 'out', 1000, col) : Promise.resolve();
-    tint.classList.remove('full', 'strobe'); tint.style.transition = 'opacity 1s'; tint.style.opacity = '0';
-    return Promise.all([run, new Promise(r => setTimeout(r, 1050))]).then(() => {
+    const run = window.KBDismantle ? KBDismantle.run(layer, 'out', 900, col) : Promise.resolve();
+    tint.classList.remove('full', 'strobe'); tint.style.transition = 'opacity .9s'; tint.style.opacity = '0';
+    return Promise.all([run, new Promise(r => setTimeout(r, 920))]).then(() => {
       window.KBDismantle && KBDismantle.restore(layer);
       layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.transition = ''; tint.style.background = ''; });
   }
@@ -1556,14 +1556,15 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         await attackOut();
       }
       await atkSettle(col);                                         // the attack / defence clears completely: nothing covers what follows
-      await (window.KBDismantle ? Promise.all([new Promise(r => setTimeout(r, 1900)), Promise.resolve(chanText(a, 'out', 1800, col))]) : 0);
+      chanText(a, 'out', 2600, col);                             // every element, timed to the scan line: exactly 2.6 s
+      await new Promise(r => setTimeout(r, 2650));
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
       const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
       b.style.visibility = 'hidden'; b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      chanText(b, 'in', 1900, col);                             // it starts blank, so show it only once the rebuild has begun
-      setTimeout(() => { b.style.visibility = ''; }, 90);
-      await new Promise(r => setTimeout(r, 900));
+      chanText(b, 'in', 2800, col);                             // it starts blank, so show it only once the rebuild has begun
+      setTimeout(() => { b.style.visibility = ''; }, 60);
+      await new Promise(r => setTimeout(r, 1200));
       busy = false; lockUntil = performance.now() + 300; return;
     }
     if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && b.dataset.warp === undefined && b.dataset.attack === undefined)){ // hologram projection: close to a line, then project open between two scan lines

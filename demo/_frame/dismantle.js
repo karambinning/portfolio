@@ -37,23 +37,22 @@
   }
 
   function schedule(els, vh, mode, W){
-    // the beam reaches each element at a time set by its position; the tree then orders children and parents
-    const t = els.map(e => {
-      const y = Math.min(1, Math.max(0, (e.r.top + Math.min(e.r.height, vh) / 2) / vh));
-      return (mode === 'out' ? 1 - y : y) * W * .75 + Math.random() * W * .05;
-    });
-    const step = Math.min(45, W / 30);
-    if (mode === 'out'){ for (let i = els.length - 1; i >= 0; i--){ const p = els[i].parent; if (p >= 0) t[p] = Math.max(t[p], t[i] + step); } }
-    else { for (let i = 0; i < els.length; i++){ const p = els[i].parent; if (p >= 0) t[i] = Math.max(t[i], t[p] + step); } }
-    const max = Math.max(1, ...t);
-    return t.map(x => x / max * W);
+    // each element's moment is when the beam crosses it: going out the beam rises from the bottom and meets an
+    // element's lower edge first; coming in it falls from the top and meets its upper edge. The tree then makes a box
+    // wait for everything inside it (out), or its contents wait for the box (in). Times stay locked to the beam.
+    const y = v => Math.min(1, Math.max(0, v / vh));
+    const t = els.map(e => (mode === 'out' ? 1 - y(e.r.bottom) : y(e.r.top)) * W);
+    const gap = 55;
+    if (mode === 'out'){ for (let i = els.length - 1; i >= 0; i--){ const p = els[i].parent; if (p >= 0) t[p] = Math.max(t[p], t[i] + gap); } }
+    else { for (let i = 0; i < els.length; i++){ const p = els[i].parent; if (p >= 0) t[i] = Math.max(t[i], t[p] + gap); } }
+    return t.map(x => Math.min(W, x));
   }
 
   function beam(color, mode, ms){
     const b = document.createElement('div'); b.dataset.kbBeam = '';
     b.style.cssText = `position:fixed;left:0;right:0;height:2px;z-index:2147483646;pointer-events:none;background:#fff;box-shadow:0 0 18px 5px ${color},0 0 60px 10px ${color};top:${mode === 'in' ? 0 : 100}%;opacity:.95`;
     document.body.appendChild(b);
-    b.animate([{ top: mode === 'in' ? '0%' : '100%' }, { top: mode === 'in' ? '100%' : '0%' }], { duration: ms * .9, easing: 'linear', fill: 'forwards' })
+    b.animate([{ top: mode === 'in' ? '0%' : '100%' }, { top: mode === 'in' ? '100%' : '0%' }], { duration: ms, easing: 'linear', fill: 'forwards' })
       .finished.then(() => b.animate([{ opacity: .95 }, { opacity: 0 }], { duration: 200, fill: 'forwards' }).finished).then(() => b.remove());
   }
 
@@ -62,22 +61,26 @@
     restore(root);
     const st = { anims: [], texts: [], job: Math.random() }; state.set(root, st);
     const { els, texts, vh } = collect(root);
-    const D = Math.max(180, Math.min(340, ms * .22)), W = Math.max(200, ms - D);
+    const D = Math.max(260, Math.min(520, ms * .2)), W = Math.max(300, ms - D);
     const T = schedule(els, vh, mode, W);
     const wire = `1px solid ${color}`, clear = '1px solid transparent';
     els.forEach((e, i) => {
       const dx = (Math.random() * 2 - 1) * 9, tf = !e.inline;
+      const T0 = { outlineOffset: '-1px' };
       const kf = mode === 'out' ? [
-        { opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined },
-        { opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? `translateX(${dx}px) skewX(${dx}deg)` : undefined, offset: .3 },
-        { opacity: 1, outline: wire, clipPath: `inset(${(20 + Math.random() * 25) | 0}% 0 ${(20 + Math.random() * 25) | 0}% 0)`, transform: tf ? `translateX(${-dx}px)` : undefined, offset: .55 },
-        { opacity: .9, outline: wire, clipPath: 'inset(49% 0 49% 0)', transform: tf ? 'scaleY(.05)' : undefined, offset: .82 },
-        { opacity: 0, outline: clear, clipPath: 'inset(50% 0 50% 0)', transform: tf ? 'scaleY(0)' : undefined }
+        { ...T0, opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined },
+        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? `translateX(${dx}px)` : undefined, offset: .18 },
+        { ...T0, opacity: 1, outline: wire, clipPath: `inset(${(5 + Math.random() * 20) | 0}% 0 ${(40 + Math.random() * 20) | 0}% 0)`, transform: tf ? `translateX(${-dx}px) skewX(${dx}deg)` : undefined, offset: .38 },
+        { ...T0, opacity: 1, outline: wire, clipPath: `inset(${(45 + Math.random() * 20) | 0}% 0 ${(5 + Math.random() * 15) | 0}% 0)`, transform: tf ? `translateX(${dx * 1.5}px)` : undefined, offset: .56 },
+        { ...T0, opacity: .9, outline: wire, clipPath: 'inset(48% 0 48% 0)', transform: tf ? 'scaleY(.1)' : undefined, offset: .78 },
+        { ...T0, opacity: 0, outline: clear, clipPath: 'inset(50% 0 50% 0)', transform: tf ? 'scaleY(0)' : undefined }
       ] : [
-        { opacity: 0, outline: wire, clipPath: 'inset(0 100% 0 0)', transform: tf ? `translateX(${dx}px)` : undefined },
-        { opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined, offset: .45 },
-        { opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? `translateX(${-dx / 2}px)` : undefined, offset: .7 },
-        { opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined }
+        { ...T0, opacity: 0, outline: wire, clipPath: 'inset(0 100% 0 0)', transform: tf ? 'none' : undefined },
+        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 100% 0 0)', transform: tf ? 'none' : undefined, offset: .01 },
+        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined, offset: .35 },
+        { ...T0, opacity: 1, outline: wire, clipPath: `inset(0 0 ${(30 + Math.random() * 30) | 0}% 0)`, transform: tf ? `translateX(${dx}px)` : undefined, offset: .5 },
+        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? `translateX(${-dx / 2}px)` : undefined, offset: .66 },
+        { ...T0, opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined }
       ];
       kf.forEach(k => { if (k.transform === undefined) delete k.transform; });
       try { st.anims.push(e.el.animate(kf, { duration: D, delay: T[i], easing: 'steps(6,end)', fill: mode === 'out' ? 'forwards' : 'both' })); } catch (_){}
@@ -85,19 +88,19 @@
     // the text: decays as its element is torn down, types back in once its element has formed
     texts.forEach(x => { x.t = T[x.owner] || 0; x.L = x.o.length; if (mode === 'in') x.n.nodeValue = ''; });
     st.texts = texts;
-    beam(color, mode, ms);
+    beam(color, mode, W);
     const t0 = performance.now(), job = st.job;
-    const end = mode === 'out' ? W + D : W + D * .45 + 420;
+    const end = mode === 'out' ? W + D : W + D * .35 + 540;
     return new Promise(res => {
       (function f(now){
         if (state.get(root) !== st || st.job !== job) return res();
         const el = now - t0;
         texts.forEach(x => {
           if (mode === 'out'){
-            const q = Math.min(1, Math.max(0, (el - x.t) / (D * .6))), k = Math.floor(x.L * (1 - q));
+            const q = Math.min(1, Math.max(0, (el - x.t) / (D * .55))), k = Math.floor(x.L * (1 - q));
             x.n.nodeValue = k <= 0 ? '' : x.o.slice(0, k) + (q > 0 ? g(Math.min(4, x.L - k)) : x.o.slice(k));
           } else {
-            const s = x.t + D * .45, dur = Math.min(420, 60 + x.L * 6), q = Math.min(1, Math.max(0, (el - s) / dur)), k = Math.floor(x.L * q);
+            const s = x.t + D * .35, dur = Math.min(520, 80 + x.L * 7), q = Math.min(1, Math.max(0, (el - s) / dur)), k = Math.floor(x.L * q);
             x.n.nodeValue = q <= 0 ? '' : k >= x.L ? x.o : x.o.slice(0, k) + g(Math.min(5, x.L - k));
           }
         });
