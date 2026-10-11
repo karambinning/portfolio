@@ -13,7 +13,14 @@
 @font-face { font-family: "Press Start 2P"; src: url(assets/fonts/press_start_2p.ttf) format("truetype"); font-display: block; }
 
 /* ---------- this window ---------- */
-.nb{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;flex:1;min-height:0}
+.nb{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.72fr);gap:20px;flex:1;min-height:0}
+/* left: the screen, with the now-playing readout under it; right: what it does */
+.stagecol{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.stagecol #lap{flex:1}
+.stagecol .readout{flex:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:8px 12px}
+.stagecol .readout .t-label{margin:0 !important}
+.stagecol .readout .t-tag,.stagecol .readout .ln{margin-top:0}
+.stagecol .readout .cred{flex-basis:100%;margin-top:0}
 #lap{position:relative;min-height:0;min-width:0}
 #bezel{position:absolute;left:50%;top:0;transform:translateX(-50%);background:#0b0b0e;border-radius:16px 16px 4px 4px;
   box-shadow:0 0 0 1px #2b2b33,0 0 0 2px #050507,0 18px 40px rgba(0,0,0,.6),0 0 40px color-mix(in srgb,var(--a) 10%,transparent)}
@@ -23,7 +30,7 @@
 #inner{position:relative;overflow:hidden;border-radius:9px 9px 2px 2px}
 .side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .feat{list-style:none}
-.feat li{padding:7px 0 7px 16px;position:relative;border-bottom:1px dashed var(--line);font-size:12.5px;line-height:1.45;color:var(--body)}
+.feat li{padding:5px 0 5px 16px;position:relative;border-bottom:1px dashed var(--line);font-size:12px;line-height:1.42;color:var(--body)}
 .feat li::before{content:"›";position:absolute;left:2px;color:var(--a)}
 .feat b{color:var(--text)}
 .feat .t-btn{font-size:11.5px;margin-left:4px}
@@ -36,7 +43,7 @@
 .readout .cred{font:500 10.5px/1.4 var(--mono);color:var(--dim);margin-top:6px;letter-spacing:0}
 .readout .cred a{color:var(--b)}
 #note{min-height:1.4em;color:var(--b);font:700 11px/1.4 var(--mono);text-transform:uppercase}
-@media (max-width:860px){ .nb{grid-template-columns:1fr} .side{overflow:visible} }
+@media (max-width:860px){ .nb{grid-template-columns:1fr} .side{overflow:visible} .stagecol #lap{flex:none} }
 #lap.zoom{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 #lap.zoom #bezel{left:0;transform:none}
 .zoomb{display:none}
@@ -168,6 +175,7 @@
       <div class="t-sub2">ssh karam@macbook · a demo screen, used like the real one</div>
     </div>
     <div class="nb">
+      <div class="stagecol">
       <div id="lap" aria-label="A MacBook screen running K·A·M Notch">
         <div id="bezel"><div id="inner">
           <div id="scr">
@@ -192,8 +200,7 @@
           </div>
         </div></div>
       </div>
-      <div class="side" data-keep>
-        <div class="t-box hot readout" aria-live="polite">
+      <div class="t-box hot readout" data-keep aria-live="polite">
           <div class="t-label" style="margin-bottom:4px">Now playing</div>
           <div class="trk" id="rTrack"></div>
           <span class="t-tag" id="rTag"></span>
@@ -202,6 +209,8 @@
           <div class="cred" id="rCredit">Recording: Robin Alciatore, piano, via Musopen. Public domain, from
             <a href="https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg" target="_blank" rel="noopener">Wikimedia Commons</a>.</div>
         </div>
+      </div>
+      <div class="side" data-keep>
         <div id="note" aria-live="polite"></div>
         <div class="t-label">What it does</div>
         <ul class="feat">
