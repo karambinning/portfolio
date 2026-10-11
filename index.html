@@ -317,23 +317,39 @@ dialog:not(.full) .tv-app{height:min(62vh,560px)}
 
 /* ---------- contact terminal ---------- */
 .ct{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(24px,4vw,56px);align-items:center}
-.tx{border:1px solid color-mix(in srgb,var(--phos) 45%,var(--rule));background:#03070e;padding:16px 18px;font:500 13.5px/1.6 var(--mono);box-shadow:inset 0 0 30px rgba(0,212,255,.05),0 0 40px rgba(0,212,255,.06)}
-.tx-bar{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.12em;color:var(--phos);border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:10px}
-.tx-live{color:#00ff88} .tx-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ff88;margin-right:4px;animation:blink 1.6s steps(1) infinite}
-.tx-line{color:var(--text)} .tx-line.dim{color:var(--dim);margin-bottom:10px}
+/* the message terminal: a K·A·M-style ssh session into the inbox */
+.tx{position:relative;border:1px solid color-mix(in srgb,var(--phos) 55%,var(--rule));background:#02060c;font:500 13px/1.6 var(--mono);
+  box-shadow:0 0 0 1px rgba(0,212,255,.08),0 0 46px rgba(0,212,255,.10),inset 0 0 60px rgba(0,212,255,.05);overflow:hidden}
+.tx::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+.tx-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;background:linear-gradient(#0b1828,#071120);border-bottom:1px solid color-mix(in srgb,var(--phos) 40%,var(--rule));font-size:11px;letter-spacing:.1em;color:var(--dim)}
+.tx-dots{display:flex;gap:6px}.tx-dots i{width:9px;height:9px;border-radius:50%;background:#16273a}.tx-dots i:first-child{background:#ff3355}.tx-dots i:nth-child(2){background:#ffcc00}.tx-dots i:nth-child(3){background:#00ff88}
+.tx-title{flex:1;text-align:center;color:var(--text);letter-spacing:.06em}
+.tx-live{color:#00ff88;white-space:nowrap} .tx-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;margin-right:5px;animation:blink 1.6s steps(1) infinite}
+.tx-unit{display:flex;justify-content:space-between;gap:12px;padding:5px 14px;font-size:10.5px;letter-spacing:.16em;color:var(--phos);border-bottom:1px dashed var(--rule)}
+.tx-unit span:last-child{color:var(--dim)}
+.tx-body{padding:12px 16px 14px}
+.tx-boot{min-height:4.8em;color:var(--text);white-space:pre-wrap}
+.tx-boot .k{color:var(--phos)} .tx-boot .ok{color:#00ff88} .tx-boot .d{color:var(--dim)}
+.tx-line{color:var(--text)} .tx-line.dim{color:var(--dim);margin:6px 0 8px;font-size:12px}
 .tx-f{display:flex;gap:10px;align-items:baseline;padding:4px 0}
-.tx-f span{color:var(--phos);white-space:nowrap}
-.tx-f input,.tx-f textarea{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px dashed var(--rule);color:var(--text);font:inherit;padding:2px 0;caret-color:var(--phos);resize:vertical}
-.tx-f input:focus,.tx-f textarea:focus{outline:none;border-bottom-color:var(--phos)}
+.tx-f span{white-space:nowrap;color:var(--dim)} .tx-f span b{color:#00ff88;font-weight:600} .tx-f span em{color:var(--phos);font-style:normal}
+.tx-f input,.tx-f textarea{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px dashed var(--rule);color:#fff;font:inherit;padding:2px 0;caret-color:var(--phos);caret-shape:block;resize:none}
+.tx-f input::placeholder,.tx-f textarea::placeholder{color:#3b5568}
+.tx-f input:focus,.tx-f textarea:focus{outline:none;border-bottom-color:var(--phos);box-shadow:0 1px 0 var(--phos)}
+.tx-f:focus-within span em{text-shadow:0 0 8px var(--phos)}
 .tx-m{flex-direction:column;gap:4px}
-.tx-m textarea{width:100%}
+.tx-m textarea{width:100%;border:1px dashed var(--rule);padding:6px 8px}
+.tx-m textarea:focus{border-color:var(--phos)}
 .tx-hp{position:absolute;left:-9999px}
-.tx-ctl{display:flex;gap:16px;margin-top:12px}
-.tx-btn{all:unset;cursor:pointer;color:var(--dim);font-weight:500}
-.tx-btn span{color:var(--phos)} .tx-btn:hover span,.tx-btn:focus-visible span{color:#ff66cc}
-.tx-btn:focus-visible{outline:1px dashed var(--phos);outline-offset:4px}
-.tx-out{min-height:1.6em;margin-top:8px;color:var(--dim)}
-.tx-out.ok{color:#00ff88} .tx-out.err{color:var(--red)}
+.tx-ctl{display:flex;gap:10px;align-items:center;margin-top:12px}
+.tx-btn{all:unset;cursor:pointer;font:700 12px/1 var(--mono);letter-spacing:.12em;padding:8px 14px;border:1px solid var(--rule);color:var(--dim)}
+.tx-btn.go{border-color:var(--phos);color:var(--phos);box-shadow:0 0 14px rgba(0,212,255,.18)}
+.tx-btn:hover,.tx-btn:focus-visible{color:#02060c;background:var(--phos);border-color:var(--phos)}
+.tx-btn:focus-visible{outline:1px dashed var(--phos);outline-offset:3px}
+.tx-count{margin-left:auto;font-size:11px;color:var(--dim);letter-spacing:.08em}
+.tx-out{min-height:1.6em;margin-top:10px;color:var(--dim);white-space:pre-wrap}
+.tx-out .ok{color:#00ff88} .tx-out .err{color:var(--red)} .tx-out .k{color:var(--phos)}
+@media (prefers-reduced-motion:reduce){ .tx-live i{animation:none} }
 .ct .mail{font-size:clamp(20px,2.5vw,34px)}
 .share-note{margin-top:10px;font-size:12px;color:var(--dim);min-height:1.2em}
 /* ---------- the quick channel: a cyan CRT scan-in (no glitch, no static) ---------- */
@@ -842,15 +858,18 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       </div>
     </div>
     <form class="tx" id="tx" novalidate>
-      <div class="tx-bar"><span>[K·B] TRANSMIT</span><span class="tx-live"><i></i> LINK OPEN</span></div>
-      <div class="tx-line">&gt; connect karam --inbox university</div>
-      <div class="tx-line dim">connected. fill in the fields and press enter on the last one, or [ SEND ].</div>
-      <label class="tx-f"><span>&gt; your_email:</span><input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
-      <label class="tx-f"><span>&gt; subject:</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
-      <label class="tx-f tx-m"><span>&gt; message:</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
-      <input type="checkbox" name="botcheck" class="tx-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <div class="tx-ctl"><button class="tx-btn" type="submit">[ <span>SEND</span> ]</button><button class="tx-btn" type="reset">[ <span>CLEAR</span> ]</button></div>
-      <div class="tx-out" id="txOut" aria-live="polite"></div>
+      <div class="tx-bar"><span class="tx-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tx-title">visitor@karam — ssh — inbox</span><span class="tx-live"><i></i> SSH CONNECTED</span></div>
+      <div class="tx-unit"><span>[K·B] TRANSMIT · UNIT 08</span><span>TO: UNIVERSITY INBOX</span></div>
+      <div class="tx-body">
+        <div class="tx-boot" id="txBoot" aria-hidden="true"></div>
+        <div class="tx-line dim">fill in the fields · enter moves on · ⌘/ctrl + enter sends</div>
+        <label class="tx-f"><span><b>visitor@karam</b>:<em>~</em>$ from</span><input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
+        <label class="tx-f"><span><b>visitor@karam</b>:<em>~</em>$ subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
+        <label class="tx-f tx-m"><span><b>visitor@karam</b>:<em>~</em>$ message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
+        <input type="checkbox" name="botcheck" class="tx-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="tx-ctl"><button class="tx-btn go" type="submit"><span>SEND ⏎</span></button><button class="tx-btn" type="reset"><span>CLEAR</span></button><span class="tx-count" id="txCount">0 / 4000</span></div>
+        <div class="tx-out" id="txOut" aria-live="polite"></div>
+      </div>
     </form>
   </div>
 </section>
@@ -1179,25 +1198,40 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   // activation email there; once Karam confirms it, every later message arrives directly.
   const INBOX = 'K.S.Binning1-24@student.lboro.ac.uk';
   const tx = $('#tx'), txOut = $('#txOut');
-  const txSay = (t, cls) => { txOut.className = 'tx-out' + (cls ? ' ' + cls : ''); txOut.textContent = t; };
+  const txSay = (t, cls) => { txOut.className = 'tx-out'; txOut.innerHTML = ''; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); };
+  const txLog = (t, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); return d; };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  // the ssh login types itself the first time the slide is shown
+  let txBooted = false;
+  window.txBoot = async () => {
+    if (txBooted) return; txBooted = true;
+    const box = $('#txBoot'), L = [['k', '$ ssh visitor@karam.inbox'], ['d', 'authenticating · key exchange ok'], ['ok', 'ACCESS GRANTED · session open'], ['d', 'messages land in my university inbox']];
+    box.textContent = '';
+    for (const [c, t] of L){ const d = document.createElement('div'); d.className = c; box.appendChild(d);
+      if (reduce){ d.textContent = t; continue; }
+      for (let k = 0; k <= t.length; k += 2){ d.textContent = t.slice(0, k); await wait(14); } d.textContent = t; await wait(120); }
+  };
+  const txCount = $('#txCount'); tx.message.addEventListener('input', () => { txCount.textContent = tx.message.value.length + ' / 4000'; });
+  tx.addEventListener('reset', () => { setTimeout(() => { txCount.textContent = '0 / 4000'; txOut.innerHTML = ''; }); });
+  tx.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); const nx = e.target.name === 'email' ? tx.subject : tx.message; nx.focus(); } });
   tx.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA' && (e.metaKey || e.ctrlKey)) tx.requestSubmit(); e.stopPropagation(); });
   tx.addEventListener('wheel', e => e.stopPropagation(), { passive:true });
   tx.addEventListener('submit', async e => {
     e.preventDefault();
     const f = new FormData(tx), email = (f.get('email') || '').trim(), subject = (f.get('subject') || '').trim(), message = (f.get('message') || '').trim();
     if (f.get('botcheck')) return;
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return txSay('> error: that email address doesn\u2019t look right.', 'err');
-    if (!subject || !message) return txSay('> error: add a subject and a message.', 'err');
-    txSay('> transmitting…'); burst(300); SFX.open();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return txSay('✗ error: that email address doesn\u2019t look right.', 'err');
+    if (!subject || !message) return txSay('✗ error: add a subject and a message.', 'err');
+    txOut.innerHTML = ''; txLog('$ send --to university-inbox', 'k'); await wait(160); txLog('packing message · ' + message.length + ' characters ✓', 'ok'); await wait(160); const tr = txLog('sending over https …');
     try {
       const r = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(INBOX), {
         method:'POST', headers:{ 'Content-Type':'application/json', Accept:'application/json' },
         body: JSON.stringify({ name: email, email, _replyto: email, _subject: 'Portfolio: ' + subject, message, _template: 'box', _captcha: 'false' }) });
       const j = await r.json().catch(() => ({}));
-      if (r.ok && (j.success === 'true' || j.success === true)){ tx.reset(); txSay('> transmitted ✓ — thank you. I\u2019ll reply from my university email.', 'ok'); }
-      else if (/activ/i.test(j.message || '')) txSay('> this inbox link is being switched on. For now, please email me directly at ' + INBOX + '.', 'err');
-      else txSay('> error: the message didn\u2019t send. Please email me directly at ' + INBOX + '.', 'err');
-    } catch (err) { txSay('> error: no connection. Please email me directly at ' + INBOX + '.', 'err'); }
+      if (r.ok && (j.success === 'true' || j.success === true)){ tr.textContent = 'sending over https ✓'; tr.className = 'ok'; txLog('delivered ✓ thank you. I\u2019ll reply from my university email.', 'ok'); tx.email.value = tx.subject.value = tx.message.value = ''; txCount.textContent = '0 / 4000'; }
+      else if (/activ/i.test(j.message || '')) txLog('✗ this inbox link is still being switched on. For now, email me directly at ' + INBOX + '.', 'err');
+      else txLog('✗ error: the message didn\u2019t send. Please email me directly at ' + INBOX + '.', 'err');
+    } catch (err) { txLog('✗ error: no connection. Please email me directly at ' + INBOX + '.', 'err'); }
   });
   /* ---------- share: the public address, by whichever route suits the visitor ---------- */
   const SITE = 'https://karambinning.github.io/portfolio/';
@@ -1446,6 +1480,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     scenes.forEach((x, i) => { x.toggleAttribute('inert', i !== cur); x.setAttribute('aria-hidden', i !== cur); });
     if (history.replaceState) history.replaceState(null, '', '#' + s.id);
     typeTerm(TERM[s.id] || '');
+    if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
   }
   /* ---------- the timeline as one continuous scroll: position p runs 0 → steps-1 along the rail ---------- */
