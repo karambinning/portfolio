@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dissertation</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  @font-face{font-family:'DSEG7';src:url(assets/fonts/DSEG7Classic-Bold.woff2) format('woff2');font-display:swap}
+  :root{--r:#ff3030;--r2:#b00000;--lab:#800000;--hi:#ff5050;--bg:#000;--txt:#fff0f0;--body:#f4cccc}
+  html,body{background:var(--bg)}
+  body{color:var(--txt);font-family:'JetBrains Mono',ui-monospace,monospace}
+  .scr{position:fixed;inset:0;pointer-events:none;z-index:20;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+  .page{position:relative;z-index:2;height:100%;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,.62fr);gap:clamp(16px,2.4vw,34px);align-items:safe center;padding:clamp(14px,3vh,26px) clamp(18px,4vw,60px)}
+  /* words */
+  .eyebrow{display:inline-block;font:600 10.5px/1.35 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.22em;color:#140003;background:#ff3030;padding:5px 8px}
+  h1{font:400 clamp(34px,min(4.4vw,8.5vh),66px)/.95 'Bebas Neue',Impact,sans-serif;color:var(--r);letter-spacing:.04em;margin:10px 0 8px;text-shadow:0 0 26px rgba(255,48,48,.45)}
+  h1 .cur{animation:c 1.05s steps(1) infinite} @keyframes c{50%{opacity:0}}
+  .q{font:700 clamp(13px,1.15vw,15px)/1.45 'JetBrains Mono',monospace;color:#ff7070;text-transform:uppercase;letter-spacing:.02em;margin-bottom:16px}
+  .w p{font-size:clamp(13px,min(1.05vw,2vh),14.5px);line-height:1.6;color:var(--body);margin-bottom:clamp(6px,1.4vh,11px);max-width:60ch}
+  .w p b{color:#fff;font-weight:700}
+  .w .tier{border-left:2px solid var(--r2);padding-left:12px}
+  .w .tier span{display:block;font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;color:#ff5050;margin-bottom:5px}
+  .next{font:700 12px/1.4 'JetBrains Mono',monospace;color:var(--r);letter-spacing:.06em;margin-top:6px}
+  /* globe */
+  .stage{position:relative;width:100%;aspect-ratio:1/1;max-height:82vh;margin:auto}
+  .stage canvas{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);cursor:grab;outline:none}
+  .tag{position:absolute;font:700 10px/1.2 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#c01010}
+  .tag.tl{left:0;top:4%} .tag.br{right:0;bottom:3%;text-align:right;color:#ffcc00}
+  /* two small mock experiments */
+  .xp{display:flex;flex-direction:column;gap:14px}
+  .exp{border:1px solid #3a0000;background:rgba(40,0,0,.35);padding:12px 12px 10px}
+  .exp .k{font:700 10.5px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#ff5050}
+  .exp p{font-size:12.5px;line-height:1.5;color:var(--body);margin:6px 0 8px}
+  .split{position:relative;height:16px;border:1px solid #5a0000;display:flex}
+  .split i{display:block;height:100%}
+  .split .tr{flex:174;background:repeating-linear-gradient(90deg,#b00000 0 4px,transparent 4px 6px)}
+  .split .te{flex:25;background:#ff3030}
+  .split .sweep{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;box-shadow:0 0 8px #ff5050;left:0;animation:sw 4.5s linear infinite}
+  @keyframes sw{to{left:100%}}
+  .yrs{display:flex;justify-content:space-between;font:400 10px/1 'DSEG7',monospace;color:var(--hi);margin-top:5px}
+  .acc{display:grid;grid-template-columns:90px 1fr;gap:6px 8px;align-items:center;font-size:10.5px;color:var(--body)}
+  .bar{height:9px;border:1px solid #5a0000;position:relative}
+  .bar i{position:absolute;inset:0;width:var(--w);background:var(--c,#ff3030);transition:width 1.2s}
+  .acc s{color:#ff8080}
+  .syn{font:700 9px/1.4 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#ffcc00;margin-top:2px}
+  /* lab-style activity, as on the lab's own screens */
+  .xp{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .lab{border:1px solid #3a0000;background:rgba(30,0,0,.4);padding:8px 10px}
+  .lab-h{display:flex;align-items:center;gap:8px;font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#c01010;margin-bottom:6px}
+  .lab-h .st{margin-left:auto;color:#ff5050}
+  .led{font:400 22px/1 'DSEG7',monospace;color:#ff3030;text-shadow:0 0 10px rgba(255,48,48,.6)}
+  .led.sm{font-size:14px}
+  .pg{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;font:700 9px/1 'JetBrains Mono',ui-monospace,monospace;color:#c01010;margin-top:5px}
+  .pg i{display:block;height:7px;border:1px solid #5a0000;position:relative;overflow:hidden}
+  .pg b{position:absolute;inset:0;width:0;background:repeating-linear-gradient(90deg,#ff3030 0 3px,#7a0000 3px 5px)}
+  #roc{display:block;width:100%;height:auto}
+  .feed{list-style:none;font:500 10.5px/1.5 'JetBrains Mono',monospace;color:#f4cccc;height:84px;overflow:hidden}
+  .feed li{display:flex;gap:6px;white-space:nowrap}
+  .feed .f-d{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .feed .f-w{display:none}
+  .mets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mets div{display:flex;flex-direction:column;gap:4px}
+  .mets span{font:700 9px/1 'JetBrains Mono',ui-monospace,monospace;color:#c01010;letter-spacing:.12em}
+  /* the takeover on arrival */
+  .tk{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 50%,#2a0000,#000 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer}
+  .tk.flash{background:#ff3030} .tk.flash .tk-t{color:#000;text-shadow:none}
+  .tk-t{font:400 clamp(22px,4.6vw,56px)/1 'JetBrains Mono',ui-monospace,monospace;color:#ff3030;text-align:center;text-shadow:3px 0 #600,-3px 0 #ff9090}
+  .tk-s{font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.24em;color:var(--lab)}
+  .tk.out{animation:tko .3s ease-in forwards} @keyframes tko{to{transform:scaleY(.004);filter:brightness(5);opacity:0}}
+  @media (max-width:900px){
+    .page{grid-template-columns:1fr;align-items:start;overflow:auto;height:100%}
+    .stage{max-width:420px;max-height:none}
+  }
+  @media (prefers-reduced-motion:reduce){ h1 .cur,.split .sweep{animation:none} .tk{display:none} }
+</style>
+</head>
+<body data-channel data-mock="none">
+<div class="tk" id="tk" aria-hidden="true"><div class="tk-t" id="tkT">WAR.SYS</div><div class="tk-s" id="tkS">OVERRIDE · CLICK TO SKIP</div></div>
+<div class="scr" aria-hidden="true"></div>
+<main class="page">
+  <section class="w">
+    <div class="eyebrow">MY DISSERTATION · BA HISTORY &amp; POLITICS · LOUGHBOROUGH UNIVERSITY · FINAL YEAR · IN PROGRESS</div>
+    <h1>GREAT POWER WAR<br>AS A PROCESS<span class="cur">_</span></h1>
+    <div class="q">What structural indicators of systemic conflict can, and cannot, predict</div>
+    <p>Major war read as a <b>long structural process</b> rather than a dated event. Two tiers ask two different questions.</p>
+    <p class="tier"><span>SYSTEMIC TIER</span>The condition of the international system from <b>1816 to 2022</b>, set against the build-ups to <b>1914 and 1939</b>. It describes how close today's structure looks to those two moments, and attaches no probability to war.</p>
+    <p class="tier"><span>DYADIC TIER</span>Whether a <b>pair of states</b> starts a militarised dispute the following year. Trained on 1816–1989, tested on 1990–2014: split by time, never at random, so the model never sees the future it is tested on.</p>
+    <p>Every result reports base rate, AUROC, AUPR and Brier score together, against honest baselines. It incorporates its own forecasting software, the lab, built for this dissertation.</p>
+    <div class="next">NEXT YEAR ▸ A MASTER'S IN INTERNATIONAL SECURITY</div>
+  </section>
+  <section class="stage" id="stage" aria-label="A rotating globe with synthetic activity">
+    <span class="tag tl">THEATRE · MOCK ASSET</span>
+    <canvas id="globe" tabindex="0" role="img" aria-label="A rotating wireframe globe with synthetic pulses and arcs between pairs of states. Mock data; drag or use the arrow keys to turn it."></canvas>
+  </section>
+  <aside class="xp" aria-hidden="true">
+    <div class="lab">
+      <div class="lab-h"><span>RUN</span><b class="led" id="run">0009</b><span class="st" id="labStage">TRAINING</span></div>
+      <div class="pg"><span>TRAIN</span><i><b id="p0"></b></i></div>
+      <div class="pg"><span>TUNE</span><i><b id="p1"></b></i></div>
+      <div class="pg"><span>TEST</span><i><b id="p2"></b></i></div>
+    </div>
+    <div class="lab">
+      <div class="lab-h"><span>CURVE</span><span class="st" id="ep">EPOCH 000</span></div>
+      <canvas id="roc" width="220" height="120"></canvas>
+    </div>
+    <div class="lab">
+      <div class="lab-h"><span>DYADS</span><b class="led sm" id="dy">000</b></div>
+      <ul class="feed" id="feed"></ul>
+    </div>
+    <div class="lab mets">
+      <div><span>BASE</span><b class="led sm" id="m0">.000</b></div>
+      <div><span>AUROC</span><b class="led sm" id="m1">.000</b></div>
+      <div><span>AUPR</span><b class="led sm" id="m2">.000</b></div>
+      <div><span>BRIER</span><b class="led sm" id="m3">.000</b></div>
+    </div>
+  </aside>
+</main>
+<script src="../../_frame/frame.js"></script>
+<script src="assets/d3.v7.9.0.min.js"></script>
+<script src="assets/topojson-client.v3.1.0.min.js"></script>
+<script src="assets/world-110m.js"></script>
+<script src="assets/globe.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  WarGlobe({ canvas: document.getElementById('globe'), stage: document.getElementById('stage'), feed: document.getElementById('feed'), onCount: null, reduce });
+  /* the lab, whirring: decorative activity in the lab's style */
+  const $ = id => document.getElementById(id);
+  let run = 9, ep = 0, phase = 0, prog = [0, 0, 0];
+  const pad = (n, w) => String(n).padStart(w, '0');
+  const roc = $('roc'), rc = roc.getContext('2d');
+  function drawCurve(t){
+    rc.clearRect(0, 0, 220, 120);
+    rc.strokeStyle = '#3a0000'; rc.lineWidth = 1;
+    for (let i = 0; i <= 4; i++){ rc.beginPath(); rc.moveTo(i * 55, 0); rc.lineTo(i * 55, 120); rc.stroke(); rc.beginPath(); rc.moveTo(0, i * 30); rc.lineTo(220, i * 30); rc.stroke(); }
+    rc.strokeStyle = '#7a0000'; rc.setLineDash([3, 3]); rc.beginPath(); rc.moveTo(0, 120); rc.lineTo(220, 0); rc.stroke(); rc.setLineDash([]);
+    const k = 2.2 + Math.sin(ep / 9) * .8, n = Math.floor(60 * t);
+    rc.strokeStyle = '#ff3030'; rc.lineWidth = 2; rc.shadowColor = '#ff3030'; rc.shadowBlur = 6; rc.beginPath();
+    for (let i = 0; i <= n; i++){ const x = i / 60, y = 1 - Math.pow(1 - x, k); i ? rc.lineTo(x * 220, 120 - y * 120) : rc.moveTo(0, 120); }
+    rc.stroke(); rc.shadowBlur = 0;
+  }
+  const flick = () => '.' + pad(Math.floor(Math.random() * 1000), 3);
+  let ct = 0;
+  function tick(){
+    ct++;
+    prog[phase] = Math.min(100, prog[phase] + 2 + Math.random() * 4);
+    ['p0', 'p1', 'p2'].forEach((id, i) => $(id).style.width = prog[i] + '%');
+    if (prog[phase] >= 100){ phase++; $('labStage').textContent = ['TRAINING', 'TUNING', 'TESTING', 'LOGGED'][phase] || 'LOGGED'; }
+    if (phase > 2){ phase = 0; prog = [0, 0, 0]; run++; $('run').textContent = pad(run, 4); $('labStage').textContent = 'TRAINING'; }
+    ep = (ep + 1) % 1000; $('ep').textContent = 'EPOCH ' + pad(ep, 3);
+    drawCurve((ct % 40) / 40);
+    if (ct % 2 === 0) ['m0', 'm1', 'm2', 'm3'].forEach(id => $(id).textContent = flick());
+    $('dy').textContent = pad(Math.floor(Math.random() * 999), 3);
+  }
+  if (!reduce) setInterval(tick, 120); else { drawCurve(1); }
+
+  // arrival: a short red takeover that resolves into the title (skippable)
+  const tk = document.getElementById('tk'), T = document.getElementById('tkT');
+  if (reduce || parent !== window){ tk.remove(); return; }
+  const GL = '▓▒░█#%&@$!?/\\<>';
+  const target = 'GREAT POWER WAR AS A PROCESS';
+  let done = false, t0 = performance.now();
+  const end = () => { if (done) return; done = true; tk.classList.add('out'); setTimeout(() => tk.remove(), 320); };
+  tk.addEventListener('click', end); addEventListener('keydown', end, { once:true });
+  setTimeout(() => tk.classList.add('flash'), 90); setTimeout(() => tk.classList.remove('flash'), 170);
+  (function scramble(now){
+    if (done) return;
+    const p = Math.min(1, (now - t0) / 1250), k = Math.floor(target.length * p);
+    T.textContent = p < .25 ? 'WAR.SYS OVERRIDE'.split('').map(c => Math.random() < .3 ? GL[(Math.random() * GL.length) | 0] : c).join('')
+      : target.slice(0, k) + target.slice(k).replace(/\S/g, () => GL[(Math.random() * GL.length) | 0]);
+    if (p < 1) requestAnimationFrame(scramble); else setTimeout(end, 250);
+  })(t0);
+})();
+</script>
+</body>
+</html>

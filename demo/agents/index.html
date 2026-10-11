@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command · Agent Fleet (replica)</title>
+<meta name="description" content="Interactive replica of the Command dashboard's agent fleet view, running on demo data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ═══ COMMAND replica · KAM palette (from Command.html :root + RESET) ═══ */
+  :root{
+    --zone-c:#00d4ff;
+    --av-bg:#04080f; --av-text:#aacce0;
+    --av-yerdad:#00d4ff; --av-scout:#00ff88; --av-builder:#ff7700; --av-analyst:#ffcc00;
+    --av-reviewer:#eef6ff; --av-envoy:#44aaff; --av-archivist:#aa66ff; --av-sentinel:#ff3355;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'IBM Plex Mono','SF Mono',Menlo,monospace;background:#070e1c;color:#eef6ff;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  ::selection{background:#00d4ff44;color:#fff}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:#070e1c}
+  ::-webkit-scrollbar-thumb{background:#3a5c7a;border-radius:0}
+  ::-webkit-scrollbar-thumb:hover{background:#00d4ff}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes tpulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+  @keyframes scanline{0%{top:38px;opacity:0}10%{opacity:.6}90%{opacity:.6}100%{top:100%;opacity:0}}
+  @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  @keyframes rowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @keyframes cortexNodePulse{0%,100%{opacity:.6}50%{opacity:1}}
+  :focus-visible{outline:1px solid var(--zone-c);outline-offset:1px}
+
+  /* ═══ APP LAYOUT · header / agent-view rail / workspace / ticker ═══ */
+  .app{display:grid;grid-template-rows:44px 1fr 30px;grid-template-columns:clamp(210px,24vw,250px) 1fr;height:100vh;width:100vw;gap:1px;background:#00d4ff15}
+  .header{grid-column:1/-1;grid-row:1}
+  .brain{grid-column:1;grid-row:2}
+  .work{grid-column:2;grid-row:2}
+  .ticker{grid-column:1/-1;grid-row:3}
+
+  .header{background:#070e1c;border-bottom:1px solid var(--zone-c);display:flex;align-items:stretch;z-index:20;position:relative;
+    box-shadow:0 1px 0 var(--zone-c),0 6px 32px color-mix(in srgb,var(--zone-c) 22%,transparent);transition:border-color .6s,box-shadow .6s}
+  .header-left{display:flex;align-items:stretch;flex:0 0 auto;height:100%}
+  .brand{font-size:10px;color:#00d4ff;text-shadow:0 0 8px #00d4ff66;letter-spacing:5px;font-weight:700;display:flex;align-items:center;padding:0 14px;border-right:1px solid #1e3a5f;white-space:nowrap;cursor:default}
+  .brand .dot{color:#00ff88;margin-right:6px;animation:pulse 2.4s ease-in-out infinite}
+  .hbtn{display:flex;align-items:center;height:100%;padding:0 12px;border:none;border-right:1px solid #1e3a5f;background:transparent;color:#6a8eaa;font-size:9px;letter-spacing:2px;transition:color .15s,background .15s;white-space:nowrap}
+  .hbtn:hover{background:#00d4ff10;color:#00d4ff}
+  #yerdad-jump-chip{display:flex;align-items:center;gap:6px;align-self:center;background:transparent;border:1px solid #aa66ff66;color:#aa66ff;font-size:10px;letter-spacing:2px;padding:5px 10px;margin:0 8px;transition:filter .12s,border-color .12s;white-space:nowrap}
+  #yerdad-jump-chip:hover{filter:brightness(1.4);border-color:#aa66ff}
+  .yj-dot{width:6px;height:6px;border-radius:50%;background:#aa66ff;box-shadow:0 0 6px #aa66ff;animation:pulse 1.6s infinite}
+  .livestrip{display:flex;flex:1;flex-wrap:nowrap;align-items:stretch;overflow-x:auto;overflow-y:hidden;height:100%;min-width:0}
+  .livestrip::-webkit-scrollbar{height:2px}
+  .live-stat{display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid #1e3a5f;height:100%;flex-shrink:0;white-space:nowrap}
+  .live-stat:hover{background:color-mix(in srgb,var(--zone-c) 6%,transparent)}
+  .live-stat-icon{font-size:11px;line-height:1}
+  .live-stat-val{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .live-stat-cap{font-size:7px;color:#4a6888;letter-spacing:2px;margin-left:3px}
+  .header-right{display:flex;align-items:stretch;flex:0 0 auto}
+  .header-right>*{display:flex;align-items:center;padding:0 12px;border:none;border-left:1px solid #1e3a5f;background:transparent;white-space:nowrap}
+  .clock{font-variant-numeric:tabular-nums;color:#00d4ff;letter-spacing:2px;font-size:11px}
+
+  /* ═══ BRAIN RAIL · AGENT VIEW ═══ */
+  .brain{background:#070e1c;border-right:1px solid color-mix(in srgb,var(--zone-c) 30%,#3a5c7a 70%);overflow:hidden;min-height:0;display:grid}
+  .cortex{background:#050a14;position:relative;overflow:hidden;box-shadow:inset 0 0 60px color-mix(in srgb,var(--zone-c) 12%,transparent)}
+  #agent-view-rail{display:flex;flex-direction:column;height:100%;padding:10px 12px;gap:10px;color:#aacce0;overflow-y:auto}
+  .av-lab{font-size:8px;color:#1e3a5f;letter-spacing:3px}
+  .av-agent-row{display:grid;grid-template-columns:8px 1fr auto;gap:6px;align-items:center;padding:3px 5px;border-left:2px solid currentColor;opacity:.5;transition:opacity .3s,background .3s}
+  .av-agent-row.on{opacity:1;background:color-mix(in srgb,currentColor 7%,transparent)}
+  .av-agent-row .d{width:6px;height:6px;background:currentColor;border-radius:50%}
+  .av-agent-row.on .d{box-shadow:0 0 6px currentColor;animation:pulse 1s infinite}
+  .av-agent-row .t{font-size:9px;color:var(--av-text);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .av-agent-row strong{color:currentColor}
+  .av-agent-row .s{font-size:7px;color:#4a6888;letter-spacing:2px}
+  .av-agent-row.on .s{color:currentColor}
+  .av-agent-row[data-agent="scout"]{color:var(--av-scout)}
+  .av-agent-row[data-agent="builder"]{color:var(--av-builder)}
+  .av-agent-row[data-agent="analyst"]{color:var(--av-analyst)}
+  .av-agent-row[data-agent="reviewer"]{color:var(--av-reviewer)}
+  .av-agent-row[data-agent="envoy"]{color:var(--av-envoy)}
+  .av-agent-row[data-agent="archivist"]{color:var(--av-archivist)}
+  .av-agent-row[data-agent="sentinel"]{color:var(--av-sentinel)}
+
+  /* ═══ WORKSPACE · tabs + views ═══ */
+  .work{background:#04080f;overflow:hidden;position:relative;display:grid;grid-template-rows:38px 1fr;min-width:0}
+  .work::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,#00000060 100%);z-index:1}
+  .work::before{content:"";position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00d4ff44,transparent);pointer-events:none;z-index:3;top:38px;animation:scanline 7s linear infinite;opacity:.6}
+  .work-tabs{display:flex;border-bottom:1px solid #162540;background:#060d1a;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .work-tabs::-webkit-scrollbar{display:none}
+  .work-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#4a6888;padding:10px 16px;font-size:9px;letter-spacing:3px;transition:all .15s;white-space:nowrap;--tc:#00d4ff}
+  .work-tab[data-view="missions"]{--tc:#ff3355}.work-tab[data-view="territory"]{--tc:#00ff88}.work-tab[data-view="people"]{--tc:#44aaff}
+  .work-tab[data-view="inbox"]{--tc:#44aaff}.work-tab[data-view="timeline"]{--tc:#aa66ff}.work-tab[data-view="career"]{--tc:#ffcc00}
+  .work-tab[data-view="academic"]{--tc:#aa66ff}.work-tab[data-view="sports"]{--tc:#00ff88}.work-tab[data-view="resell"]{--tc:#ff66aa}
+  .work-tab[data-view="routine"]{--tc:#ff7a00}.work-tab[data-view="strategy"]{--tc:#aa66ff}.work-tab[data-view="skills"]{--tc:#00ff88}.work-tab[data-view="builder"]{--tc:#ff7700}
+  .work-tab:hover{color:var(--tc);filter:brightness(1.2)}
+  .work-tab.active{color:var(--tc);border-bottom-color:var(--tc);text-shadow:0 0 8px var(--tc)}
+  .work-tab[aria-disabled="true"]{opacity:.55}
+  .view{overflow:hidden;position:absolute;top:38px;left:0;right:0;bottom:0;opacity:0;transform:translateY(8px);transition:opacity .32s ease,transform .32s ease;pointer-events:none;visibility:hidden}
+  .view.active{opacity:1;transform:none;pointer-events:auto;visibility:visible;z-index:2}
+  .view-inner{height:100%;overflow-y:auto;overflow-x:hidden}
+
+  /* ═══ TICKER ═══ */
+  .ticker{background:#060d1a;border-top:1px solid #00ff8822;display:flex;align-items:center;padding:0 14px;gap:14px;overflow:hidden;position:relative}
+  .ticker-label{font-size:8px;color:#00ff88;letter-spacing:3px;font-weight:700;padding-right:14px;border-right:1px solid #1e3c58;white-space:nowrap}
+  .ticker-stream{flex:1;overflow:hidden;white-space:nowrap;display:flex;gap:28px;align-items:center;min-width:0}
+  .ticker-item{font-size:9px;color:#c0d8f0;letter-spacing:1px;animation:rowIn .4s both}
+  .ticker-item .cat{color:#00ff88;padding-right:6px}
+  .ticker-pulse{color:#00ff88;font-size:12px;line-height:0;animation:tpulse 1.6s ease-in-out infinite}
+  .replica-tag{font-size:8px;letter-spacing:2px;color:#ffcc00;border:1px solid #ffcc0055;background:#ffcc000d;padding:2px 7px;white-space:nowrap;text-transform:lowercase}
+
+  /* ═══ CARDS / PILLS / TOAST / DRAWER ═══ */
+  .card{background:#060d1a;border:1px solid #1e3c58;padding:12px 14px;transition:all .2s;box-shadow:0 2px 0 #00000050}
+  .card:hover{border-color:#00d4ff66;background:#08152e;box-shadow:0 4px 18px #00d4ff22,0 0 0 1px #00d4ff44 inset}
+  .card-title{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+  .card-meta{font-size:9px;color:#4a6888;letter-spacing:2px;margin-bottom:6px}
+  .card-body{font-size:10px;color:#c0d8f0;line-height:1.5}
+  .pill{display:inline-block;padding:2px 7px;font-size:8px;letter-spacing:2px;margin-right:4px;font-weight:700}
+  .section-label{font-size:9px;color:#1e3a5f;letter-spacing:3px;text-transform:uppercase}
+  .toast{position:fixed;bottom:42px;right:14px;max-width:calc(100vw - 28px);visibility:hidden;background:#04080f;border:1px solid #00d4ff;padding:10px 14px;font-size:10px;color:#00d4ff;box-shadow:0 8px 32px #00000099,0 0 20px #00d4ff44;z-index:300;transform:translateX(calc(100% + 40px));transition:transform .4s,visibility .4s;letter-spacing:1px}
+  .toast.show{transform:translateX(0);visibility:visible}
+  .modal-backdrop{position:fixed;inset:0;z-index:200;display:none;pointer-events:none}
+  .modal-backdrop.open{display:block}
+  .modal-backdrop.open .modal{pointer-events:auto}
+  .modal{position:fixed;top:44px;right:0;bottom:30px;background:#04080ff5;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-left:2px solid var(--zone-c);box-shadow:-12px 0 32px #000000aa,-2px 0 28px color-mix(in srgb,var(--zone-c) 22%,transparent);width:min(560px,100vw);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;animation:slideInRight .28s cubic-bezier(.22,.61,.36,1)}
+  .modal-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #3a5c7a;background:linear-gradient(180deg,#0b1830 0%,#050a14 100%)}
+  .modal-title{font-size:15px;color:var(--zone-c);letter-spacing:4px;text-shadow:0 0 10px color-mix(in srgb,var(--zone-c) 50%,transparent)}
+  .modal-sub{font-size:9px;color:#6a8eaa;letter-spacing:2px;margin-top:2px;word-break:break-all}
+  .modal-close{background:transparent;border:1px solid #3a5c7a;color:#6a8eaa;width:30px;height:30px;font-size:14px;line-height:1;flex-shrink:0;transition:all .15s}
+  .modal-close:hover{background:#ff335515;color:#ff3355;border-color:#ff3355}
+  .modal-body{overflow-y:auto;padding:18px 22px;font-size:12px;line-height:1.7;color:#b0c8e0}
+  .modal-body h1{font-size:18px;color:var(--zone-c);letter-spacing:2px;margin:0 0 12px;line-height:1.35}
+  .modal-body h2{font-size:15px;color:color-mix(in srgb,var(--zone-c) 80%,#c0d8f0);letter-spacing:3px;margin:18px 0 10px}
+  .modal-body h3{font-size:13px;color:#aa66ff;letter-spacing:2px;margin:14px 0 8px;font-weight:700}
+  .modal-body h4{font-size:12px;color:#00d4ff;letter-spacing:1px;margin:12px 0 6px;font-weight:700}
+  .modal-body p{margin-bottom:10px}
+  .modal-body strong{color:#fff;font-weight:700}
+  .modal-body em{color:#c0d8f0;font-style:italic}
+  .modal-body code{color:var(--zone-c);background:#050a14;padding:1px 6px;font-size:.9em}
+  .modal-body ul{margin:6px 0 12px 20px}
+  .modal-body li{margin-bottom:5px}
+  .modal-body hr{border:none;border-top:1px solid #3a5c7a;margin:16px 0}
+  .modal-foot{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #3a5c7a;background:#050a14;flex-wrap:wrap}
+  .modal-foot .meta{font-size:8px;color:#6a8eaa;letter-spacing:2px}
+  .modal-btn{background:transparent;border:1px solid #00d4ff66;color:#00d4ff;padding:7px 12px;font-size:9px;letter-spacing:2px;font-weight:600;transition:all .15s}
+  .modal-btn:hover{background:#00d4ff15}
+  .modal-btn.primary{border-color:#00ff88;color:#00ff88}
+  .modal-btn.primary:hover{background:#00ff8815}
+
+  /* ═══ PHONE · 720px breakpoint (Command: hide AV column, single column) ═══ */
+  @media (max-width:720px){
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr 30px}
+    .brain{display:none}
+    .work{grid-column:1}
+    .header{flex-wrap:wrap;height:auto;min-height:44px}
+    .header-left{height:44px}
+    .hbtn,.global-search,.clock,.hide-sm{display:none !important}
+    .livestrip{order:3;flex:1 1 100%;height:34px;border-top:1px solid #1e3a5f}
+    .header-right{margin-left:auto;height:44px}
+    .header-right>*{padding:0 10px}
+    .live-stat-cap{display:none}
+    .work-tab{padding:10px 12px}
+    .ticker-label{padding-right:10px}
+    .modal{width:100vw;top:0;bottom:0;border-left:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  }
+
+  /* ═══ OFFICE · cowork floor (replica of Command #view-office) ═══ */
+  .office-head{padding:9px 14px;border-bottom:1px solid #162540;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#020a14;flex-wrap:wrap}
+  .office-tag{font-size:8px;color:#1e3a5f;letter-spacing:2px;margin-top:2px}
+  .floor{background:#020811;background-image:linear-gradient(rgba(0,212,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.022) 1px,transparent 1px);background-size:30px 30px;border-bottom:1px solid #162540;padding:16px 14px 16px;position:relative;overflow:hidden}
+  .floor::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none}
+  .corner{position:absolute;font-size:10px;color:#00d4ff1a}
+  .ws-director{position:relative;display:flex;align-items:center;gap:14px;padding:16px 14px 10px;background:linear-gradient(180deg,#00d4ff0d,#020a14);border:1px solid #00d4ff44;border-top:2px solid #00d4ff;max-width:980px;margin:0 auto;transition:box-shadow .4s}
+  .ws-director.acting{box-shadow:0 0 22px #00d4ff33,inset 0 0 20px #00d4ff10}
+  .ws-director .tagl{position:absolute;top:5px;left:10px;font-size:8px;color:#00d4ff66;letter-spacing:2px}
+  .ws-director .tagr{position:absolute;top:5px;right:10px;font-size:8px;color:#00d4ffaa;letter-spacing:3px}
+  .dir-name{font-size:20px;color:#00d4ff;letter-spacing:6px;font-weight:700;text-shadow:0 0 14px #00d4ff44}
+  .dir-sub{font-size:9px;color:#00d4ff99;letter-spacing:3px;margin-top:2px}
+  .dir-status{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:9px;letter-spacing:2px}
+  .dir-box{margin-left:auto;width:min(330px,40%);border:1px solid #00d4ff;background:#010a14;padding:7px 9px;box-shadow:0 0 14px #00d4ff22}
+  .dir-box-h{display:flex;justify-content:space-between;font-size:8px;color:#00d4ff;letter-spacing:2px;padding-bottom:4px;border-bottom:1px solid #00d4ff33;margin-bottom:4px}
+  .dir-log{font-size:9px;color:#aacce0;line-height:1.55;min-height:44px}
+  .dir-log div{animation:rowIn .35s both;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dispatch{display:flex;gap:6px;max-width:980px;margin:10px auto 0;align-items:stretch;flex-wrap:wrap}
+  .dispatch input{flex:1 1 220px;min-width:0;background:#020a14;border:1px solid #1e3a5f;color:#c0d8f0;padding:8px 10px;font-size:11px;letter-spacing:1px;outline:none}
+  .dispatch input::placeholder{color:#3a5c7a}
+  .dispatch input:focus{border-color:#00d4ff}
+  .btn{background:transparent;border:1px solid var(--c,#00d4ff);color:var(--c,#00d4ff);padding:7px 12px;font-size:9px;letter-spacing:2px;font-weight:700;transition:background .15s,filter .15s;white-space:nowrap}
+  .btn:hover{background:color-mix(in srgb,var(--c,#00d4ff) 12%,transparent)}
+  .btn[aria-pressed="false"]{opacity:.55}
+  .chips{display:flex;gap:5px;flex-wrap:wrap;max-width:980px;margin:6px auto 0}
+  .qchip{background:transparent;border:1px solid #1e3a5f;color:#6a8eaa;padding:3px 8px;font-size:9px;letter-spacing:1px}
+  .qchip:hover{border-color:#00d4ff;color:#00d4ff}
+  .floor-title{text-align:center;font-size:8px;color:#1e3a5f;letter-spacing:5px;margin:14px 0 10px}
+  .floor-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;max-width:980px;margin:0 auto}
+  .ws-card{--c:#00ff88;display:flex;flex-direction:column;align-items:center;padding:16px 5px 10px;position:relative;background:color-mix(in srgb,var(--c) 2.5%,transparent);border:1px solid color-mix(in srgb,var(--c) 14%,transparent);border-top:2px solid color-mix(in srgb,var(--c) 27%,transparent);transition:all .5s;min-width:0}
+  .ws-card.acting{background:color-mix(in srgb,var(--c) 7%,transparent);border-color:color-mix(in srgb,var(--c) 45%,transparent);border-top-color:var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 20%,transparent)}
+  .ws-card.failed{border-top-color:#ff3355}
+  .ws-num{position:absolute;top:3px;left:6px;font-size:8px;color:color-mix(in srgb,var(--c) 40%,transparent);letter-spacing:1.5px}
+  .ws-monitor{width:100%;height:56px;background:#010a14;border:2px solid color-mix(in srgb,var(--c) 40%,transparent);box-shadow:0 0 14px color-mix(in srgb,var(--c) 13%,transparent),inset 0 0 8px color-mix(in srgb,var(--c) 7%,transparent);margin-bottom:6px;display:flex;flex-direction:column;padding:3px 5px;overflow:hidden;transition:box-shadow .6s}
+  .ws-card.acting .ws-monitor{box-shadow:0 0 18px color-mix(in srgb,var(--c) 35%,transparent),inset 0 0 10px color-mix(in srgb,var(--c) 18%,transparent)}
+  .ws-mh{font-size:7px;color:color-mix(in srgb,var(--c) 67%,transparent);letter-spacing:1px;display:flex;justify-content:space-between;padding-bottom:2px;border-bottom:1px solid color-mix(in srgb,var(--c) 20%,transparent)}
+  .ws-trail{flex:1;display:flex;flex-direction:column;justify-content:flex-end;font-size:7.5px;line-height:1.35;color:color-mix(in srgb,var(--c) 75%,#c0d8f0);overflow:hidden;padding-top:2px}
+  .ws-trail div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:rowIn .3s both}
+  .ws-bars{display:flex;flex-direction:column;gap:2px;width:90%;margin:auto}
+  .ws-bars i{display:block;height:2px;background:color-mix(in srgb,var(--c) 35%,transparent)}
+  .ws-stand{width:12px;height:5px;background:color-mix(in srgb,var(--c) 20%,transparent);border:1px solid color-mix(in srgb,var(--c) 27%,transparent)}
+  .ws-card svg{margin-top:4px;opacity:.88}
+  .ws-progress{width:90%;height:4px;margin-top:6px;background:color-mix(in srgb,var(--c) 6%,transparent);border:1px solid color-mix(in srgb,var(--c) 20%,transparent);overflow:hidden;position:relative}
+  .ws-progress-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:color-mix(in srgb,var(--c) 67%,transparent);transition:width .6s}
+  .ws-name{margin-top:7px;font-size:11px;color:var(--c);letter-spacing:3px;font-weight:700}
+  .ws-role{font-size:8px;color:color-mix(in srgb,var(--c) 45%,transparent);margin-top:2px;text-align:center;letter-spacing:.5px;min-height:24px;line-height:1.35}
+  .ws-st{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:8px;color:color-mix(in srgb,var(--c) 55%,transparent);letter-spacing:1.5px;text-align:center}
+  .ws-dot{width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);animation:pulse 2s infinite;flex-shrink:0}
+  .ws-card.acting .ws-st{color:var(--c)}
+  .ws-card.acting .ws-dot{animation-duration:.6s}
+  .ws-card.failed .ws-dot{background:#ff3355;box-shadow:0 0 6px #ff3355}
+  .ws-card.failed .ws-st{color:#ff3355}
+  /* review ledger */
+  .ledger-wrap{display:grid;grid-template-columns:1.25fr 1fr 210px;gap:1px;background:#0a1e35}
+  .lane{background:#020a14;padding:12px 14px;min-width:0}
+  .lane-h{display:flex;align-items:center;gap:6px;padding-bottom:6px;border-bottom:1px solid color-mix(in srgb,var(--c) 20%,transparent);margin-bottom:8px}
+  .lane-h .d{width:5px;height:5px;background:var(--c);border-radius:50%;box-shadow:0 0 5px var(--c);animation:pulse 1.6s infinite}
+  .lane-h .l{font-size:9px;color:var(--c);letter-spacing:3px;font-weight:600}
+  .lane-h .r{margin-left:auto;font-size:8px;color:#4a6888;letter-spacing:2px}
+  .lrow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline;padding:5px 8px;background:#04080f;border-left:2px solid var(--c);margin-bottom:3px;font-size:9px;animation:rowIn .4s both}
+  .lrow .id{color:#4a6888;letter-spacing:1px}
+  .lrow .tx{color:#c0d8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lrow .why{grid-column:2/4;color:#ff8899;font-size:8.5px;letter-spacing:.5px}
+  .lrow .who{font-size:8px;letter-spacing:2px;color:var(--c)}
+  .empty{color:#1e3a5f;font-size:9px;font-style:italic}
+  .stat-big{font-size:22px;font-weight:700;letter-spacing:1px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat-lab{font-size:8px;color:#1e3a5f;letter-spacing:2px}
+  .ratio-bar{height:6px;background:#ff335533;border:1px solid #1e3c58;margin:8px 0 4px;position:relative}
+  .ratio-bar i{position:absolute;left:0;top:0;bottom:0;background:#00ff88;transition:width .5s}
+  .rule{margin-top:10px;font-size:8.5px;color:#6a8eaa;line-height:1.55;border-left:2px solid #eef6ff;padding:4px 8px;background:#04080f}
+  .rule b{color:#eef6ff;font-weight:600}
+  /* COMMAND board (team health lanes) */
+  .board{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:1px;background:#0a1e35;min-height:100%}
+  .team-agent{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#04080f;border-left:2px solid var(--c);margin-bottom:3px}
+  .team-agent .g{color:var(--c);font-size:12px;width:14px;text-align:center}
+  .team-agent .n{font-size:10px;color:var(--c);letter-spacing:2px;flex:1;font-weight:600}
+  .team-agent .r{font-size:9px;color:color-mix(in srgb,var(--c) 45%,transparent);letter-spacing:1px}
+  .team-agent .o{width:5px;height:5px;border-radius:50%;background:#00ff88;box-shadow:0 0 4px #00ff88}
+  .team-agent.on .o{background:var(--c);box-shadow:0 0 6px var(--c);animation:pulse .8s infinite}
+  .op{padding:6px 9px;background:#04080f;border-left:2px solid var(--c);margin-bottom:4px;font-size:9px;color:#c0d8f0;animation:rowIn .4s both}
+  .op .k{font-size:8px;color:var(--c);letter-spacing:2px;display:block}
+  @media (max-width:1000px){ .ledger-wrap{grid-template-columns:1fr 1fr} .ledger-wrap .lane.stats{grid-column:1/-1} .board{grid-template-columns:1fr 1fr} }
+  @media (max-width:860px){ .floor-grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  @media (max-width:720px){
+    .floor-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    .ws-director{flex-wrap:wrap;gap:10px;padding:18px 10px 10px}
+    .ws-director svg.dir-bot{width:30px;height:38px}
+    .dir-flow,.dir-sub{display:none}
+    .chips .qchip:nth-child(n+3){display:none}
+    .dir-name{font-size:16px;letter-spacing:4px}
+    .dir-sub{font-size:8px;letter-spacing:1.5px}
+    .dir-box{width:100%;margin-left:0}
+    .ledger-wrap,.board{grid-template-columns:1fr}
+    .ws-role{display:none}
+    .floor{padding:12px 10px}
+  }
+</style>
+</head>
+<body data-view="office">
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="brand"><span class="dot">●</span>BINNING.AI · HQ</div>
+      <button id="yerdad-jump-chip" title="Focus the dispatch bar"><span class="yj-dot"></span>YER DAD</button>
+    </div>
+    <div class="livestrip">
+      <div class="live-stat" title="Director phase"><span class="live-stat-icon" style="color:#00d4ff">⌁</span><span class="live-stat-val" id="ls-phase" style="color:#00d4ff">IDLE</span></div>
+      <div class="live-stat" title="Tasks waiting for dispatch"><span class="live-stat-icon" style="color:#ffcc00">▤</span><span class="live-stat-val" id="ls-queue">0</span><span class="live-stat-cap">QUEUED</span></div>
+      <div class="live-stat" title="Demo counter · reviewer passes"><span class="live-stat-icon" style="color:#00ff88">✓</span><span class="live-stat-val" id="ls-pass" style="color:#00ff88">0</span><span class="live-stat-cap">PASSED · DEMO</span></div>
+      <div class="live-stat" title="Demo counter · reviewer fails (kept in ledger)"><span class="live-stat-icon" style="color:#ff3355">✗</span><span class="live-stat-val" id="ls-fail" style="color:#ff3355">0</span><span class="live-stat-cap">FAILED · DEMO</span></div>
+      <div class="live-stat" title="Demo pass rate"><span class="live-stat-icon" style="color:#aa66ff">%</span><span class="live-stat-val" id="ls-rate">—</span><span class="live-stat-cap">PASS RATE</span></div>
+    </div>
+    <div class="header-right">
+      <span class="clock" id="clock">—</span>
+    </div>
+  </header>
+
+  <aside class="brain">
+    <div class="cortex">
+      <div id="agent-view-rail">
+        <div style="display:flex;align-items:baseline;gap:8px;padding-bottom:6px;border-bottom:1px solid #1e3a5f">
+          <span id="av-phase-dot" style="display:inline-block;width:7px;height:7px;background:#aa66ff;border-radius:50%;box-shadow:0 0 5px #aa66ff"></span>
+          <span style="font-size:9px;color:#aa66ff;letter-spacing:3px;font-weight:700">◉ AGENT VIEW · YER DAD</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span class="av-lab">PHASE</span>
+          <span id="av-phase" style="font-size:12px;color:#aa66ff;letter-spacing:3px;font-weight:700">IDLE</span>
+        </div>
+        <div style="background:#04080f;border-left:2px solid #aa66ff;padding:6px 9px">
+          <div class="av-lab" style="margin-bottom:3px">▸ WHAT IT'S DOING</div>
+          <div id="av-doing" style="font-size:10px;color:#aacce0;line-height:1.45">awaiting input</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span class="av-lab">▸ SUB-AGENTS · 7</span><span style="flex:1"></span>
+            <span id="av-agents-active" class="av-lab" style="letter-spacing:2px">0 ACTIVE</span>
+          </div>
+          <div id="av-agents-rich" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
+        <div>
+          <div class="av-lab" style="margin-bottom:3px">▸ TOOL TRACE · LAST 5</div>
+          <div id="av-trace" style="font-size:9px;color:#6a8eaa;letter-spacing:.5px;line-height:1.5;min-height:60px"></div>
+        </div>
+        <div>
+          <div class="av-lab" style="margin-bottom:3px">▸ PLAN STEPS</div>
+          <div id="av-plan" style="font-size:9px;color:#aacce0;line-height:1.6"></div>
+        </div>
+        <span style="flex:1"></span>
+        <div id="av-shift-chip" style="display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #ffcc00;background:#ffcc0010">
+          <span style="font-size:11px">☀</span>
+          <span style="font-size:8px;color:#ffcc00;letter-spacing:2px;font-weight:700">DAY SHIFT · DEMO</span>
+        </div>
+        <div style="display:flex;align-items:stretch;gap:6px">
+          <select id="av-run-task-pick" aria-label="Pick a demo task" style="min-width:0;flex:1;background:#04080f;border:1px solid #aa66ff;color:#aa66ff;padding:4px 6px;font-size:8px;letter-spacing:1px"></select>
+          <button id="av-run-task-btn" class="btn" style="--c:#aa66ff;font-size:8px;padding:4px 8px">▶ RUN</button>
+        </div>
+        <div id="av-run-task-status" style="font-size:8px;color:#1e3a5f;letter-spacing:2px">⌁ idle</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="work">
+    <div class="work-tabs" id="work-tabs" role="tablist">
+      <button class="work-tab" data-view="hq" role="tab">▣ COMMAND</button>
+      <button class="work-tab active" data-view="office" role="tab">⊞ OFFICE</button>
+      <button class="work-tab" data-view="inbox" aria-disabled="true">✉ INBOX</button>
+      <button class="work-tab" data-view="missions" aria-disabled="true">▴ MISSIONS</button>
+      <button class="work-tab" data-view="intel" aria-disabled="true">◆ INTEL</button>
+      <button class="work-tab" data-view="builder" aria-disabled="true">⚒ BUILDER</button>
+      <button class="work-tab" data-view="vault" aria-disabled="true">⌕ VAULT</button>
+    </div>
+
+    <!-- OFFICE · cowork floor -->
+    <section class="view active" id="view-office">
+      <div class="view-inner">
+        <div class="office-head">
+          <div>
+            <div class="section-label">OFFICE · COWORK FLOOR + AGENT VIEW</div>
+            <div class="office-tag">BINNING.AI OPERATIONS CENTRE · 8 STATIONS · DIRECTOR + 7 AGENTS</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn" id="auto-btn" aria-pressed="true" style="--c:#00ff88;font-size:8px;padding:3px 8px" title="Auto-dispatch demo tasks when the floor is idle">AUTO · ON</button>
+            <span style="display:inline-block;width:6px;height:6px;background:#00ff88;border-radius:50%;box-shadow:0 0 6px #00ff88;animation:pulse 1.5s infinite"></span>
+            <span style="font-size:9px;color:#00ff88;letter-spacing:2px">LIVE</span>
+            <span style="font-size:9px;color:#1e3a5f;letter-spacing:2px">CAM-01</span>
+          </div>
+        </div>
+        <div class="floor">
+          <span class="corner" style="top:4px;left:6px">┌</span><span class="corner" style="top:4px;right:6px">┐</span>
+          <span class="corner" style="bottom:4px;left:6px">└</span><span class="corner" style="bottom:4px;right:6px">┘</span>
+          <div class="ws-director" id="ws-director">
+            <span class="tagl">HQ · STATION 00</span><span class="tagr">DIRECTOR</span>
+            <svg class="dir-bot" width="44" height="54" viewBox="0 0 22 28" aria-hidden="true">
+              <rect x="6" y="2" width="10" height="8" fill="#00d4ffaa" stroke="#00d4ff" stroke-width=".5"/>
+              <rect x="8" y="4" width="2" height="2" fill="#02050a"/><rect x="12" y="4" width="2" height="2" fill="#02050a"/>
+              <rect x="4" y="11" width="14" height="10" fill="#00d4ff88" stroke="#00d4ff" stroke-width=".5"/>
+              <rect x="3" y="22" width="6" height="5" fill="#00d4ff66"/><rect x="13" y="22" width="6" height="5" fill="#00d4ff66"/>
+            </svg>
+            <div class="dir-txt" style="min-width:0;flex:1 1 200px">
+              <div class="dir-name">YER DAD</div>
+              <div class="dir-sub">DIRECTOR · BINNING.AI · CONDUCTING ALL CHANNELS</div>
+              <div class="dir-status"><span class="ws-dot" style="--c:#00d4ff"></span><span id="dir-state" style="color:#00d4ffaa">CONDUCTING</span><span class="dir-flow" style="color:#4a6888">· DISPATCH → WORK → INDEPENDENT REVIEW</span></div>
+            </div>
+            <div class="dir-box">
+              <div class="dir-box-h"><span>CONDUCTING · ALL CHANNELS</span><span>◉</span></div>
+              <div class="dir-log" id="dir-log"><div style="color:#1e3a5f">awaiting first activity…</div></div>
+            </div>
+          </div>
+          <form class="dispatch" id="dispatch-form" autocomplete="off">
+            <input id="dispatch-input" maxlength="90" placeholder="dispatch a task to the fleet · e.g. fix the retry bug in the scheduler" aria-label="Task to dispatch">
+            <button class="btn" type="submit" style="--c:#00d4ff">▶ DISPATCH</button>
+          </form>
+          <div class="chips" id="quick-chips"></div>
+          <div class="floor-title">— 7 SUB-AGENTS · WORKSTATIONS —</div>
+          <div class="floor-grid" id="floor-grid"></div>
+        </div>
+        <div class="ledger-wrap">
+          <div class="lane" style="--c:#ff3355">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ REVIEW LEDGER · FAILS KEPT</span><span class="r" id="fail-count">0</span></div>
+            <div id="fail-list"></div>
+          </div>
+          <div class="lane" style="--c:#aa66ff">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ ARCHIVED · PASSED</span><span class="r" id="pass-count">0</span></div>
+            <div id="pass-list"></div>
+          </div>
+          <div class="lane stats" style="--c:#eef6ff">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ REVIEWER · DEMO COUNTERS</span></div>
+            <div style="display:flex;gap:18px">
+              <div><div class="stat-lab">PASSED</div><div class="stat-big" id="st-pass" style="color:#00ff88">0</div></div>
+              <div><div class="stat-lab">FAILED</div><div class="stat-big" id="st-fail" style="color:#ff3355">0</div></div>
+              <div><div class="stat-lab">RATE</div><div class="stat-big" id="st-rate" style="color:#eef6ff">—</div></div>
+            </div>
+            <div class="ratio-bar"><i id="st-bar" style="width:0"></i></div>
+            <div class="stat-lab">DEMO SESSION · TARGET ≈ 92% · REAL LEDGER 1,054 PASS / 91 FAIL</div>
+            <div class="rule"><b>No agent may mark its own work complete.</b> The worker submits; the independent reviewer decides. Pass → archived. Fail → kept in the ledger and shown, never hidden.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMAND · 4-column board -->
+    <section class="view" id="view-hq">
+      <div class="view-inner">
+        <div class="board">
+          <div class="lane" style="--c:#ffcc00">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ TODAY · QUEUE</span><span class="r" id="hq-queue-n">0</span></div>
+            <div id="hq-queue"></div>
+          </div>
+          <div class="lane" style="--c:#ff3355">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ LIVE OPERATIONS</span></div>
+            <div id="hq-live"></div>
+          </div>
+          <div class="lane" style="--c:#aa66ff">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ RECENT WORK</span></div>
+            <div id="hq-recent"></div>
+          </div>
+          <div class="lane" style="--c:#00ff88">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ TEAM HEALTH</span></div>
+            <div id="hq-team"></div>
+            <div style="margin-top:10px;padding:8px 10px;background:#04080f;border:1px solid #1e3a5f;font-size:9px;color:#4a6888;letter-spacing:1.5px;line-height:1.6"><span style="color:#00ff88">●</span> <span id="hq-total">0</span> TOTAL REPORTS · DEMO</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ticker">
+    <span class="ticker-label">◉ LIVE</span>
+    <div class="ticker-stream" id="ticker-stream"><span class="ticker-item"><span class="cat">SYNC</span>floor online · demo data</span></div>
+    <span class="replica-tag">replica · demo data</span>
+    <span class="ticker-pulse">●</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+  const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  // Agent roster · names, colours, glyphs and roles as Command.html defines them
+  const AGENTS = {
+    scout:     { code:'SCT', c:'#00ff88', g:'⌖', st:'S01', role:'Intelligence · eyes/ears',   rail:'scout · search · OSINT' },
+    analyst:   { code:'ANL', c:'#ffcc00', g:'∑', st:'S02', role:'Strategy · pattern-finder', rail:'analyst · metrics · digest' },
+    archivist: { code:'ARC', c:'#aa66ff', g:'◐', st:'S03', role:'Knowledge · append-only',   rail:'archivist · vault · curate' },
+    builder:   { code:'BLD', c:'#ff7700', g:'⚒', st:'S04', role:'Construction · technical',  rail:'builder · drafts · canvas' },
+    reviewer:  { code:'RVW', c:'#eef6ff', g:'⌥', st:'S05', role:'Quality gate · APPROVE',    rail:'reviewer · stamp · gate' },
+    sentinel:  { code:'SNT', c:'#ff3355', g:'⛨', st:'S06', role:'Security · immune system',  rail:'sentinel · baseline · diff' },
+    envoy:     { code:'ENV', c:'#44aaff', g:'✈', st:'S07', role:'Comms · diplomacy',         rail:'envoy · drafts · comms' },
+  };
+  const RAIL_ORDER = ['scout','builder','analyst','reviewer','envoy','archivist','sentinel'];
+  const FLOOR_ORDER = ['scout','analyst','archivist','builder','reviewer','sentinel','envoy'];
+
+  // Neutral demo tasks · no live data
+  const DEMO_TASKS = [
+    'Fix flaky retry in the collector scheduler',
+    'Add a frontmatter check to the vault lint',
+    'Patch tab overflow on the dashboard at 390px',
+    'Refactor the ticker into a single poller',
+    'Add an index to the snapshot table migration',
+    'Sweep sources for new open-data releases',
+    'Collect release notes for pinned libraries',
+    'Weekly digest of collector row counts',
+    'Compare pass/fail trend by agent',
+    'Draft the weekly status note',
+    'Write tests for the timeout-ordering guard',
+    'Build a CSV export for the demo ledger',
+  ];
+  const QUICK = ['Fix the login form validation', 'Research new open datasets', 'Analyse last week\'s error rates', 'Draft a release note'];
+  const FAIL_REASONS = {
+    builder: ['tests fail on an empty-input edge case', 'patch changes behaviour outside the spec', 'no test covers the fixed path', 'lint fails · missing frontmatter'],
+    scout:   ['claim not supported by the cited source', 'two sources are the same article syndicated', 'source date unverifiable'],
+    analyst: ['totals do not reconcile with the raw rows', 'trend computed on a partial week'],
+    envoy:   ['draft states a figure the ledger does not show', 'tone check failed · overclaims'],
+  };
+  const STEPS = {
+    builder: [['read_note','› read spec'], ['write_patch','› write patch'], ['run_tests','› run tests · local'], ['submit','› submit for review']],
+    scout:   [['web_search','› search sources'], ['fetch_source','› fetch + extract'], ['dedupe','› de-duplicate'], ['submit','› submit for review']],
+    analyst: [['query_db','› query rows'], ['compute_stats','› compute stats'], ['write_digest','› write digest'], ['submit','› submit for review']],
+    envoy:   [['read_note','› read context'], ['draft_message','› draft (never auto-sent)'], ['submit','› submit for review']],
+  };
+
+  function workerFor(text) {
+    const t = text.toLowerCase();
+    if (/\b(research|find|sweep|collect|sources?|scan|search|datasets?)\b/.test(t)) return 'scout';
+    if (/(analy[sz]|\bcompare|\bdigest|\bmetrics?\b|\bcounts?\b|\btrends?\b|\brates?\b|\bstats?\b)/.test(t)) return 'analyst';
+    if (/\b(draft|email|announce|message|letter|release note|status note)\b/.test(t)) return 'envoy';
+    return 'builder';
+  }
+
+  // ── state ──
+  const S = { seq: 412, pass: 0, fail: 0, queue: [], fails: [], passes: [], live: null, auto: true, reports: {}, trace: [] };
+  RAIL_ORDER.forEach(a => S.reports[a] = 0);
+
+  // ── build rail rows ──
+  $('av-agents-rich').innerHTML = RAIL_ORDER.map(a => {
+    const A = AGENTS[a];
+    return `<div class="av-agent-row" data-agent="${a}"><div class="d"></div><span class="t"><strong>${A.code}</strong> · ${A.rail}</span><span class="s" data-s>IDLE</span></div>`;
+  }).join('');
+
+  // ── build floor ──
+  const bot = (c) => `<svg width="24" height="30" viewBox="0 0 22 28" aria-hidden="true"><rect x="6" y="2" width="10" height="8" fill="${c}aa" stroke="${c}" stroke-width=".5"/><rect x="8" y="4" width="2" height="2" fill="#02050a"/><rect x="12" y="4" width="2" height="2" fill="#02050a"/><rect x="4" y="11" width="14" height="10" fill="${c}88" stroke="${c}" stroke-width=".5"/><rect x="3" y="22" width="6" height="5" fill="${c}66"/><rect x="13" y="22" width="6" height="5" fill="${c}66"/></svg>`;
+  $('floor-grid').innerHTML = FLOOR_ORDER.map(a => {
+    const A = AGENTS[a];
+    return `<div class="ws-card" data-agent="${a}" style="--c:${A.c}">
+      <div class="ws-num">${A.st}</div>
+      <div class="ws-monitor"><div class="ws-mh"><span>${a.toUpperCase()}.LOG</span><span>${A.g}</span></div>
+        <div class="ws-trail" data-trail><div class="ws-bars"><i style="width:65%"></i><i style="width:48%"></i><i style="width:72%"></i></div></div></div>
+      <div class="ws-stand"></div>${bot(A.c)}
+      <div class="ws-progress"><div class="ws-progress-fill" data-prog></div></div>
+      <div class="ws-name">${a.toUpperCase()}</div>
+      <div class="ws-role">${A.role}</div>
+      <div class="ws-st"><span class="ws-dot"></span><span data-st>STANDBY</span></div>
+    </div>`;
+  }).join('');
+
+  $('av-run-task-pick').innerHTML = DEMO_TASKS.map((t, i) => `<option value="${i}">T${i + 1} · ${esc(t.toUpperCase())}</option>`).join('');
+  $('quick-chips').innerHTML = QUICK.map(q => `<button class="qchip" type="button">${esc(q)}</button>`).join('');
+
+  // ── helpers ──
+  const card = (a) => document.querySelector(`.ws-card[data-agent="${a}"]`);
+  const row  = (a) => document.querySelector(`.av-agent-row[data-agent="${a}"]`);
+  function setAgent(a, on, status, failed) {
+    const c = card(a), r = row(a);
+    if (c) { c.classList.toggle('acting', !!on); c.classList.toggle('failed', !!failed); c.querySelector('[data-st]').textContent = status || (on ? 'WORKING' : 'STANDBY'); }
+    if (r) { r.classList.toggle('on', !!on); r.querySelector('[data-s]').textContent = on ? 'ACTIVE' : (status === 'STANDBY' || !status ? 'IDLE' : status.split(' ')[0]); }
+    const n = document.querySelectorAll('.av-agent-row.on').length;
+    $('av-agents-active').textContent = n + ' ACTIVE';
+    renderTeam();
+  }
+  function monitor(a, line, reset) {
+    const t = card(a)?.querySelector('[data-trail]'); if (!t) return;
+    if (reset) t.innerHTML = '';
+    if (line) { const d = document.createElement('div'); d.textContent = line; t.appendChild(d); while (t.children.length > 4) t.removeChild(t.firstChild); }
+  }
+  function idleMonitor(a) {
+    const t = card(a)?.querySelector('[data-trail]'); if (!t) return;
+    t.innerHTML = '<div class="ws-bars"><i style="width:65%"></i><i style="width:48%"></i><i style="width:72%"></i></div>';
+  }
+  function progress(a, pct) { const p = card(a)?.querySelector('[data-prog]'); if (p) p.style.width = pct + '%'; }
+  function trace(tool, who, ok = true) {
+    S.trace.unshift({ tool, who, ok, t: Date.now() });
+    S.trace = S.trace.slice(0, 5);
+    renderTrace();
+  }
+  function renderTrace() {
+    const now = Date.now();
+    $('av-trace').innerHTML = S.trace.length ? S.trace.map(x => {
+      const A = AGENTS[x.who] || { c:'#00d4ff' };
+      const age = Math.max(0, Math.round((now - x.t) / 1000));
+      return `<div style="display:flex;gap:6px"><span style="color:${x.ok ? A.c : '#ff3355'}">${x.ok ? '▸' : '✗'}</span><span style="color:#aacce0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.tool)}</span><span style="color:#1e3a5f">${age}s</span></div>`;
+    }).join('') : '<div style="color:#1e3a5f;font-style:italic">no tool calls yet</div>';
+  }
+  function phase(p, doing, col) {
+    $('av-phase').textContent = p; $('ls-phase').textContent = p;
+    const c = col || '#aa66ff';
+    $('av-phase').style.color = c; $('av-phase-dot').style.background = c; $('av-phase-dot').style.boxShadow = '0 0 5px ' + c;
+    if (doing) $('av-doing').textContent = doing;
+  }
+  function plan(task, step) {
+    if (!task) { $('av-plan').innerHTML = '<div style="color:#1e3a5f;font-style:italic">no task in flight</div>'; return; }
+    const W = task.worker.toUpperCase();
+    const steps = ['DIRECTOR dispatches', W + ' works + submits', 'REVIEWER judges (independent)', 'PASS → ARCHIVIST · FAIL → LEDGER'];
+    $('av-plan').innerHTML = `<div style="color:#4a6888;margin-bottom:2px">${esc(task.id)} · ${esc(task.text.slice(0, 34))}${task.text.length > 34 ? '…' : ''}</div>` +
+      steps.map((s, i) => `<div style="color:${i < step ? '#00ff88' : i === step ? '#ffcc00' : '#3a5c7a'}">${i < step ? '✓' : i === step ? '▸' : '·'} ${i + 1}. ${s}</div>`).join('');
+  }
+  function dirLog(html) {
+    const box = $('dir-log');
+    if (box.firstElementChild && box.firstElementChild.style.color === 'rgb(30, 58, 95)') box.innerHTML = '';
+    const d = document.createElement('div'); d.innerHTML = html; box.prepend(d);
+    while (box.children.length > 3) box.removeChild(box.lastChild);
+  }
+  let toastT;
+  function toast(msg, col) {
+    const t = $('toast'); t.textContent = msg; t.style.color = col || '#00d4ff'; t.style.borderColor = col || '#00d4ff';
+    t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+  function tick(cat, msg, col) {
+    const s = $('ticker-stream');
+    const el = document.createElement('span'); el.className = 'ticker-item';
+    el.innerHTML = `<span class="cat" style="color:${col || '#00ff88'}">${esc(cat)}</span>${esc(msg)}`;
+    s.prepend(el); while (s.children.length > 6) s.removeChild(s.lastChild);
+  }
+  const hhmm = () => new Date().toTimeString().slice(0, 5);
+
+  // ── counters / lists ──
+  function renderCounts() {
+    const tot = S.pass + S.fail, rate = tot ? (S.pass / tot * 100).toFixed(1) + '%' : '—';
+    $('ls-pass').textContent = S.pass; $('ls-fail').textContent = S.fail; $('ls-rate').textContent = rate;
+    $('st-pass').textContent = S.pass; $('st-fail').textContent = S.fail; $('st-rate').textContent = rate;
+    $('st-bar').style.width = tot ? (S.pass / tot * 100) + '%' : '0';
+    $('fail-count').textContent = S.fail + ' KEPT'; $('pass-count').textContent = S.pass;
+    $('ls-queue').textContent = S.queue.length;
+  }
+  function renderLists() {
+    $('fail-list').innerHTML = S.fails.length ? S.fails.slice(0, 6).map(f =>
+      `<div class="lrow" style="--c:#ff3355"><span class="id">${esc(f.id)}</span><span class="tx" title="${esc(f.text)}">${esc(f.text)}</span><span class="who" style="color:${AGENTS[f.worker].c}">${f.worker.toUpperCase()}</span><span class="why">✗ ${esc(f.reason)} · ${esc(f.at)}</span></div>`
+    ).join('') + (S.fails.length > 6 ? `<div class="empty" style="margin-top:4px">+ ${S.fails.length - 6} earlier fails · all retained</div>` : '')
+      : '<div class="empty">no fails yet · every fail stays here</div>';
+    $('pass-list').innerHTML = S.passes.length ? S.passes.slice(0, 6).map(p =>
+      `<div class="lrow" style="--c:#aa66ff"><span class="id">${esc(p.id)}</span><span class="tx" title="${esc(p.text)}">${esc(p.text)}</span><span class="who" style="color:#00ff88">PASS</span></div>`
+    ).join('') : '<div class="empty">nothing archived yet</div>';
+    renderBoard();
+  }
+  function renderTeam() {
+    const order = ['scout','analyst','archivist','builder','reviewer','sentinel','envoy'];
+    $('hq-team').innerHTML = order.map(a => {
+      const A = AGENTS[a], on = row(a)?.classList.contains('on');
+      return `<div class="team-agent${on ? ' on' : ''}" style="--c:${A.c}"><span class="g">${A.g}</span><span class="n">${a.toUpperCase()}</span><span class="r">${S.reports[a]} R</span><span class="o" title="${on ? 'active' : 'online'}"></span></div>`;
+    }).join('');
+    $('hq-total').textContent = Object.values(S.reports).reduce((x, y) => x + y, 0);
+  }
+  function renderBoard() {
+    $('hq-queue-n').textContent = S.queue.length;
+    $('hq-queue').innerHTML = S.queue.length ? S.queue.map(q => `<div class="op" style="--c:#ffcc00"><span class="k">${esc(q.id)} · ${q.worker.toUpperCase()} · ${q.src}</span>${esc(q.text)}</div>`).join('')
+      : '<div class="empty">queue clear · dispatch from OFFICE</div>';
+    $('hq-live').innerHTML = S.live ? `<div class="op" style="--c:#ff3355"><span class="k">${esc(S.live.id)} · ${esc(S.live.stage)}</span>${esc(S.live.text)}</div>` : '<div class="empty">no active ops</div>';
+    const recent = [...S.passes.slice(0, 4).map(p => ({ ...p, ok: true })), ...S.fails.slice(0, 3).map(f => ({ ...f, ok: false }))].sort((a, b) => b.n - a.n).slice(0, 6);
+    $('hq-recent').innerHTML = recent.length ? recent.map(r => `<div class="op" style="--c:${r.ok ? '#00ff88' : '#ff3355'}"><span class="k">${esc(r.id)} · ${r.ok ? 'PASS · ARCHIVED' : 'FAIL · LEDGER'}</span>${esc(r.text)}</div>`).join('') : '<div class="empty">no recent work</div>';
+    renderTeam();
+  }
+
+  // ── seed a short demo history so the ledger isn't empty on load ──
+  (function seed() {
+    const hist = [
+      ['Normalise dates in the collector output', 'builder', 1], ['Index the snapshot table', 'builder', 1],
+      ['Sweep for new public datasets', 'scout', 1], ['Digest of last week\'s runs', 'analyst', 1],
+      ['Add retry jitter to the fetcher', 'builder', 0, 'tests fail on an empty-input edge case'],
+      ['Draft the weekly status note', 'envoy', 1], ['Fix the tab overflow on mobile', 'builder', 1],
+      ['Collect library release notes', 'scout', 1], ['Reconcile row counts per source', 'analyst', 1],
+      ['Harden the lint path checks', 'builder', 1], ['Write tests for the parser', 'builder', 1],
+    ];
+    hist.forEach(([text, worker, ok, reason], i) => {
+      const id = 'T-0' + (S.seq++);
+      const at = 'earlier';
+      S.reports[worker]++; S.reports.reviewer++;
+      if (ok) { S.pass++; S.passes.unshift({ id, text, worker, n: i }); S.reports.archivist++; }
+      else { S.fail++; S.fails.unshift({ id, text, worker, reason, at, n: i }); }
+    });
+  })();
+
+  // ── pipeline ──
+  let busy = false, nextN = 100;
+  function enqueue(text, src) {
+    text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+    if (!text) return;
+    const task = { id: 'T-0' + (S.seq++), text, worker: workerFor(text), src, n: nextN++ };
+    if (src === 'YOU') S.queue.unshift(task); else S.queue.push(task);
+    renderCounts(); renderBoard();
+    tick('QUEUE', `${task.id} → ${task.worker.toUpperCase()} · ${text}`, '#ffcc00');
+    pump();
+    return task;
+  }
+  async function pump() {
+    if (busy) return;
+    const task = S.queue.shift();
+    if (!task) return;
+    busy = true;
+    renderCounts();
+    try { await run(task); } finally { busy = false; S.live = null; renderBoard(); plan(null); phase('IDLE', 'awaiting input', '#aa66ff'); $('dir-state').textContent = 'CONDUCTING'; $('av-run-task-status').textContent = '⌁ idle'; }
+    setTimeout(pump, 500);
+  }
+  const T = (ms) => sleep(RM ? Math.round(ms * 0.6) : ms);
+
+  async function run(task) {
+    const W = task.worker, A = AGENTS[W];
+    S.live = { ...task, stage: 'DISPATCH' }; renderBoard();
+    // 1 · director dispatches
+    phase('DISPATCHING', `routing ${task.id} to ${W.toUpperCase()}`, '#00d4ff');
+    $('dir-state').textContent = 'DISPATCHING';
+    $('ws-director').classList.add('acting');
+    $('av-run-task-status').textContent = `⌁ ${task.id} in flight`;
+    plan(task, 0);
+    trace(`dispatch_task → ${W}`, 'yerdad');
+    dirLog(`<span style="color:#00d4ff">▸ ${esc(task.id)}</span> → <span style="color:${A.c}">${W.toUpperCase()}</span> · ${esc(task.text)}`);
+    await T(1000);
+    $('ws-director').classList.remove('acting');
+    $('dir-state').textContent = 'CONDUCTING';
+
+    // 2 · worker works, then submits · cannot close its own task
+    S.live.stage = W.toUpperCase() + ' WORKING'; renderBoard();
+    phase('WORKING', `${W.toUpperCase()} on ${task.id} · ${task.text}`, A.c);
+    plan(task, 1);
+    setAgent(W, true, 'WORKING');
+    monitor(W, `› ${task.id}`, true);
+    const steps = STEPS[W];
+    for (let i = 0; i < steps.length; i++) {
+      const [tool, line] = steps[i];
+      monitor(W, line); trace(tool, W); progress(W, Math.round((i + 1) / steps.length * 100));
+      await T(900);
+    }
+    trace(`mark_complete · denied (${W} ≠ reviewer)`, W, false);
+    monitor(W, '› close? denied · reviewer only');
+    setAgent(W, false, 'SUBMITTED');
+    S.reports[W]++;
+    await T(500);
+
+    // 3 · independent review
+    S.live.stage = 'IN REVIEW'; renderBoard();
+    phase('REVIEWING', `REVIEWER judging ${task.id} · independent of ${W.toUpperCase()}`, '#eef6ff');
+    plan(task, 2);
+    setAgent('reviewer', true, 'JUDGING');
+    monitor('reviewer', `› ${task.id} from ${W}`, true);
+    for (const [tool, line] of [['diff_vs_spec', '› diff vs spec'], ['rerun_checks', '› re-run checks'], ['verdict', '› verdict']]) {
+      monitor('reviewer', line); trace(tool, 'reviewer'); progress('reviewer', tool === 'verdict' ? 100 : tool === 'rerun_checks' ? 66 : 33);
+      await T(750);
+    }
+    const ok = Math.random() < 0.92;
+    S.reports.reviewer++;
+    plan(task, 3);
+    if (ok) {
+      monitor('reviewer', '✓ PASS');
+      setAgent('reviewer', false, 'PASSED');
+      trace(`verdict: PASS ${task.id}`, 'reviewer');
+      // 4a · archive
+      S.live.stage = 'ARCHIVING'; renderBoard();
+      phase('ARCHIVING', `ARCHIVIST filing ${task.id} · append-only`, '#aa66ff');
+      setAgent('archivist', true, 'FILING');
+      monitor('archivist', `› file ${task.id}`, true); monitor('archivist', '› append · never edit');
+      trace(`archive ${task.id}`, 'archivist'); progress('archivist', 100);
+      await T(900);
+      S.pass++; S.reports.archivist++;
+      S.passes.unshift({ ...task, at: hhmm() });
+      setAgent('archivist', false, 'STANDBY');
+      monitor('archivist', '✓ archived');
+      dirLog(`<span style="color:#00ff88">✓ ${esc(task.id)} passed</span> · archived`);
+      tick('PASS', `${task.id} · ${task.text} · archived`);
+      setAgent(W, false, 'STANDBY'); idleMonitor(W);
+      if (task.src === 'YOU') toast(`✓ ${task.id} passed review · archived`, '#00ff88');
+    } else {
+      const reasons = FAIL_REASONS[W];
+      const reason = reasons[Math.floor(Math.random() * reasons.length)];
+      monitor('reviewer', '✗ FAIL');
+      setAgent('reviewer', false, 'FAILED');
+      trace(`verdict: FAIL ${task.id}`, 'reviewer', false);
+      S.fail++;
+      S.fails.unshift({ ...task, reason, at: hhmm() });
+      setAgent(W, false, 'RETURNED', true);
+      monitor(W, '✗ returned · see ledger');
+      dirLog(`<span style="color:#ff3355">✗ ${esc(task.id)} failed</span> · kept in ledger`);
+      tick('FAIL', `${task.id} · ${reason} · kept in ledger`, '#ff3355');
+      if (task.src === 'YOU') toast(`✗ ${task.id} failed review · kept in the ledger`, '#ff3355');
+      await T(400);
+    }
+    renderCounts(); renderLists();
+    await T(700);
+    ['reviewer', 'archivist', W].forEach(a => { progress(a, 0); });
+    idleMonitor('reviewer'); idleMonitor('archivist');
+    setAgent('reviewer', false, 'STANDBY');
+    if (card(W)?.classList.contains('failed')) setTimeout(() => { if (!card(W).classList.contains('acting')) { setAgent(W, false, 'STANDBY'); idleMonitor(W); } }, 2500);
+  }
+
+  // ── sentinel · background baseline diff ──
+  setInterval(() => {
+    if (document.hidden) return;
+    setAgent('sentinel', true, 'BASELINE');
+    monitor('sentinel', '› baseline diff', true);
+    trace('baseline_diff · 0 new', 'sentinel');
+    setTimeout(() => { monitor('sentinel', '✓ no drift'); setAgent('sentinel', false, 'STANDBY'); setTimeout(() => idleMonitor('sentinel'), 1500); }, 1400);
+  }, 15000);
+
+  // ── auto-dispatch when idle ──
+  let autoI = 0;
+  setInterval(() => {
+    if (!S.auto || busy || S.queue.length || document.hidden) return;
+    enqueue(DEMO_TASKS[(autoI++ * 5 + 3) % DEMO_TASKS.length], 'AUTO');
+  }, 2600);
+
+  // ── controls ──
+  $('dispatch-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = $('dispatch-input').value;
+    if (!v.trim()) { $('dispatch-input').focus(); return; }
+    const t = enqueue(v, 'YOU');
+    $('dispatch-input').value = '';
+    if (t) toast(`▸ ${t.id} queued → ${t.worker.toUpperCase()}${busy ? ' · next in line' : ''}`);
+  });
+  $('quick-chips').addEventListener('click', (e) => {
+    const b = e.target.closest('.qchip'); if (!b) return;
+    const t = enqueue(b.textContent, 'YOU'); if (t) toast(`▸ ${t.id} queued → ${t.worker.toUpperCase()}`);
+  });
+  $('av-run-task-btn').addEventListener('click', () => {
+    const t = enqueue(DEMO_TASKS[+$('av-run-task-pick').value], 'YOU'); if (t) toast(`▸ ${t.id} queued → ${t.worker.toUpperCase()}`);
+  });
+  $('yerdad-jump-chip').addEventListener('click', () => { switchView('office'); $('dispatch-input').focus(); });
+  $('auto-btn').addEventListener('click', (e) => {
+    S.auto = !S.auto; e.currentTarget.setAttribute('aria-pressed', S.auto); e.currentTarget.textContent = 'AUTO · ' + (S.auto ? 'ON' : 'OFF');
+  });
+  function switchView(v) {
+    document.querySelectorAll('.work-tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+    document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
+  }
+  $('work-tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('.work-tab'); if (!b) return;
+    if (b.getAttribute('aria-disabled') === 'true') { toast('this tab is not part of the agents replica', '#4a6888'); return; }
+    switchView(b.dataset.view);
+  });
+
+  // ── clock + trace ages ──
+  function clock() { $('clock').textContent = new Date().toTimeString().slice(0, 8); renderTrace(); }
+  setInterval(clock, 1000); clock();
+
+  plan(null); renderCounts(); renderLists();
+  setTimeout(() => enqueue(DEMO_TASKS[0], 'AUTO'), 900);
+})();
+</script>
+</body>
+</html>

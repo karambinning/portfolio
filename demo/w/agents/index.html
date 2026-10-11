@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The agents — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  body{--a:#00d4ff;--b:#8b7bff}
+  .scr{display:none;flex:1;min-height:0;flex-direction:column;gap:10px}
+  .scr.on{display:flex}
+  .tline{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  /* ---------- select screen: the wheel ---------- */
+  .stage{position:relative;flex:1;min-height:250px;perspective:1100px;perspective-origin:50% 40%;overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;
+    background:radial-gradient(ellipse 34% 16% at 50% 88%,color-mix(in srgb,var(--a) 22%,transparent),transparent 70%),
+      repeating-linear-gradient(90deg,transparent 0 59px,color-mix(in srgb,var(--line) 70%,transparent) 59px 60px);
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .stage.drag{cursor:grabbing}
+  .stage::after{content:"";position:absolute;left:50%;bottom:7%;width:min(300px,62%);height:28px;transform:translateX(-50%);border-radius:50%;
+    border:1px solid color-mix(in srgb,var(--a) 55%,transparent);box-shadow:0 0 30px color-mix(in srgb,var(--a) 30%,transparent),inset 0 0 18px color-mix(in srgb,var(--a) 25%,transparent);pointer-events:none}
+  .wheel{position:absolute;inset:0;transform-style:preserve-3d}
+  .card{all:unset;box-sizing:border-box;position:absolute;left:50%;top:48%;width:var(--cw,168px);padding:10px 8px 10px;text-align:center;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--c);
+    border:1px solid color-mix(in srgb,var(--c) 35%,transparent);border-top:3px solid color-mix(in srgb,var(--c) 60%,transparent);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--c) 10%,#05010c),#05010c 70%);
+    transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .38s,box-shadow .38s;will-change:transform;backface-visibility:hidden}
+  .stage.drag .card{transition:none}
+  .card .ccls{font:700 8.5px/1.2 var(--mono);letter-spacing:.12em;color:var(--dim)}
+  .bcls{color:var(--b);font-size:10px;letter-spacing:.14em}
+  .pcls{font:700 9.5px/1.3 var(--mono);letter-spacing:.14em;color:var(--b)}
+  .card .bdg{font:700 9px/1 var(--mono);letter-spacing:.14em;padding:3px 6px;border:1px solid currentColor;align-self:center}
+  .card .bdg.live{background:var(--c);color:#05010c;border-color:var(--c)}
+  .card .bdg.off{color:var(--dim)}
+  .card .cn{font:400 26px/1 var(--display);letter-spacing:.1em;color:var(--c)}
+  .card .cr{font:600 9.5px/1.25 var(--mono);color:var(--body);letter-spacing:.06em;text-transform:uppercase;min-height:24px}
+  .card.dim .bot{opacity:.55;filter:grayscale(.35)}
+  .card.on{box-shadow:0 0 34px color-mix(in srgb,var(--c) 40%,transparent),inset 0 0 22px color-mix(in srgb,var(--c) 14%,transparent);border-color:var(--c)}
+  .card.on .bot{animation:idle 1.4s ease-in-out infinite}
+  .card.on .press{display:block}
+  .card .press{display:none;font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--text);animation:t-blink 1s steps(1) infinite}
+  @keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .arrow{all:unset;position:absolute;top:44%;z-index:50;cursor:pointer;font:700 26px/1 var(--mono);color:var(--a);padding:12px 10px;
+    text-shadow:0 0 12px color-mix(in srgb,var(--a) 60%,transparent);background:color-mix(in srgb,var(--screen) 70%,transparent);border:1px solid var(--line)}
+  .arrow:hover,.arrow:focus-visible{border-color:var(--a)}
+  .arrow.l{left:6px} .arrow.r{right:6px}
+  .hint{position:absolute;left:0;right:0;top:8px;text-align:center;font:700 9.5px/1 var(--mono);letter-spacing:.16em;color:var(--dim);pointer-events:none;z-index:40}
+
+  .banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 18px;align-items:center;padding:4px 2px 0}
+  .bname{font:400 46px/.9 var(--display);letter-spacing:.1em;color:var(--a);text-shadow:0 0 18px color-mix(in srgb,var(--a) 50%,transparent)}
+  .bname::before{content:"P1 ▸ ";font:700 13px/1 var(--mono);letter-spacing:.1em;color:var(--b);vertical-align:12px}
+  .bsub{font:700 11.5px/1.4 var(--mono);color:var(--body);letter-spacing:.06em;text-transform:uppercase}
+  .bsub b{color:var(--a)}
+  .pick{font-size:17px}
+  .rules-strip{display:flex;flex-wrap:wrap;gap:4px 16px;font:700 10.5px/1.3 var(--mono);letter-spacing:.06em;color:var(--dim);border:1px dashed var(--line);padding:7px 10px;text-transform:uppercase}
+  .rules-strip b{color:var(--text)} .rules-strip .g{color:#00ff88} .rules-strip .r{color:#ff3355}
+
+  /* ---------- profile screen: the character sheet ---------- */
+  .sheet{display:grid;grid-template-columns:250px minmax(0,1fr) minmax(0,1.05fr);gap:16px;flex:1;min-height:0}
+  .cc{display:flex;flex-direction:column;gap:8px;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);border-top:3px solid var(--a);padding:12px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--a) 9%,#05010c),#05010c 60%);min-height:0;overflow:auto;scrollbar-width:thin}
+  .cc .top{display:flex;align-items:center;gap:12px}
+  .pname{font:400 34px/.9 var(--display);letter-spacing:.08em;color:var(--a);text-shadow:0 0 16px color-mix(in srgb,var(--a) 45%,transparent)}
+  .prole{font:700 10.5px/1.3 var(--mono);color:var(--body);letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+  .ptag{color:var(--a);align-self:flex-start}
+  .ptag.warn{color:#ffcc00} .ptag.off{color:var(--dim)}
+  .bot{flex:none}
+  .bot.live{animation:idle 1.6s ease-in-out infinite}
+  .stat{display:grid;grid-template-columns:1fr;gap:3px;padding-top:6px;border-top:1px dashed var(--line)}
+  .stat .k{display:flex;justify-content:space-between;font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
+  .stat .k span:last-child{color:var(--text);letter-spacing:.04em;text-transform:none;font-weight:600}
+  .segs{display:flex;gap:3px}
+  .segs i{flex:1;height:9px;background:var(--line)} .segs i.on{background:var(--a);box-shadow:0 0 6px color-mix(in srgb,var(--a) 50%,transparent)}
+  .stat .v{font:600 11px/1.3 var(--mono);color:var(--text)}
+  .qual{font-size:9.5px;color:var(--dim);margin-top:auto}
+  .facts{display:flex;flex-direction:column;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .fact{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .fact dt{font:700 9.5px/1.5 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;padding-top:1px}
+  .fact dd{font:500 12.5px/1.5 var(--mono);color:var(--body)}
+  .fact dd b{color:var(--text);font-weight:700}
+  .fact.no dt{color:color-mix(in srgb,#ff3355 80%,var(--dim))}
+  .fact.st dd{color:var(--text)}
+
+  /* ---------- the live panel ---------- */
+  .sim{display:flex;flex-direction:column;min-height:0;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:#05010c;box-shadow:inset 0 0 26px color-mix(in srgb,var(--a) 8%,transparent)}
+  .simh{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--a) 30%,transparent);font:700 10px/1 var(--mono);letter-spacing:.14em;color:var(--a)}
+  .simh span:last-child{color:var(--dim)}
+  .simb{flex:1;min-height:0;position:relative;overflow:hidden;padding:10px 12px;font:500 11.5px/1.5 var(--mono);color:var(--body)}
+  .log{display:flex;flex-direction:column;gap:1px}
+  .log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:rin .3s both}
+  @keyframes rin{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  .k-a{color:var(--a)} .k-g{color:#00ff88} .k-r{color:#ff3355} .k-y{color:#ffcc00} .k-d{color:var(--dim)} .k-t{color:var(--text)} .k-c{color:#00d4ff}
+  .lbl{font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:0 0 6px}
+
+  /* fleet pipeline */
+  .pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .stg{border:1px solid var(--line);padding:8px 6px;text-align:center;font:700 10px/1.3 var(--mono);letter-spacing:.06em;color:var(--dim);transition:all .3s}
+  .stg b{display:block;font-size:16px;margin-bottom:3px}
+  .stg.on{border-color:var(--c,var(--a));color:var(--c,var(--a));box-shadow:0 0 14px color-mix(in srgb,var(--c,var(--a)) 30%,transparent)}
+  .ledger{display:flex;gap:18px;align-items:flex-end;margin:4px 0 8px}
+  .lbar{display:flex;height:14px;border:1px solid var(--line);margin-bottom:10px}
+  .lbar i{display:block;height:100%}
+  .rules{list-style:none;font-size:11.5px}
+  .rules li{padding:3px 0 3px 16px;position:relative;color:var(--body)} .rules li::before{content:"■";position:absolute;left:0;font-size:8px;top:6px;color:var(--a)}
+
+  /* director: chat + dispatch */
+  .dir{display:grid;grid-template-columns:1fr 1fr;gap:12px;height:100%}
+  .chat{display:flex;flex-direction:column;gap:6px;justify-content:flex-end;border:1px solid var(--line);padding:8px;min-height:0;overflow:hidden}
+  .bub{max-width:92%;padding:5px 8px;font-size:11px;line-height:1.4;animation:rin .3s both}
+  .bub.me{align-self:flex-end;background:color-mix(in srgb,#00d4ff 16%,transparent);border:1px solid color-mix(in srgb,#00d4ff 40%,transparent);color:var(--text)}
+  .bub.it{align-self:flex-start;background:color-mix(in srgb,var(--a) 8%,transparent);border:1px solid var(--line);color:var(--body)}
+  .lanes{display:flex;flex-direction:column;gap:5px}
+  .lane{display:grid;grid-template-columns:76px 1fr;gap:6px;align-items:center;font-size:10.5px}
+  .lane .n{color:var(--c);font-weight:700;letter-spacing:.06em}
+  .lane .w{height:12px;border:1px solid var(--line);position:relative;overflow:hidden}
+  .lane .w i{position:absolute;inset:0;width:0;background:var(--c);opacity:.75;transition:width .8s}
+  .lane .w.idle{opacity:.4}
+
+  /* builder */
+  .night{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .clock{font:400 30px/1 var(--display);letter-spacing:.08em;color:var(--a)}
+
+  /* sentinel grid */
+  .sgrid{display:grid;grid-template-columns:86px repeat(5,1fr);gap:3px;font-size:10px;margin-bottom:10px}
+  .sgrid .h{color:var(--dim);font-weight:700;letter-spacing:.06em;text-align:center;font-size:9px;padding-bottom:2px}
+  .sgrid .m{color:var(--text);font-weight:700;letter-spacing:.04em;padding:4px 0}
+  .cell{border:1px solid var(--line);text-align:center;padding:4px 0;color:var(--dim);transition:all .25s}
+  .cell.scan{border-color:var(--a);color:var(--a)}
+  .cell.ok{color:#00ff88;border-color:color-mix(in srgb,#00ff88 35%,transparent)}
+  .cell.diff{color:#05010c;background:#ff3355;border-color:#ff3355;font-weight:700}
+  .diffbox{border:1px solid var(--line);padding:6px 8px;font-size:11px;min-height:86px}
+
+  /* yerson */
+  .cyc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;height:calc(100% - 24px)}
+  .col{border:1px solid var(--line);padding:6px;display:flex;flex-direction:column;gap:4px;min-height:0;overflow:hidden}
+  .col.on{border-color:var(--a);box-shadow:inset 0 0 14px color-mix(in srgb,var(--a) 14%,transparent)}
+  .col .lbl{color:var(--a)}
+  .it{font-size:10px;line-height:1.3;padding:3px 5px;border-left:2px solid var(--c,var(--dim));background:color-mix(in srgb,var(--c,var(--dim)) 7%,transparent);animation:rin .3s both;color:var(--text)}
+  .it small{display:block;color:var(--dim);font-size:9px}
+  .bins{display:flex;flex-direction:column;gap:5px}
+  .bin{display:grid;grid-template-columns:1fr auto;font-size:10.5px;padding:3px 5px;border:1px solid var(--line)}
+  .bin b{color:var(--c)}
+  .cycnote{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:6px}
+
+  /* mission */
+  .q{color:var(--text);border:1px solid var(--line);padding:6px 8px;margin-bottom:8px;min-height:32px}
+  .q::before{content:"? ";color:var(--a)}
+  .hit{display:grid;grid-template-columns:22px 1fr 64px 64px;gap:6px;align-items:center;font-size:10.5px;padding:2px 0;animation:rin .3s both}
+  .hit .sc{height:6px;background:var(--line);position:relative}
+  .hit .sc i{position:absolute;inset:0;background:var(--c);width:var(--w)}
+  .ans{border-left:2px solid var(--a);padding:4px 8px;margin-top:8px;color:var(--text);font-size:11.5px;min-height:48px}
+  .ans sup{color:var(--a);font-weight:700}
+
+  /* moltimus */
+  .sweep{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .radar{width:58px;height:58px;border-radius:50%;border:1px solid color-mix(in srgb,var(--a) 50%,transparent);position:relative;flex:none;
+    background:repeating-radial-gradient(circle,transparent 0 9px,color-mix(in srgb,var(--a) 22%,transparent) 9px 10px)}
+  .radar::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(color-mix(in srgb,var(--a) 55%,transparent),transparent 25%);animation:spin 2.4s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .draft{border:1px dashed var(--a);padding:7px 9px;margin-top:8px;font-size:11px;position:relative}
+  .gate{display:inline-block;margin-top:6px;font:700 10px/1 var(--mono);letter-spacing:.12em;padding:4px 6px;border:1px solid #ffcc00;color:#ffcc00}
+  .gate.ok{border-color:#00ff88;color:#00ff88}
+
+  /* themis */
+  .src{display:grid;grid-template-columns:16px 1fr auto;gap:6px;font-size:10.5px;padding:2px 0;animation:rin .3s both}
+  .conf{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--dim)}
+
+  /* dormant / archived */
+  .zz{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;text-align:center}
+  .zz .bot{opacity:.45;filter:grayscale(.4)}
+  .zz .z{font:700 14px/1 var(--mono);color:var(--a);opacity:.7;animation:zz 2.4s ease-in-out infinite}
+  @keyframes zz{0%{opacity:0;transform:translate(0,4px)}50%{opacity:.8}100%{opacity:0;transform:translate(10px,-10px)}}
+  .flat{width:100%;height:60px}
+  .flat path{fill:none;stroke:var(--a);stroke-width:1.5}
+
+  .note{font-size:10px;color:var(--dim);margin-top:8px}
+  .simb.embed{padding:0}
+  .emb{position:absolute;width:960px;height:760px;transform-origin:0 0}
+  .emb iframe{width:960px;height:760px;border:0;display:block;background:#000a00}
+  .openfull{position:absolute;right:8px;bottom:8px;z-index:5;font-size:11px;text-decoration:none;background:#05010ce6;padding:5px 6px}
+  .mo-head{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:10.5px;margin-bottom:6px}
+  .mo-tabs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;border-bottom:1px solid color-mix(in srgb,var(--a) 35%,transparent);padding-bottom:6px}
+  .mo-tabs button{all:unset;cursor:pointer;font:700 9.5px/1 var(--mono);letter-spacing:.08em;color:var(--dim);padding:4px 6px;border:1px solid var(--line)}
+  .mo-tabs button:hover,.mo-tabs button:focus-visible{color:var(--a)}
+  .mo-tabs button[aria-selected="true"]{color:#05010c;background:var(--a);border-color:var(--a)}
+
+
+  @media (max-width:760px){
+    .tline .t-sub2{display:none}
+    .stage{min-height:330px;--cw:132px}
+    .card .cn{font-size:22px}
+    .bname{font-size:36px}
+    .banner{grid-template-columns:1fr}
+    .rules-strip{font-size:9.5px}
+    .sheet{display:flex;flex-direction:column}
+    .cc,.facts{overflow:visible}
+    .sim{min-height:340px}
+    .fact{grid-template-columns:80px 1fr}
+    .dir{grid-template-columns:1fr}
+    #pScr{flex:none}
+    .t-body{overflow:auto}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .card,.card.on .bot,.bot.live,.card .press,.radar::after,.zz .z,.log div,.bub,.it,.hit,.src{animation:none;transition:none}
+    .lane .w i,.stg,.cell{transition:none}
+  }
+  #pScr .cc,#pScr .facts{cursor:zoom-out}
+  .tline{position:relative} .pclose{position:absolute;right:0;top:0}
+  @media (max-width:760px){ .pclose{position:static;margin-top:6px} }
+</style>
+</head>
+<body data-channel data-self="agents" data-brand="[K·B AGENTS]" data-unit="K·B AGENT FLEET · SMALL-SCALE · SEMI-AUTONOMOUS" data-status="FLEET" data-status-tail="LIVE"
+      data-mock="mock data · illustration">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <!-- select screen -->
+    <section class="scr on" id="sScr" aria-label="Choose an agent">
+      <div class="tline">
+        <div class="t-title">Choose your agent</div>
+        <div class="t-sub2">A small, semi-autonomous fleet that looks after the systems I built</div>
+      </div>
+      <div class="stage" id="stage" aria-roledescription="carousel" aria-label="Agents. Drag, swipe or use the arrow keys.">
+        <div class="hint" aria-hidden="true">◂ DRAG · SWIPE · ARROW KEYS ▸</div>
+        <div class="wheel" id="wheel"></div>
+        <button class="arrow l" id="aL" aria-label="Previous agent">◂</button>
+        <button class="arrow r" id="aR" aria-label="Next agent">▸</button>
+      </div>
+      <div class="banner" aria-live="polite">
+        <div><div class="bname" id="bname"></div><div class="bsub" id="bsub"></div></div>
+        <button class="t-btn pick" id="pick"><span>PICK ▸</span></button>
+      </div>
+      <div class="rules-strip"><span><b>Semi-autonomous</b></span><span>an independent reviewer checks work · the Verifier gives PASS / FAIL before “done”</span>
+        <span>nothing leaves a machine, moves money or writes to the human notes without approval</span>
+        <span>ledger <b class="g">1,054 passed</b> · <b class="r">91 failed</b>, kept</span></div>
+    </section>
+
+    <!-- profile screen -->
+    <section class="scr" id="pScr" aria-live="polite">
+      <div class="tline"><div class="t-title" id="ptitle">Intel profile</div><div class="t-sub2">Mock data · described, not the real thing</div><button class="t-btn pclose" id="pClose" type="button"><span>× CLOSE</span></button></div>
+      <div class="sheet" id="prof">
+        <div class="cc">
+          <div class="top"><span id="pbot"></span><div><div class="pname" id="pname"></div><div class="prole" id="prole"></div></div></div>
+          <span class="pcls" id="pcls"></span><span class="t-tag ptag" id="ptag"></span>
+          <div id="stats"></div>
+          <div class="qual">Meters are qualitative descriptions, not measurements.</div>
+        </div>
+        <dl class="facts" id="facts"></dl>
+        <div class="sim">
+          <div class="simh"><span id="simt"></span><span>MOCK DATA</span></div>
+          <div class="simb" id="simb"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="t-ctl" id="ctlS">
+    <button class="t-btn" id="cL" aria-label="Previous agent"><span>◂</span></button>
+    <button class="t-btn" id="cP"><span>PICK</span></button>
+    <button class="t-btn" id="cR" aria-label="Next agent"><span>▸</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" id="fleet"><span>FLEET RULES</span></button>
+  </div>
+  <div class="t-ctl" id="ctlP" hidden>
+    <button class="t-btn" id="back"><span>◂ BACK</span></button>
+    <button class="t-btn" id="prev" aria-label="Previous agent"><span>PREV</span></button>
+    <button class="t-btn" id="next" aria-label="Next agent"><span>NEXT</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" id="fleet2"><span>FLEET RULES</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const R = KB.reduce;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+
+  /* the office sprite from Command, one per agent colour */
+  const bot = (c, s = 1, cls = '') => `<svg class="bot ${cls}" width="${22 * s}" height="${28 * s}" viewBox="0 0 22 28" aria-hidden="true">
+    <rect x="10.5" y="0" width="1" height="2" fill="${c}"/>
+    <rect x="6" y="2" width="10" height="8" fill="${c}aa" stroke="${c}" stroke-width=".5"/>
+    <rect x="8" y="4" width="2" height="2" fill="#02050a"/><rect x="12" y="4" width="2" height="2" fill="#02050a"/>
+    <rect x="4" y="11" width="14" height="10" fill="${c}88" stroke="${c}" stroke-width=".5"/>
+    <rect x="3" y="22" width="6" height="5" fill="${c}66"/><rect x="13" y="22" width="6" height="5" fill="${c}66"/></svg>`;
+
+  /* ---------- the roster (verified 11 Oct 2026) ---------- */
+  const A = [
+    { id:'fleet', name:'THE FLEET', c:'#8b7bff', tier:'live', cls:'fleet', role:'How it fits together', tag:'SEMI-AUTONOMOUS', sim:'fleet',
+      f:[['What it is','A <b>small-scale, semi-autonomous</b> set of agents that runs and watches the systems I built: the vault, the machines, the apps and the research tools.'],
+         ['How it runs','A mix: Claude Code sessions, scheduled jobs, a local model and plain deterministic code. Each agent lives on one machine and does one kind of job.'],
+         ['Checked by','An <b>independent reviewer</b> checks work before it counts, and the <b>Verifier</b> gives a literal PASS or FAIL before non-trivial work is reported as done. Every result goes in a ledger, failures included.'],
+         ['Not allowed','Nothing leaves a machine, moves money or writes to the vault’s human notes <b>without my approval</b>.'],
+         ['Status','Ledger: <b>1,054 passed, 91 failed</b>. The failures are kept, not deleted.']] },
+
+    { id:'yerdad', name:'YERDAD', c:'#00d4ff', tier:'live', cls:'director', role:'Director', tag:'LIVE', sim:'yerdad',
+      f:[['Lives on','<b>M1</b>, the hub machine that holds the vault.'],
+         ['Runs as','A persistent <b>Claude Code session</b> I reach through <b>Telegram</b>, plus a <b>scheduled night shift</b>.'],
+         ['Does','Takes my requests by message, works across the estate and hands work to the right machine or agent. It spawns helpers (Scout, Analyst, Archivist) when genuinely useful, and the Verifier before reporting non-trivial work as done. Overnight it checks the estate’s health, writes the morning brief and keeps track of deadlines.'],
+         ['Not allowed','Send anything off a machine, spend money or write to the vault’s human notes without my approval.'],
+         ['Status','Live.']] },
+
+    { id:'builder', name:'BUILDER', c:'#ff7700', tier:'live', cls:'core', role:'Overnight builder', tag:'LIVE · STALLED TWICE', warn:1, sim:'builder',
+      f:[['Lives on','<b>The iMac</b>, the lab machine.'],
+         ['Runs as','<b>Claude Code, overnight</b>, on a schedule. M1 relays the work to it and watches the run.'],
+         ['Does','Works through a short task list on the KAM codebase while I sleep, on <b>its own branch only</b>, and runs build checks before it reports. I review in the morning.'],
+         ['Not allowed','Work on the main branch, merge its own work or deploy anything.'],
+         ['Status','Live. It has <b>stalled twice</b>: runs that stopped part-way through the night. That is recorded, not hidden.']] },
+
+    { id:'sentinel', name:'SENTINEL', c:'#c41e3a', tier:'live', cls:'core', role:'Security watch', tag:'LIVE · PHASE 1', sim:'sentinel',
+      f:[['Lives on','<b>M1</b>, with a small sensor on <b>every Mac</b>.'],
+         ['Runs as','<b>Deterministic code</b>, on a schedule. No language model.'],
+         ['Does','Records a baseline for each machine (what is installed, what starts at login, what listens on the network, who can log in) and compares every new reading with it. A change sends an alert by Telegram.'],
+         ['Not allowed','Change or block anything itself. It reports; I decide.'],
+         ['Status','Live, Phase 1: collect, compare, alert.']] },
+
+    { id:'yerson', name:'YERSON', c:'#00ff88', tier:'live', cls:'core', role:'Intelligence engine agent', tag:'LIVE · SCHEDULED', sim:'yerson',
+      f:[['Lives on','<b>The Intel MacBook</b>, which runs the intelligence engine.'],
+         ['Runs as','A scheduled agent with <b>its own Telegram</b> bot.'],
+         ['Does','Runs collection cycles: gathers items from public sources, classifies each one by topic and region, files it into the engine, and sends me a digest of what matters.'],
+         ['Not allowed','Act on what it collects, or send it anywhere else. It gathers and files.'],
+         ['Status','Live: it collects on a schedule and sends me a digest.']] },
+
+    { id:'mission', name:'MISSION', c:'#ff3355', tier:'demand', cls:'demand', role:'Mission analyst', tag:'ON DEMAND', sim:'mission',
+      f:[['Lives on','<b>M3</b>, the career node, inside <b>Mission OS</b> in the Work app.'],
+         ['Runs as','A <b>local model</b>, on demand, with hybrid search: by keyword and by meaning. Nothing goes to a cloud service.'],
+         ['Does','Mission OS is a reusable app for running missions: any objective, such as an event, a project or an investigation, each with its own research, plan, targets, dossier and debrief. Mission is the analyst that works a mission from that mission’s notes, and cites the notes it used. London Tech Week was the first mission.'],
+         ['Not allowed','Contact anyone or send anything. It answers; I act.'],
+         ['Status','On demand: it runs when I ask it something.']] },
+
+    { id:'moltimus', name:'MOLTIMUS', c:'#ff66aa', tier:'live', cls:'core', role:'Social reconnaissance', tag:'LIVE · SCHEDULED', sim:'moltimus',
+      f:[['Lives on','<b>M3</b>, the career node.'],
+         ['Runs as','A <b>scheduled job</b>, every few hours.'],
+         ['Does','Reads a social network, notes what is new and relevant, and drafts replies or posts for me to look at.'],
+         ['Not allowed','<b>Post anything without my approval.</b> Posting is gated.'],
+         ['Status','Live: it runs every few hours and sends me a digest of what it found; nothing is posted without my approval.']] },
+
+    { id:'themis', name:'THEMIS', c:'#ffcc00', tier:'demand', cls:'demand', role:'Legal research', tag:'ON DEMAND', sim:'themis',
+      f:[['Lives on','<b>M1</b>.'],
+         ['Runs as','A research agent, run on request.'],
+         ['Does','Researches public law, legislation and published judgments, and reports what it found with the source for every point and a note of what it is unsure about.'],
+         ['Not allowed','State a conclusion without its source, or act on anything. It is deliberately cautious.'],
+         ['Status','On demand: the service stays up on M1, and I call it when I have a legal-research question.']] },
+
+    { id:'scout', name:'SCOUT', c:'#00ff88', tier:'oncall', cls:'bg', role:'Cited web research', tag:'LIVE · ON CALL', sim:'scout',
+      f:[['Lives on','<b>M1</b>, spawned by YerDad when it is genuinely useful.'],
+         ['Runs as','A <b>Claude Code subagent</b>, on call. It gets one research question at a time.'],
+         ['Does','Finds sources on the web, reads them and returns findings with a citation for every claim.'],
+         ['Not allowed','Write files: it has <b>no file-writing tools</b>. It returns findings; YerDad decides what happens next.'],
+         ['Status','Live, on call. Since 11 Oct 2026 the director’s rules let YerDad spawn it when it is genuinely useful.']] },
+    { id:'analyst', name:'ANALYST', c:'#ffcc00', tier:'oncall', cls:'bg', role:'Read-only queries', tag:'LIVE · ON CALL', sim:'analyst',
+      f:[['Lives on','<b>M1</b>, spawned by YerDad when it is genuinely useful.'],
+         ['Runs as','A <b>Claude Code subagent</b>, on call.'],
+         ['Does','Answers questions with read-only queries over the machine-output store and the vault: counts, trends, lookups. Every number comes with <b>the command that produced it</b>, so it can be run again.'],
+         ['Not allowed','Change anything. It is read-only, with <b>no file-writing tools</b>.'],
+         ['Status','Live, on call.']] },
+    { id:'archivist', name:'ARCHIVIST', c:'#aa66ff', tier:'oncall', cls:'bg', role:'Vault lint · read-only', tag:'LIVE · ON CALL', sim:'archivist',
+      f:[['Lives on','<b>M1</b>, spawned by YerDad when it is genuinely useful.'],
+         ['Runs as','A <b>Claude Code subagent</b>, on call. <b>Read-only.</b>'],
+         ['Does','Runs the vault lint, the rule checker for how the vault is laid out, named and labelled, and reports what it finds.'],
+         ['Not allowed','<b>Move, rename or write anything.</b> It has no file-writing tools and only reports; any fix is my decision.'],
+         ['Status','Live, on call.']] },
+
+    { id:'warden', name:'WARDEN', c:'#9a90c8', tier:'live', cls:'checks', role:'Watchdog checks', tag:'LIVE · DETERMINISTIC', sim:'warden',
+      f:[['Lives on','<b>M1</b>.'],
+         ['Runs as','<b>Deterministic code</b>: the fleet-guard and agent-health checks, on a schedule. No model.'],
+         ['Does','Checks that each machine and agent is up and answering, and flags any that has gone quiet.'],
+         ['History','The June Warden agent was replaced by these checks: the same watchdog role, done more simply.'],
+         ['Status','Live, deterministic.']] },
+    { id:'verifier', name:'VERIFIER', c:'#eef6ff', tier:'live', cls:'checks', role:'Independent done-gate', tag:'LIVE · BEFORE EVERY DONE', sim:'verifier',
+      f:[['Lives on','<b>M1</b>, spawned by YerDad.'],
+         ['Runs as','One of <b>YerDad’s subagents</b>, used as an <b>independent AI check</b>: a separate Claude Code session that did not do the work. Not deterministic code.'],
+         ['Does','Before YerDad reports non-trivial work as done, he spawns the Verifier to check it against the evidence, and quotes its literal verdict line: <b>VERDICT: PASS</b> or <b>VERDICT: FAIL</b>.'],
+         ['Not allowed','Fix the work it is checking. It judges; a fix goes back to whoever did the work.'],
+         ['Status','Live: it runs before YerDad reports any non-trivial work as done (the rule began on 11 October 2026).']] },
+
+    { id:'krabs', name:'KRABS', c:'#ff8a3d', tier:'archived', cls:'archived', role:'Markets and trading agent', tag:'ARCHIVED · FOR NOW', off:1, sim:'krabs',
+      f:[['Lived on','A remote server, now decommissioned.'],['Ran as','The agent behind all of my <b>quantitative work</b>: the War Room on five-minute crypto prediction markets, and the World Cup in-play football model.'],
+         ['Did','Ran the trading models on paper, logged every signal and position, and was scored against the market rather than against itself.'],
+         ['Not allowed','Risk real money. Everything was paper-traded, and no capital was ever at risk.'],
+         ['Status','Archived for now: its server was decommissioned in September 2026. It is the agent I would bring back first for any markets work.']] },
+  ];
+  const BY = Object.fromEntries(A.map(a => [a.id, a]));
+
+
+  /* character-sheet meters: qualitative, from what each agent is allowed and how often it runs */
+  const SHEET = {
+    fleet:    [[3,'Semi-autonomous; I approve'],[4,'Always something running'],'Mixed'],
+    yerdad:   [[3,'Acts; asks before anything leaves'],[5,'Always on + night shift'],'Claude Code'],
+    builder:  [[2,'Own branch; I merge'],[3,'Nightly'],'Claude Code'],
+    sentinel: [[1,'Observes and reports'],[4,'Scheduled sweeps'],'Deterministic code'],
+    yerson:   [[2,'Collects and files'],[4,'Scheduled cycles'],'Scheduled agent'],
+    mission:  [[1,'Answers only'],[2,'On demand'],'Local model + hybrid search'],
+    moltimus: [[2,'Drafts; posting gated'],[3,'Every few hours'],'Scheduled job'],
+    themis:   [[1,'Research only'],[2,'On request'],'Research agent'],
+    scout:    [[2,'On call; returns findings'],[2,'When useful'],'Claude Code subagent'],
+    analyst:  [[1,'Read-only'],[2,'When useful'],'Claude Code subagent'],
+    archivist:[[1,'Read-only; reports'],[2,'When useful'],'Claude Code subagent'],
+    verifier: [[1,'Judges; does not edit'],[4,'Every "done"'],'Independent AI check'],
+    warden:   [[1,'Checks and flags'],[4,'Scheduled'],'Deterministic code'],
+    krabs:    [[1,'Paper only'],[0,'Archived for now'],'Trading models'],
+  };
+  const HOME = { fleet:'Every machine', yerdad:'M1', builder:'iMac · the lab', sentinel:'M1 + every Mac', yerson:'Intel MacBook', mission:'M3 · Mission OS',
+    moltimus:'M3', themis:'M1', scout:'M1 · spawned by YerDad', analyst:'M1 · spawned by YerDad', archivist:'M1 · spawned by YerDad', verifier:'M1 · spawned by YerDad', warden:'M1', krabs:'Decommissioned' };
+  const CLASS = { fleet:['FLEET','THE FLEET'], director:['DIRECTOR OF OPERATIONS','DIRECTOR OF OPERATIONS'], core:['CORE AGENTS','CORE AGENTS'], demand:['ON-DEMAND AGENTS','ON-DEMAND AGENTS · CALLED WHEN NEEDED'], bg:['YERDAD’S SUBAGENTS','SUBAGENTS · BACKGROUND · SMALL-SCALE · SPAWNED BY YERDAD'], checks:['BACKGROUND · CHECKS','BACKGROUND · CHECKS'], archived:['ARCHIVED','ARCHIVED'] };
+  const BADGE = { live:['LIVE','live'], demand:['ON DEMAND',''], oncall:['ON CALL',''], archived:['ARCHIVED','off'] };
+
+  /* ---------- scheduler for the live panels ---------- */
+  let timers = [];
+  const clear = () => { timers.forEach(t => clearTimeout(t)); timers = []; };
+  // run steps one after another with a delay; under reduced motion run them all at once
+  function play(steps, gap = 900, loop = true){
+    if (R){ steps.forEach(s => s()); return; }
+    let i = 0;
+    const go = () => { steps[i](); i++; if (i < steps.length) timers.push(setTimeout(go, typeof gap === 'function' ? gap(i) : gap));
+      else if (loop) timers.push(setTimeout(() => { i = 0; go(); }, 2600)); };
+    go();
+  }
+  const line = (el, html, max = 14) => { const d = document.createElement('div'); d.innerHTML = html; el.appendChild(d); while (el.children.length > max) el.firstChild.remove(); };
+
+  const SIMS = {
+    fleet(b){
+      $('simt').textContent = 'HOW A TASK MOVES';
+      b.innerHTML = `<div class="pipe">
+          <div class="stg" style="--c:#00d4ff"><b>01</b>REQUEST<br>or schedule</div>
+          <div class="stg" style="--c:#ff7700"><b>02</b>AGENT<br>does the work</div>
+          <div class="stg" style="--c:#eef6ff"><b>03</b>REVIEWER<br>checks it</div>
+          <div class="stg" style="--c:#ffcc00"><b>04</b>KARAM<br>approves</div></div>
+        <div class="lbl">Ledger · every result kept</div>
+        <div class="ledger"><div class="t-stat"><strong id="lp" style="color:#00ff88">1,054</strong><span>passed</span></div>
+          <div class="t-stat"><strong id="lf" style="color:#ff3355">91</strong><span>failed, kept</span></div></div>
+        <div class="lbar" aria-hidden="true"><i style="width:${1054 / 11.45}%;background:#00ff88"></i><i style="flex:1;background:#ff3355"></i></div>
+        <ul class="rules"><li>Nothing leaves a machine without approval.</li><li>Nothing moves money without approval.</li>
+          <li>Nothing writes to the vault’s human notes without approval.</li><li>Agents write only to their own areas.</li></ul>`;
+      const st = [...b.querySelectorAll('.stg')];
+      play([0, 1, 2, 3].map(k => () => st.forEach((s, j) => s.classList.toggle('on', R ? true : j === k))), 1100);
+    },
+
+    yerdad(b){
+      $('simt').textContent = 'DIRECTOR · TELEGRAM + DISPATCH';
+      const lanes = [['SENTINEL','#c41e3a'],['BUILDER','#ff7700'],['YERSON','#00ff88'],['THEMIS','#ffcc00'],['NIGHT SHIFT','#00d4ff']];
+      b.innerHTML = `<div class="dir"><div class="chat" id="chat"></div><div>
+          <div class="lbl">Dispatch</div><div class="lanes">${lanes.map(([n, c], i) => `<div class="lane" style="--c:${c}"><span class="n">${n}</span><span class="w idle" id="ln${i}"><i></i></span></div>`).join('')}</div>
+          <div class="lbl" style="margin-top:12px">Night shift · 02:00</div><div class="log" id="dl"></div></div></div>`;
+      const chat = $('chat'), dl = $('dl');
+      const say = (who, t) => { const d = document.createElement('div'); d.className = 'bub ' + who; d.textContent = t; chat.appendChild(d); while (chat.children.length > 6) chat.firstChild.remove(); };
+      const fire = (i, p) => { const w = $('ln' + i); w.classList.remove('idle'); w.querySelector('i').style.width = p + '%'; };
+      play([
+        () => { chat.innerHTML = ''; dl.innerHTML = ''; lanes.forEach((_, i) => { const w = $('ln' + i); w.classList.add('idle'); w.querySelector('i').style.width = 0; }); say('me', 'Is everything healthy? And what is due this week?'); },
+        () => say('it', 'Checking. Asking Sentinel for the latest baselines.'),
+        () => fire(0, 100),
+        () => { fire(4, 100); line(dl, '<span class="k-g">✓</span> estate health · 4 machines up'); },
+        () => line(dl, '<span class="k-g">✓</span> backups · last run 01:40'),
+        () => line(dl, '<span class="k-y">!</span> 2 deadlines inside 7 days'),
+        () => { fire(1, 60); line(dl, '<span class="k-a">→</span> builder run · started on the lab'); },
+        () => say('it', 'All four machines healthy, no alerts. Two deadlines this week; both are in the morning brief.'),
+        () => say('me', 'Thanks. Leave the build until I review it.'),
+        () => say('it', 'Understood. Branch stays unmerged until you approve.'),
+      ], 1200);
+    },
+
+    builder(b){
+      $('simt').textContent = 'OVERNIGHT RUN · LAB';
+      b.innerHTML = `<div class="night"><div><div class="lbl">Branch</div><div class="k-t">night/2026-10-11 · not main</div></div><div class="clock" id="clk">23:10</div></div>
+        <div class="lbl">Tasks</div><div id="tb"></div><div class="lbl" style="margin-top:10px">Run log</div><div class="log" id="bl"></div>`;
+      const bl = $('bl'), clk = $('clk'), tb = $('tb');
+      const bar = n => { tb.innerHTML = KB.bar(n / 4) + `<div class="note">${n} of 4 tasks done</div>`; };
+      const at = (t, h) => () => { clk.textContent = t; line(bl, `<span class="k-d">${t}</span> ${h}`, 11); };
+      bar(0);
+      play([
+        () => { bl.innerHTML = ''; bar(0); at('23:10', 'relay from M1 · run started · 4 tasks')(); },
+        at('23:12', 'task 1 · tidy the news module filters'),
+        at('23:48', '<span class="k-g">build ✓</span> · type check ✓'),
+        () => { bar(1); at('23:49', 'task 1 committed to the branch')(); },
+        at('00:20', 'task 2 · fix calendar week start'),
+        at('01:05', '<span class="k-r">build ✗</span> · 1 failing test · retry'),
+        at('01:31', '<span class="k-g">build ✓</span> · 0 failing'),
+        () => { bar(2); at('01:32', 'task 2 committed')(); },
+        at('02:10', 'task 3 · globe layer labels'),
+        at('03:40', '<span class="k-y">no output for 60 min</span> · M1 notes a possible stall'),
+        at('03:52', 'output resumes · <span class="k-g">build ✓</span>'),
+        () => { bar(3); at('03:53', 'task 3 committed')(); },
+        at('05:40', 'task 4 left for the morning · report written'),
+        at('05:41', 'waiting for Karam’s review · <span class="k-a">nothing merged</span>'),
+      ], 800);
+    },
+
+    sentinel(b){
+      $('simt').textContent = 'BASELINE DIFF · EVERY MAC';
+      const M = ['M1','M3','IMAC','MACBOOK'], C = ['APPS','LOGIN','PORTS','USERS','KEYS'];
+      b.innerHTML = `<div class="sgrid"><span></span>${C.map(c => `<span class="h">${c}</span>`).join('')}
+        ${M.map((m, i) => `<span class="m">${m}</span>` + C.map((_, j) => `<span class="cell" id="c${i}${j}">·</span>`).join('')).join('')}</div>
+        <div class="lbl">Readout</div><div class="diffbox log" id="sd"></div>`;
+      const sd = $('sd');
+      const steps = [() => { b.querySelectorAll('.cell').forEach(c => { c.className = 'cell'; c.textContent = '·'; }); sd.innerHTML = ''; line(sd, '<span class="k-d">sweep</span> comparing each reading with its baseline'); }];
+      M.forEach((m, i) => C.forEach((_, j) => steps.push(() => {
+        const c = $('c' + i + j);
+        if (i === 2 && j === 1){ c.className = 'cell diff'; c.textContent = '+1'; }
+        else { c.className = 'cell ok'; c.textContent = '='; }
+      })));
+      steps.push(() => { line(sd, '<span class="k-r">− baseline</span>  14 login items'); line(sd, '<span class="k-r">+ now</span>       15 login items · 1 new'); });
+      steps.push(() => line(sd, '<span class="k-a">→ alert sent by Telegram</span> · nothing changed on the machine'));
+      steps.push(() => line(sd, '<span class="k-g">✓ Karam: expected (new app)</span> · baseline updated'));
+      play(steps, i => (i <= 20 ? 140 : 1300));
+    },
+
+
+    mission(b, a){
+      $('simt').textContent = 'MISSION OS · EXAMPLE MISSION';
+      const MODES = [['field','FIELD'],['ask','ASK'],['synthesis','SYNTHESIS'],['roadmap','ROADMAP'],['planner','PLANNER'],['map','MAP'],['targets','TARGETS'],['dossier','DOSSIER'],['debrief','DEBRIEF']];
+      b.innerHTML = `<div class="mo-head"><span class="k-t">Example: a tech conference week</span><span class="k-d">3 days · objective: meet teams hiring analysts</span></div>
+        <div class="mo-tabs" role="tablist" aria-label="Mission OS modes">${MODES.map(([id, l]) => `<button role="tab" data-m="${id}" aria-selected="${id === 'ask'}">${l}</button>`).join('')}</div>
+        <div class="mo-view" id="mov"></div>`;
+      const v = $('mov');
+      const VIEWS = {
+        field: () => { v.innerHTML = `<div class="lbl">Field · on the phone, live</div><div class="log">
+            <div><span class="k-a">now</span> Stage B · panel on applied AI</div><div><span class="k-a">next</span> 14:30 · expo floor, zone 2</div>
+            <div><span class="k-c">who is this?</span> “Person A, data team at Company A”</div><div><span class="k-d">opener</span> ask about their evaluation work</div></div>`; },
+        synthesis: () => { v.innerHTML = `<div class="lbl">Synthesis · four pillars</div>${[['CAREER','#ff3355','two teams hiring analysts'],['ACADEMIC','#00d4ff','one talk on forecasting'],['COMPANY','#00ff88','three possible partners'],['FOUNDER','#aa66ff','one investor talk']].map(([p, c, t]) => `<div class="src"><span style="color:${c}">■</span><span class="k-t">${p}</span><span class="k-d">${t}</span></div>`).join('')}`; },
+        roadmap: () => { v.innerHTML = `<div class="lbl">Roadmap · sessions by day</div><div class="log"><div><span class="k-a">Day 1</span> 10:00 keynote · <span class="k-r">must</span></div><div><span class="k-a">Day 1</span> 15:00 panel on data roles</div><div><span class="k-a">Day 2</span> 11:30 workshop · booked</div><div><span class="k-a">Day 3</span> 09:30 talk on forecasting</div></div>`; },
+        planner: () => { v.innerHTML = `<div class="lbl">Planner · before / during / after</div>${[['before','print CV, charge phone',1],['before','book travel',1],['during','log each conversation',0],['after','follow up within 48 h',0]].map(([w, t, ok]) => `<div class="src"><span class="${ok ? 'k-g' : 'k-d'}">${ok ? '☑' : '☐'}</span><span class="k-t">${t}</span><span class="k-d">${w}</span></div>`).join('')}`; },
+        map: () => { v.innerHTML = `<div class="lbl">Map · venue zones</div><svg viewBox="0 0 200 90" style="width:100%;height:120px"><g fill="none" stroke-width="1">
+            <rect x="4" y="4" width="120" height="82" stroke="#00d4ff"/><rect x="12" y="12" width="48" height="26" stroke="#ff3355"/><rect x="68" y="12" width="48" height="26" stroke="#ffcc00"/>
+            <rect x="12" y="46" width="104" height="32" stroke="#00ff88"/><rect x="132" y="4" width="64" height="40" stroke="#aa66ff"/></g>
+            <g font-size="7" font-family="monospace"><text x="16" y="28" fill="#ff3355">Stage A</text><text x="72" y="28" fill="#ffcc00">Stage B</text><text x="16" y="64" fill="#00ff88">Expo floor</text><text x="136" y="26" fill="#aa66ff">Hall 2</text></g></svg>`; },
+        targets: () => { v.innerHTML = `<div class="lbl">Targets · people + openers</div>${[['Person A','Company A · data'],['Person B','Company B · research'],['Person C','Company C · hiring']].map(([n, o]) => `<div class="src"><span class="k-a">◆</span><span class="k-t">${n}</span><span class="k-d">${o}</span></div>`).join('')}<div class="note">invented examples</div>`; },
+        dossier: () => { v.innerHTML = `<div class="lbl">Dossier · company clusters</div>${[['Analytics', 4],['Security', 2],['Infrastructure', 3]].map(([n, k]) => `<div style="display:grid;grid-template-columns:110px 1fr 24px;gap:8px;align-items:center;margin:4px 0"><span class="k-t">${n}</span>${KB.bar(k / 5)}<span>${k}</span></div>`).join('')}`; },
+        debrief: () => { v.innerHTML = `<div class="lbl">Debrief · after-action</div><div class="log"><div><span class="k-g">✓</span> 6 conversations logged</div><div><span class="k-y">!</span> 2 follow-ups still open</div><div><span class="k-a">lesson</span> book workshops earlier</div></div>`; },
+        ask: () => {
+          v.innerHTML = `<div class="q" id="mq"></div><div class="lbl">Notes found · keyword / meaning</div><div id="mh"></div><div class="ans" id="ma"></div><div class="note">Local model · nothing leaves the machine</div>`;
+          const H = [['targets · Company A', .82, .64], ['sessions · day 1', .55, .91], ['synthesis · career pillar', .41, .58]];
+          play([
+            () => { $('mq').textContent = ''; $('mh').innerHTML = ''; $('ma').innerHTML = ''; },
+            () => KB.type($('mq'), 'Who should I see first on day one, and what do I open with?', 60),
+            ...H.map(([n, k, m], i) => () => $('mh').insertAdjacentHTML('beforeend', `<div class="hit"><span class="k-a">[${i + 1}]</span><span class="k-t">${n}</span>
+                <span class="sc" style="--c:#ff3355;--w:${k * 100}%"><i></i></span><span class="sc" style="--c:#aa66ff;--w:${m * 100}%"><i></i></span></div>`)),
+            () => { $('ma').innerHTML = 'Start with Person A after the 10:00 keynote <sup>[2]</sup>; open with their evaluation work <sup>[1]</sup>. It serves the career pillar <sup>[3]</sup>.'; },
+          ], i => (i === 2 ? 3000 : 800));
+        },
+      };
+      const tabs = [...b.querySelectorAll('.mo-tabs button')];
+      b.querySelector('.mo-tabs').addEventListener('click', e => { const t = e.target.closest('button'); if (!t) return;
+        clear(); tabs.forEach(x => x.setAttribute('aria-selected', x === t)); VIEWS[t.dataset.m](); KB.beep(700, 30); });
+      VIEWS.ask();
+    },
+
+    yerson(b, a){
+      $('simt').textContent = 'INTEL ENGINE · DEMO DASHBOARD';
+      b.classList.add('embed');
+      b.innerHTML = `<div class="emb"><iframe src="../../intel/" title="YerSon intelligence engine, demo dashboard" loading="lazy" tabindex="-1"></iframe></div>
+        <a class="t-btn openfull" href="../../intel/" target="_blank" rel="noopener"><span>OPEN FULL ↗</span></a>`;
+      const emb = b.querySelector('.emb');
+      const fit = () => { const s = b.clientWidth / 960, h = Math.max(600, b.clientHeight / s); emb.style.transform = `scale(${s})`; emb.style.height = emb.firstChild.style.height = h + 'px'; emb.style.left = emb.style.top = '0px'; };
+      fit(); requestAnimationFrame(fit);
+      (window._fitters = window._fitters || []).push(fit);
+    },
+
+    moltimus(b){
+      $('simt').textContent = 'RECONNAISSANCE · EVERY FEW HOURS';
+      b.innerHTML = `<div class="sweep"><div class="radar" aria-hidden="true"></div><div><div class="lbl">Sweep</div>
+          <div class="k-t" id="ms">reading the network…</div><div class="note" id="mn">next sweep in 3h 58m</div></div></div>
+        <div class="log" id="ml"></div><div class="draft" id="md" hidden></div>`;
+      const ml = $('ml'), md = $('md');
+      play([
+        () => { ml.innerHTML = ''; md.hidden = true; $('ms').textContent = 'reading the network…'; },
+        () => line(ml, '<span class="k-d">scan</span> 212 new posts since last sweep', 6),
+        () => line(ml, '<span class="k-d">keep</span> 9 relevant · 203 skipped', 6),
+        () => line(ml, '<span class="k-a">note</span> thread on agent safety rules · 41 replies', 6),
+        () => line(ml, '<span class="k-a">note</span> question about local models on old hardware', 6),
+        () => { $('ms').textContent = 'sweep done · 1 draft written'; md.hidden = false;
+          md.innerHTML = `<div class="lbl">Draft reply</div>“Small local models are fine for batch classification, if you can wait for the results.”<br><span class="gate" id="gt">⏸ AWAITING KARAM’S APPROVAL</span>`; },
+        () => { const g = $('gt'); g.className = 'gate ok'; g.textContent = '✓ APPROVED BY KARAM · POSTED'; },
+      ], i => (i === 6 ? 2600 : 1000));
+    },
+
+    themis(b){
+      $('simt').textContent = 'PUBLIC LAW RESEARCH · CAUTIOUS';
+      b.innerHTML = `<div class="lbl">Question</div><div class="q" id="tq"></div>
+        <div class="lbl">Sources checked</div><div id="ts"></div>
+        <div class="lbl" style="margin-top:8px">Finding</div><div class="ans" id="ta"></div>
+        <div class="conf" id="tc"></div>`;
+      const S = [['Act of Parliament · relevant section', 'primary'], ['Procedure rules · time limits', 'primary'], ['Published judgment · Court of Appeal', 'case law'], ['Government guidance note', 'secondary']];
+      const ts = $('ts');
+      play([
+        () => { $('tq').textContent = ''; ts.innerHTML = ''; $('ta').innerHTML = ''; $('tc').innerHTML = ''; },
+        () => KB.type($('tq'), 'What is the time limit for bringing a judicial review claim?', 60),
+        ...S.map(([n, k]) => () => ts.insertAdjacentHTML('beforeend', `<div class="src"><span class="k-g">✓</span><span class="k-t">${n}</span><span class="k-d">${k}</span></div>`)),
+        () => { $('ta').innerHTML = 'Generally promptly, and in any event within three months of the grounds arising <sup>[2]</sup>. Some areas set shorter limits <sup>[1]</sup>; courts read “promptly” strictly <sup>[3]</sup>.'; },
+        () => { $('tc').innerHTML = `confidence ${KB.meter(10, 7)} <span class="k-y">check the primary source · not legal advice</span>`; },
+      ], i => (i === 2 ? 3000 : 900));
+    },
+
+    scout(b, a){
+      $('simt').textContent = 'ON CALL · CITED WEB RESEARCH';
+      b.innerHTML = `<div class="lbl">Handed over by YerDad</div><div class="q" id="sq"></div>
+        <div class="lbl">Sources read</div><div id="ss"></div><div class="lbl" style="margin-top:8px">Returned to YerDad</div><div class="ans" id="sa"></div>`;
+      const S = [['Regulator consultation paper', 'gov'], ['Industry body briefing', 'org'], ['Trade press report', 'news']];
+      play([
+        () => { $('sq').textContent = ''; $('ss').innerHTML = ''; $('sa').innerHTML = ''; },
+        () => KB.type($('sq'), 'What changed in the new data-centre planning guidance?', 60),
+        ...S.map(([n, k], i) => () => $('ss').insertAdjacentHTML('beforeend', `<div class="src"><span class="k-a">[${i + 1}]</span><span class="k-t">${n}</span><span class="k-d">${k}</span></div>`)),
+        () => { $('sa').innerHTML = 'Two changes: a faster route for sites near existing grid capacity <sup>[1]</sup>, and a new requirement to publish water use <sup>[2]</sup>. Press coverage overstates the first <sup>[3]</sup>.'; },
+        () => $('sa').insertAdjacentHTML('beforeend', '<div class="note">no files written · findings only</div>'),
+      ], i => (i === 2 ? 3000 : 900));
+    },
+
+    analyst(b, a){
+      $('simt').textContent = 'ON CALL · READ-ONLY QUERY';
+      b.innerHTML = `<div class="lbl">Handed over by YerDad</div><div class="q" id="nq"></div>
+        <div class="lbl">Command</div><div class="log" id="nc" style="color:var(--text);border:1px solid var(--line);padding:6px 8px;margin-bottom:8px"></div>
+        <div class="lbl">Result</div><div id="nr"></div><div class="note" id="nn"></div>`;
+      const ROWS = [['Builder', 41, 3], ['YerSon', 118, 6], ['Night shift', 30, 1]];
+      play([
+        () => { $('nq').textContent = ''; $('nc').innerHTML = ''; $('nr').innerHTML = ''; $('nn').textContent = ''; },
+        () => KB.type($('nq'), 'How many runs failed last week, by agent?', 60),
+        () => line($('nc'), '<span class="k-a">$</span> runs --since 7d --group agent --count status'),
+        ...ROWS.map(([n, p, f]) => () => $('nr').insertAdjacentHTML('beforeend', `<div style="display:grid;grid-template-columns:90px 1fr 70px;gap:8px;align-items:center;margin:3px 0"><span class="k-t">${n}</span>${KB.bar(p / (p + f))}<span><span class="k-g">${p}</span> / <span class="k-r">${f}</span></span></div>`)),
+        () => { $('nn').textContent = 'read-only · the command is returned with the numbers so it can be re-run'; },
+      ], i => (i === 2 ? 2600 : 900));
+    },
+
+    archivist(b, a){
+      $('simt').textContent = 'ON CALL · VAULT LINT · READ-ONLY';
+      const C = [['NAMES', 'ok', 0], ['FRONTMATTER', 'warn', 3], ['CASE', 'ok', 0], ['LINKS', 'warn', 2], ['PLACEMENT', 'ok', 0]];
+      b.innerHTML = `<div class="lbl">Handed over by YerDad</div><div class="q">Run the vault lint and report.</div>
+        <div class="lbl">Checks</div><div id="vc"></div>
+        <div class="lbl" style="margin-top:8px">Report</div><div class="log" id="vr"></div>
+        <span class="gate ok" style="margin-top:8px">READ-ONLY · 0 FILES MOVED · 0 WRITTEN</span>`;
+      play([
+        () => { $('vc').innerHTML = ''; $('vr').innerHTML = ''; },
+        ...C.map(([n, s, k]) => () => $('vc').insertAdjacentHTML('beforeend', `<div class="src"><span class="${s === 'ok' ? 'k-g' : 'k-y'}">${s === 'ok' ? '✓' : '!'}</span><span class="k-t">${n}</span><span class="${s === 'ok' ? 'k-d' : 'k-y'}">${k ? k + ' to look at' : 'clean'}</span></div>`)),
+        () => line($('vr'), '<span class="k-y">3</span> notes missing a frontmatter field'),
+        () => line($('vr'), '<span class="k-y">2</span> links point at a renamed note'),
+        () => line($('vr'), '<span class="k-a">→ report to YerDad</span> · fixes left for Karam'),
+      ], 800);
+    },
+
+    verifier(b, a){
+      $('simt').textContent = 'DONE-GATE · INDEPENDENT CHECK';
+      b.innerHTML = `<div class="lbl">YerDad wants to report</div><div class="q" id="vq"></div>
+        <div class="lbl">Claims checked against evidence</div><div id="vk"></div>
+        <div class="ans" id="vv" style="font-weight:700"></div><div class="log" id="vl" style="margin-top:6px"></div>`;
+      const K1 = [['build passes', 1], ['tests: 0 failing', 0], ['branch not merged', 1]];
+      const claim = ([n, ok]) => () => $('vk').insertAdjacentHTML('beforeend', `<div class="src"><span class="${ok ? 'k-g' : 'k-r'}">${ok ? '✓' : '✗'}</span><span class="k-t">${n}</span><span class="k-d">${ok ? 'matches the log' : 'log shows 1 failing'}</span></div>`);
+      play([
+        () => { $('vq').textContent = ''; $('vk').innerHTML = ''; $('vv').innerHTML = ''; $('vl').innerHTML = ''; },
+        () => KB.type($('vq'), 'Overnight build task done: calendar fix.', 60),
+        ...K1.map(claim),
+        () => { $('vv').innerHTML = '<span class="k-r">VERDICT: FAIL</span> <span class="k-d">· one test still failing</span>'; },
+        () => line($('vl'), '<span class="k-c">yerdad</span> reports “not done”, quoting the verdict'),
+        () => line($('vl'), '<span class="k-d">fix · re-check</span> → <span class="k-g">VERDICT: PASS</span>'),
+      ], i => (i === 2 ? 2600 : 1000));
+    },
+
+    warden(b, a){
+      $('simt').textContent = 'FLEET-GUARD · AGENT-HEALTH';
+      const H = [['M1 · YerDad', 'up'], ['M1 · Sentinel', 'up'], ['iMac · Builder', 'up'], ['Intel MacBook · YerSon', 'quiet'], ['M3 · Moltimus', 'up']];
+      b.innerHTML = `<div class="lbl">Heartbeats</div><div id="wh"></div><div class="log" id="wl" style="margin-top:8px"></div>
+        <div class="note">The June Warden agent was replaced by these checks.</div>`;
+      const wl = $('wl');
+      play([
+        () => { $('wh').innerHTML = ''; wl.innerHTML = ''; },
+        ...H.map(([n, s], i) => () => $('wh').insertAdjacentHTML('beforeend', `<div class="src"><span class="${s === 'up' ? 'k-g' : 'k-y'}">${s === 'up' ? '●' : '○'}</span><span class="k-t">${n}</span><span class="${s === 'up' ? 'k-d' : 'k-y'}">${s === 'up' ? 'answered · ' + (12 + i * 7) + 's ago' : 'no answer · 25 min'}</span></div>`)),
+        () => line(wl, '<span class="k-y">flag</span> YerSon quiet past its threshold'),
+        () => line(wl, '<span class="k-a">→ Telegram</span> plain message to Karam'),
+        () => line(wl, '<span class="k-g">next sweep</span> · YerSon answering again'),
+      ], 900);
+    },
+
+    krabs(b, a){
+      $('simt').textContent = 'LAST OUTPUT · FROZEN';
+      const P = [['Home win', .46], ['Draw', .27], ['Away win', .27]];
+      b.innerHTML = `<div class="lbl">Example match · last run before shutdown</div>
+        ${P.map(([n, p]) => `<div style="display:grid;grid-template-columns:80px 1fr 40px;gap:8px;align-items:center;margin:6px 0;opacity:.6"><span>${n}</span>${KB.bar(p)}<span>${Math.round(p * 100)}%</span></div>`).join('')}
+        <div class="log" id="kl" style="margin-top:10px"></div>`;
+      const kl = $('kl');
+      play([
+        () => { kl.innerHTML = ''; line(kl, '<span class="k-d">model</span> trained on past international results'); },
+        () => line(kl, '<span class="k-d">output</span> probabilities, numbers only'),
+        () => line(kl, '<span class="k-r">server</span> decommissioned · model not running'),
+        () => line(kl, '<span class="k-a">status</span> archived · full story in the quantitative window'),
+      ], 1200);
+    },
+  };
+
+
+  /* ---------- the wheel ---------- */
+  const WHEEL = ['yerdad','builder','yerson','sentinel','themis','mission','moltimus','scout','analyst','archivist','warden','verifier','krabs'];
+  const N = WHEEL.length, stage = $('stage'), wheel = $('wheel');
+  const small = () => stage.clientWidth < 600;
+  wheel.innerHTML = WHEEL.map((id, i) => { const a = BY[id], [bt, bc] = BADGE[a.tier];
+    return `<button class="card ${a.off ? 'dim' : ''}" data-i="${i}" style="--c:${a.c}" aria-label="${a.name}, ${CLASS[a.cls][1]}, ${a.role}, ${bt}">
+      <span class="ccls">${CLASS[a.cls][0]}</span><span class="bdg ${bc}">${bt}</span><span class="spr"></span><span class="cn">${a.name}</span><span class="cr">${a.role}</span><span class="press">PRESS ▸ PICK</span></button>`; }).join('');
+  const cards = [...wheel.children];
+  const drawSprites = () => { const s = small() ? 3 : 4; cards.forEach((c, i) => { c.querySelector('.spr').innerHTML = bot(BY[WHEEL[i]].c, s); }); };
+  drawSprites();
+
+  let pos = 0, sel = 0;
+  const wrap = o => { o = ((o % N) + N) % N; return o > N / 2 ? o - N : o; };
+  function layout(){
+    const W = stage.clientWidth, sp = small() ? W * .3 : Math.min(190, W * .16);
+    cards.forEach((c, i) => {
+      const o = wrap(i - pos), ao = Math.abs(o);
+      const x = Math.sin(Math.max(-1.5, Math.min(1.5, o * .42))) * sp * 2.6;
+      const z = -Math.pow(ao, 1.15) * 150, ry = Math.max(-62, Math.min(62, -o * 24)), y = -ao * 10;
+      const sc = ao < .5 ? 1.12 - ao * .24 : 1;
+      c.style.transform = `translate(-50%,-50%) translate3d(${x}px,${y}px,${z}px) rotateY(${ry}deg) scale(${sc})`;
+      c.style.opacity = ao > 3.4 ? 0 : Math.max(.15, 1 - Math.max(0, ao - .4) * .26);
+      c.style.zIndex = 100 - Math.round(ao * 10);
+      c.style.pointerEvents = ao > 3.4 ? 'none' : '';
+      c.tabIndex = Math.round(wrap(i - pos)) === 0 ? 0 : -1;
+    });
+  }
+  function banner(){
+    const a = BY[WHEEL[sel]];
+    document.body.style.setProperty('--a', a.c);
+    cards.forEach((c, i) => c.classList.toggle('on', i === sel));
+    $('bname').textContent = a.name;
+    $('bsub').innerHTML = `<span class="bcls">${CLASS[a.cls][1]}</span><br>${esc(a.role)} · <b>${a.tag}</b> · ${esc(HOME[a.id])}`;
+    KB.twitch($('bname'));
+  }
+  function go(n, sound = true){
+    const nsel = ((Math.round(n) % N) + N) % N;
+    // keep pos continuous so the wheel turns the short way round
+    pos = Math.round(pos) + wrap(nsel - Math.round(pos));
+    if (nsel !== sel || sound === 'force'){ sel = nsel; banner(); if (sound) KB.beep(420 + sel * 25, 35); }
+    layout();
+  }
+  const step = d => go(sel + d);
+
+  /* drag / swipe */
+  let drag = null;
+  stage.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('.arrow')) return;
+    drag = { x: e.clientX, p: pos, moved: false, card: e.target.closest('.card'), id: e.pointerId };
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 6){ drag.moved = true; stage.classList.add('drag'); try { stage.setPointerCapture(e.pointerId); } catch (_) {} }
+    if (drag.moved){ pos = drag.p - dx / (small() ? stage.clientWidth * .8 : 380); layout();
+      const ns = ((Math.round(pos) % N) + N) % N; if (ns !== sel){ sel = ns; banner(); KB.beep(420 + sel * 25, 25); } }
+  });
+  const end = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null; stage.classList.remove('drag');
+    if (d.moved){ go(Math.round(pos), false); return; }
+    if (d.card && e.type === 'pointerup'){ const i = +d.card.dataset.i; i === sel ? open(WHEEL[i]) : go(i); }
+  };
+  stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  stage.addEventListener('click', e => { if (e.target.closest('.card')) e.preventDefault(); });
+  // keyboard focus on a card + Enter picks
+  wheel.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); const c = e.target.closest('.card'); if (c){ +c.dataset.i === sel ? open(WHEEL[sel]) : go(+c.dataset.i); } } });
+
+  /* horizontal trackpad scroll turns the wheel; vertical scroll stays with the page (channel change) */
+  let acc = 0, accT = 0, coolUntil = 0;
+  document.querySelector('.term').addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Math.abs(e.deltaX) < 2) return;
+    e.preventDefault(); e.stopPropagation();
+    const now = performance.now(); if (now < coolUntil){ acc = 0; return; } if (now - accT > 300) acc = 0; accT = now;
+    acc += e.deltaX;
+    if (Math.abs(acc) > 170){ const d = Math.sign(acc); acc = 0; coolUntil = now + 520; mode === 'select' ? step(d) : show(d); }
+  }, { passive: false });
+
+  // every visit lands on YerDad: the portfolio sends kbReset when the channel comes up
+  addEventListener('message', e => { if (e.data && e.data.kbReset){ if (mode === 'profile') back(); go(0, false); } });
+  $('aL').addEventListener('click', () => step(-1)); $('aR').addEventListener('click', () => step(1));
+  $('cL').addEventListener('click', () => step(-1)); $('cR').addEventListener('click', () => step(1));
+  $('pick').addEventListener('click', () => open(WHEEL[sel])); $('cP').addEventListener('click', () => open(WHEEL[sel]));
+
+  /* ---------- profile ---------- */
+  let mode = 'select', curId = null;
+  const segs = n => `<div class="segs">${[0, 1, 2, 3, 4].map(i => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div>`;
+  function render(id){
+    const a = BY[id]; curId = id; clear(); $('simb').classList.remove('embed'); window._fitters = [];
+    document.body.style.setProperty('--a', a.c);
+    $('pbot').innerHTML = bot(a.c, 2.6, a.off ? '' : 'live');
+    $('pname').textContent = a.name; $('prole').textContent = a.role;
+    $('ptitle').textContent = id === 'fleet' ? 'Fleet rules' : 'Intel profile';
+    const tg = $('ptag'); tg.textContent = a.tag; tg.className = 't-tag ptag' + (a.warn ? ' warn' : a.off ? ' off' : '');
+    $('pcls').textContent = 'CLASS · ' + CLASS[a.cls][1];
+    const [au, ac, en] = SHEET[id];
+    $('stats').innerHTML = `
+      <div class="stat"><div class="k"><span>HOME</span></div><div class="v">${esc(HOME[id])}</div></div>
+      <div class="stat"><div class="k"><span>ENGINE</span></div><div class="v">${esc(en)}</div></div>
+      <div class="stat"><div class="k"><span>AUTONOMY</span><span>${esc(au[1])}</span></div>${segs(au[0])}</div>
+      <div class="stat"><div class="k"><span>ACTIVITY</span><span>${esc(ac[1])}</span></div>${segs(ac[0])}</div>
+      <div class="stat"><div class="k"><span>APPROVAL GATE</span><span>${au[0] ? 'Karam' : '—'}</span></div>${segs(au[0] ? 5 : 0)}</div>`;
+    $('facts').innerHTML = a.f.map(([k, v]) => `<div class="fact ${/not allowed/i.test(k) ? 'no' : /status/i.test(k) ? 'st' : ''}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    SIMS[a.sim]($('simb'), a);
+    KB.twitch($('prof'));
+  }
+  function open(id){
+    mode = 'profile';
+    $('sScr').classList.remove('on'); $('pScr').classList.add('on');
+    $('ctlS').hidden = true; $('ctlP').hidden = false;
+    render(id);
+    document.querySelector('.t-body').scrollTop = 0;
+    KB.beep(880, 50); setTimeout(() => KB.beep(1320, 90), 70);
+    $('back').focus({ preventScroll: true });
+  }
+  // click anywhere that isn't part of the profile (empty space around the panels) to go back to the wheel
+  document.addEventListener('click', e => {
+    if (mode !== 'profile') return;
+    if (e.target.closest('.sim, iframe, a, button, input, textarea, select, [data-tab], .t-ctl, nav, .t-hub')) return;   // the live demo and controls stay usable
+    if (String(getSelection && getSelection()).length) return;                                                          // don't close while selecting text
+    back();
+  });
+  document.addEventListener('click', e => { if (mode === 'profile' && e.target.closest('#pClose')) back(); });
+  function back(){
+    mode = 'select'; clear();
+    $('pScr').classList.remove('on'); $('sScr').classList.add('on');
+    $('ctlP').hidden = true; $('ctlS').hidden = false;
+    const i = WHEEL.indexOf(curId); if (i >= 0 && i !== sel) go(i, false);
+    banner(); layout(); KB.beep(330, 60);
+    cards[sel].focus({ preventScroll: true });
+  }
+  function show(d){
+    let i = WHEEL.indexOf(curId);
+    i = i < 0 ? (d > 0 ? 0 : N - 1) : (i + d + N) % N;
+    render(WHEEL[i]); KB.beep(520 + i * 25, 40);
+  }
+  $('back').addEventListener('click', back);
+  $('prev').addEventListener('click', () => show(-1)); $('next').addEventListener('click', () => show(1));
+  $('fleet').addEventListener('click', () => open('fleet')); $('fleet2').addEventListener('click', () => render('fleet'));
+
+  addEventListener('keydown', e => {
+    if (e.altKey || e.metaKey || e.ctrlKey) return;
+    if (mode === 'select'){
+      if (e.key === 'ArrowLeft'){ e.preventDefault(); step(-1); }
+      else if (e.key === 'ArrowRight'){ e.preventDefault(); step(1); }
+      else if (e.key === 'Enter' && !e.target.closest('button')){ e.preventDefault(); open(WHEEL[sel]); }
+    } else {
+      if (e.key === 'Escape' || e.key === 'Backspace'){ e.preventDefault(); back(); }
+      else if (e.key === 'ArrowLeft'){ e.preventDefault(); show(-1); }
+      else if (e.key === 'ArrowRight'){ e.preventDefault(); show(1); }
+    }
+  });
+  addEventListener('resize', () => { drawSprites(); layout(); (window._fitters || []).forEach(f => f()); });
+  banner(); layout();
+})();
+</script>
+</body>
+</html>

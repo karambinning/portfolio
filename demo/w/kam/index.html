@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K·A·M — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  .kam{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;flex:1;min-height:0}
+  .left{display:flex;flex-direction:column;gap:12px;min-height:0}
+  .pane{display:none} .pane.on{display:block}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  /* the constellation: hub in the middle, sections around, modules on the outer ring */
+  .orbit{position:relative;min-height:340px;border:1px solid var(--line);background:
+    radial-gradient(circle at 50% 50%,rgba(0,212,255,.10),transparent 55%),
+    repeating-radial-gradient(circle at 50% 50%,transparent 0 58px,rgba(108,92,255,.14) 58px 59px)}
+  .orbit svg{position:absolute;inset:0;width:100%;height:100%}
+  .orbit .ln{stroke:var(--line);stroke-width:.35}
+  .orbit .ln.on{stroke:var(--c);stroke-width:.6}
+  .orbit .pulse{fill:var(--c)}
+  .core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+  .core b{display:block;font:400 34px/1 var(--display);color:var(--a);letter-spacing:.12em;text-shadow:0 0 18px rgba(0,212,255,.6)}
+  .core span{font:700 9px/1.3 var(--mono);color:var(--dim);letter-spacing:.2em}
+  .mod{all:unset;cursor:pointer;position:absolute;transform:translate(-50%,-50%);font:700 10.5px/1 var(--mono);letter-spacing:.06em;color:var(--c);
+    padding:4px 6px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:var(--screen);white-space:nowrap}
+  .mod::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;background:var(--c);vertical-align:1px}
+  .mod.dev::before{background:transparent;border:1px solid var(--c)}
+  .mod:hover,.mod:focus-visible,.mod[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 18%,var(--screen));box-shadow:0 0 14px color-mix(in srgb,var(--c) 45%,transparent)}
+  .readout{min-height:72px}
+  .readout .k{font:700 11px/1 var(--mono);letter-spacing:.12em;color:var(--c,var(--a))}
+  .readout p{margin-top:6px}
+  .legend{display:flex;gap:16px;font:700 10px/1 var(--mono);color:var(--dim);letter-spacing:.08em}
+  .legend i{display:inline-block;width:7px;height:7px;background:var(--a);margin-right:6px} .legend i.o{background:transparent;border:1px solid var(--a)}
+  @media (max-width:760px){ .kam{grid-template-columns:1fr} .orbit{min-height:300px} .stats{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body data-self="kam" data-brand="[K·A·M]" data-unit="K·A·M · KNOWLEDGE ANALYSIS MONITOR · UNIT 01" data-status="PRIVATE BETA" data-status-tail="STANDBY"
+      data-mock="private beta · described, not shown" style="--a:#00d4ff;--b:#ff66cc">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div>
+      <div class="t-title">Knowledge Analysis Monitor</div>
+      <div class="t-sub">A human operating system</div>
+      <div class="t-sub2">One terminal for the world, knowledge, AI and a life</div>
+    </div>
+    <div class="kam">
+      <div class="left">
+        <div class="pane on" id="p-vision">
+          <div class="t-label">Vision</div>
+          <p class="t-p">KAM is my first build and the platform everything since grew from. The idea is to give one person the kind of organised intelligence a well-resourced institution has: the state of the world, the knowledge to understand it, the tools to act on it, and their own life, in one place.</p>
+          <p class="t-p" style="margin-top:8px">It is a <b>single, local-first terminal</b>. A globe with live layers, news read by region and outlet, a council of AI perspectives that deliberate while <b>the person still decides</b>, an office of agents, and modules for money, time, work and home.</p>
+        </div>
+        <div class="pane" id="p-principles">
+          <div class="t-label">Principles, written down</div>
+          <ul class="t-list">
+            <li><b>Local-first.</b> Data stays on the device by default.</li>
+            <li><b>Private by default.</b> The app does not report how it is used.</li>
+            <li><b>Real data only.</b> Empty states show structure, never fake content.</li>
+            <li><b>Judgement stays human.</b> AI is an input to a decision, not the decision.</li>
+            <li><b>No regression.</b> Nothing that works is broken by something new.</li>
+          </ul>
+        </div>
+        <div class="pane" id="p-status">
+          <div class="t-label">Honest status</div>
+          <p class="t-p">KAM is in <b>private beta</b>. The shell, the globe, news, the council, the agent office and several life modules work. Others, such as the library, school and creative studios, are designed and laid out but still mostly scaffolding. It is the instrument my research design was built around, and the home of my dissertation's model.</p>
+          <div style="margin-top:12px" id="statusBar"></div>
+        </div>
+        <div class="stats">
+          <div class="t-stat"><strong>18</strong><span>modules</span></div>
+          <div class="t-stat"><strong>8</strong><span>sections</span></div>
+          <div class="t-stat"><strong>8</strong><span>council voices</span></div>
+          <div class="t-stat"><strong>0</strong><span>cloud by default</span></div>
+        </div>
+        <div class="t-box readout" id="readout" aria-live="polite"><div class="k">SELECT A MODULE</div><p class="t-p">Each node on the right is one of KAM's modules, grouped by section.</p></div>
+      </div>
+      <div class="orbit" id="orbit" aria-label="KAM's modules, grouped by section">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><g id="lines"></g><g id="pulses"></g></svg>
+        <div class="core"><b>K·A·M</b><span>HUB</span></div>
+      </div>
+    </div>
+    <div class="legend"><span><i></i>WORKING</span><span><i class="o"></i>IN DEVELOPMENT</span></div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" data-pane="vision" aria-pressed="true"><span>VISION</span></button>
+    <button class="t-btn" data-pane="principles"><span>PRINCIPLES</span></button>
+    <button class="t-btn" data-pane="status"><span>STATUS</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" id="tour"><span>▸ TOUR</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script>
+(() => {
+  const SECTIONS = {
+    'PLATFORM':  ['#00d4ff', [['hub','HUB',1,'The landing page: a briefing, the time, system status and a door into every module.']]],
+    'WORLD':     ['#00ff88', [['world','WORLD',1,'An orthographic globe with switchable layers: weather, alliances, trade routes, infrastructure, biomes, travel.'],
+                              ['news','NEWS',1,'Live feeds filtered by region and by the outlet’s orientation, with a local briefing.'],
+                              ['signal','SIGNAL',1,'Radio and live signals from around the world.']]],
+    'SIGNAL':    ['#3388ff', [['community','COMMUNITY',0,'People and groups, organised around shared interests.']]],
+    'KNOWLEDGE': ['#aa66ff', [['library','LIBRARY',0,'An archive for research and civilisational memory.'],['school','SCHOOL',0,'Structured learning paths and skills.']]],
+    'FINANCE':   ['#ffcc00', [['finance','FINANCE',1,'Portfolios and markets, read-only.'],['calendar','CALENDAR',1,'Time, deadlines and plans.']]],
+    'PERSONAL':  ['#ff66cc', [['job','JOB',0,'Work, schedule and goals.'],['life','LIFE',1,'Health, habits and a life timeline.'],['death','DEATH',1,'Planning for the end of life, handled with care.'],['home','HOME',1,'The household: rooms, garden, vehicles.']]],
+    'CREATIVE':  ['#ff7a00', [['creative','CREATIVE',0,'Studios for music, writing, art and film.'],['commerce','COMMERCE',0,'Buying, selling and making.'],['verse','VERSE',0,'A space for reflection and verse.']]],
+    'A·I':       ['#ff3355', [['office','OFFICE',1,'An office of agent roles that take tasks and report back.'],['council','COUNCIL',1,'One question, eight AI voices on separate models; a secretariat resolves; the person decides.']]],
+  };
+  const orbit = document.getElementById('orbit'), lines = document.getElementById('lines'), pulses = document.getElementById('pulses');
+  const read = document.getElementById('readout');
+  const all = []; let n = 0; const total = Object.values(SECTIONS).reduce((s, [, m]) => s + m.length, 0);
+  Object.entries(SECTIONS).forEach(([sec, [c, mods]]) => {
+    mods.forEach(([id, name, ok, text]) => {
+      const ang = -Math.PI / 2 + (n++ / total) * Math.PI * 2;
+      const r = 38, x = 50 + Math.cos(ang) * r, y = 50 + Math.sin(ang) * r;
+      const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      Object.entries({ x1: 50, y1: 50, x2: x, y2: y }).forEach(([k, v]) => ln.setAttribute(k, v));
+      ln.setAttribute('class', 'ln'); ln.style.setProperty('--c', c); lines.appendChild(ln);
+      if (ok && !KB.reduce){
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        p.setAttribute('r', '.7'); p.setAttribute('class', 'pulse'); p.style.setProperty('--c', c);
+        const am = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+        am.setAttribute('dur', (2 + Math.random() * 2.5).toFixed(2) + 's'); am.setAttribute('repeatCount', 'indefinite');
+        am.setAttribute('path', `M50,50 L${x},${y}`); p.appendChild(am); pulses.appendChild(p);
+      }
+      const b = document.createElement('button');
+      b.className = 'mod' + (ok ? '' : ' dev'); b.style.setProperty('--c', c); b.style.left = x + '%'; b.style.top = y + '%';
+      b.textContent = name; b.setAttribute('aria-label', `${name}, ${sec} section, ${ok ? 'working' : 'in development'}`);
+      b.addEventListener('click', () => pick(b, ln, sec, name, ok, text, c));
+      orbit.appendChild(b); all.push([b, ln, sec, name, ok, text, c]);
+    });
+  });
+  function pick(b, ln, sec, name, ok, text, c){
+    all.forEach(([x, l]) => { x.setAttribute('aria-pressed', x === b); l.classList.toggle('on', l === ln); });
+    read.style.setProperty('--c', c);
+    read.innerHTML = `<div class="k">${sec} › ${name} · ${ok ? 'WORKING' : 'IN DEVELOPMENT'}</div><p class="t-p"></p>`;
+    KB.type(read.querySelector('p'), text, 90); KB.twitch(read); KB.beep(880, 40);
+  }
+  document.querySelectorAll('[data-pane]').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-pane]').forEach(x => x.setAttribute('aria-pressed', x === btn));
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + btn.dataset.pane));
+    KB.twitch(document.getElementById('p-' + btn.dataset.pane)); KB.beep(520, 40);
+  }));
+  const built = all.filter(a => a[4]).length;
+  document.getElementById('statusBar').innerHTML = `<div class="t-label">${built} of ${all.length} modules working</div>` + KB.bar(built / all.length);
+  let tour = null;
+  document.getElementById('tour').addEventListener('click', () => {
+    if (tour){ clearInterval(tour); tour = null; return; }
+    let i = 0; const step = () => { pick(...all[i++ % all.length]); }; step(); tour = setInterval(step, 2600);
+  });
+})();
+</script>
+</body>
+</html>

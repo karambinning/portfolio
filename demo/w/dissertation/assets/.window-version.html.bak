@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dissertation — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  @font-face{font-family:"DSEG7 Classic";font-weight:700;font-display:block;src:url(assets/fonts/DSEG7Classic-Bold.woff2) format("woff2")}
+  @font-face{font-family:"DSEG14 Classic";font-weight:700;font-display:block;src:url(assets/fonts/DSEG14Classic-Bold.woff2) format("woff2")}
+  /* WAR palette: the Notch WAR theme + Virtual Boy red on black, by way of the lab's tokens */
+  body{--screen:#000;--panel:#0e0101;--line:#3a0808;--lineh:#5a0c0c;--violet:#c41414;--text:#ffe6e6;--body:#ff9090;--dim:#d06464;
+       --ink2:#b00000;--label:#800000;--seg-off:#2e0606;--syn:#ffcc00;--seg:"DSEG7 Classic",var(--mono)}
+  .term{background:radial-gradient(ellipse at 50% 48%,rgba(255,26,26,.07),transparent 55%),#000}
+  .t-brand{text-shadow:0 0 16px rgba(255,48,48,.7)}
+  .t-unit{color:var(--ink2)}
+  .t-hub{border-top-color:var(--line)}
+  .t-mock{color:var(--syn);border-color:color-mix(in srgb,var(--syn) 40%,transparent);background:#000}
+  .t-body{gap:10px;padding-top:4px}
+
+  /* title row */
+  .top{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+  .top .t-title{font-size:clamp(17px,2vw,23px)}
+  .top .t-sub{font-size:clamp(12px,1.25vw,14.5px);color:var(--b)}
+  .top .t-sub2{font-size:11px;color:var(--dim);letter-spacing:.06em}
+  .syn{margin-left:auto;font:700 10px/1.3 var(--mono);letter-spacing:.12em;color:var(--syn);border:1px solid color-mix(in srgb,var(--syn) 45%,transparent);
+       padding:5px 8px;text-transform:uppercase;max-width:34ch;text-align:right}
+  .syn::before{content:"▲ ";}
+
+  /* three columns: words · globe · words */
+  .dz{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.22fr) minmax(0,1fr);grid-template-areas:"l g r";gap:16px}
+  .col{display:flex;flex-direction:column;gap:9px;min-height:0;min-width:0}
+  .col.l{grid-area:l} .col.r{grid-area:r}
+  .t-box{background:color-mix(in srgb,#0e0101 80%,transparent);padding:9px 11px;border-color:var(--lineh)}
+  .t-box::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;background:var(--a);box-shadow:0 0 8px rgba(255,48,48,.6)}
+  .hd{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}
+  .hd b{font:800 12px/1 var(--mono);letter-spacing:.12em;color:var(--a);text-shadow:0 0 10px rgba(255,48,48,.5)}
+  .hd span{font:700 9.5px/1 var(--mono);letter-spacing:.12em;color:var(--label);margin-left:auto}
+  .col .t-p{font-size:12px;line-height:1.5;max-width:none}
+  .col .t-p b{color:var(--text)}
+  .q{font:600 12.5px/1.45 var(--mono);color:var(--text)}
+  .q em{font-style:normal;color:var(--a)}
+
+  /* systemic: the 1816–2022 strip with the two build-ups it is compared against */
+  .strip{position:relative;margin-top:8px;height:44px}
+  .strip svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .strip .ax{stroke:var(--violet);stroke-width:1}
+  .strip .tk{stroke:var(--label);stroke-width:1}
+  .strip .bu{fill:rgba(255,48,48,.16);stroke:var(--a);stroke-width:1}
+  .strip text{font:700 8.5px/1 var(--mono);fill:var(--dim);letter-spacing:.06em}
+  .strip text.hi{fill:var(--a)}
+  .strip .cur{stroke:var(--text);stroke-width:1}
+  .sr{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font:700 9.5px/1.2 var(--mono);color:var(--dim);letter-spacing:.06em}
+  .sr .y{font-family:var(--seg);color:var(--a);letter-spacing:0;position:relative}
+  .sr .y::before{content:"8888";position:absolute;left:0;color:var(--seg-off);z-index:-1}
+  .sr .np{color:var(--syn)}
+
+  /* dyadic: split by time, never at random */
+  .split{display:flex;height:16px;margin-top:8px;font:700 8.5px/16px var(--mono);letter-spacing:.08em}
+  .split .tr{flex:174;background:repeating-linear-gradient(90deg,#800000 0 5px,transparent 5px 7px);color:var(--text);padding-left:5px;white-space:nowrap;overflow:hidden}
+  .split .gap{width:3px;background:#000}
+  .split .te{flex:25;background:var(--a);color:#000;text-align:center;box-shadow:0 0 10px rgba(255,48,48,.6);min-width:52px}
+  .splab{display:flex;justify-content:space-between;font:700 9px/1.3 var(--mono);color:var(--dim);margin-top:3px;letter-spacing:.06em}
+  .splab b{color:var(--a)}
+  .ask{font:700 10.5px/1.4 var(--mono);color:var(--b);margin-top:6px;letter-spacing:.02em}
+
+  /* the globe */
+  .gwrap{grid-area:g;position:relative;min-height:0;min-width:0;display:flex;flex-direction:column}
+  .stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  .stage canvas{display:block;cursor:grab;touch-action:none}
+  .stage canvas:active{cursor:grabbing}
+  .stage canvas:focus-visible{outline:1px dashed var(--a);outline-offset:-6px}
+  .brk{position:absolute;width:18px;height:18px;border:0 solid var(--violet);pointer-events:none}
+  .brk.a{left:0;top:0;border-width:1px 0 0 1px} .brk.b{right:0;top:0;border-width:1px 1px 0 0}
+  .brk.c{left:0;bottom:0;border-width:0 0 1px 1px} .brk.d{right:0;bottom:0;border-width:0 1px 1px 0}
+  .hud{position:absolute;font:700 9.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--dim);pointer-events:none}
+  .hud.tl{left:8px;top:6px} .hud.tr{right:8px;top:6px;text-align:right} .hud.bl{left:8px;bottom:6px} .hud.br{right:8px;bottom:6px;text-align:right}
+  .hud b{color:var(--a)} .hud .s{color:var(--syn)}
+  .seg{font:700 15px/1 var(--seg);color:var(--a);position:relative;display:inline-block;text-shadow:0 0 8px rgba(255,26,26,.6)}
+  .seg::before{content:attr(data-ghost);position:absolute;right:0;color:var(--seg-off);text-shadow:none;z-index:-1}
+  .gcap{text-align:center;font:700 10px/1.3 var(--mono);color:var(--syn);letter-spacing:.1em;padding-top:2px}
+
+  /* metrics: four cells, always together; the LEDs are deliberately unlit */
+  .mx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:2px}
+  .mx div{border:1px solid var(--lineh);padding:5px 5px 4px;background:#070000;min-width:0}
+  .mx i{display:block;font:700 13px/1 var(--seg);color:var(--seg-off);font-style:normal;letter-spacing:0;white-space:nowrap;overflow:hidden}
+  .mx span{display:block;font:700 8.5px/1.2 var(--mono);color:var(--text);letter-spacing:.08em;margin-top:4px;white-space:nowrap}
+  .acc{display:flex;gap:8px;align-items:baseline;margin-top:6px;font:700 10px/1.35 var(--mono);color:var(--dim)}
+  .acc s{color:var(--a);text-decoration-thickness:2px;flex:none;letter-spacing:.08em}
+
+  /* the feed of mock readouts */
+  .feedbox{flex:1;min-height:92px;display:flex;flex-direction:column}
+  .feed{list-style:none;flex:1;min-height:0;overflow:hidden;font:600 10px/1.25 var(--mono);
+        mask-image:linear-gradient(180deg,#000 55%,transparent);-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent)}
+  .feed li{display:grid;grid-template-columns:minmax(0,1fr) auto 7.2em;gap:8px;padding:2.5px 0;border-bottom:1px dashed #2a0505;color:var(--dim);animation:f-in .35s steps(3) both}
+  .feed .f-d{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .feed .f-s{letter-spacing:-1px} .feed .f-w{text-align:right;letter-spacing:.06em}
+  @keyframes f-in{from{opacity:0;transform:translateX(-6px);background:rgba(255,48,48,.25)}}
+  .ft{font:700 9px/1.3 var(--mono);color:var(--syn);letter-spacing:.08em;margin-top:4px}
+
+
+  /* ---------- the takeover ---------- */
+  .tk{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 50%,#2a0000,#000 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;overflow:hidden;cursor:pointer}
+  .tk[hidden]{display:none}
+  .tk::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.45) 0 1px,transparent 1px 3px);z-index:3}
+  .tk.flash{background:#ff3030}
+  .tk.flash .tk-txt,.tk.flash .tk-sub{color:#000;text-shadow:none}
+  .tk-txt{font:400 clamp(20px,4.4vw,52px)/1.05 'Silkscreen',var(--mono);color:#ff3030;letter-spacing:.04em;text-align:center;padding:0 16px;
+          text-shadow:-3px 0 rgba(255,0,0,.85),3px 0 rgba(120,0,0,.9),0 0 24px rgba(255,26,26,.8);position:relative;z-index:2;white-space:pre-wrap;word-break:break-word}
+  .tk-sub{font:700 clamp(10px,1.2vw,13px)/1.4 var(--mono);color:#b00000;letter-spacing:.24em;text-align:center;padding:0 16px;position:relative;z-index:2}
+  .tk-bars{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .tk-bars i{position:absolute;left:0;right:0;background:#ff3030;mix-blend-mode:screen}
+  .tk-skip{position:absolute;bottom:14px;right:16px;font:700 10px/1 var(--mono);color:#800000;letter-spacing:.14em;z-index:4}
+  .tk.out{animation:tk-out .3s cubic-bezier(.7,0,.3,1) forwards}
+  @keyframes tk-out{60%{transform:scaleY(.006);filter:brightness(3)}100%{transform:scaleY(0) scaleX(0);opacity:0}}
+  .term.hit{animation:hit .12s steps(2) infinite}
+  @keyframes hit{0%{transform:translate(-6px,0) skewX(-4deg);filter:hue-rotate(-12deg) contrast(1.6)}50%{transform:translate(5px,2px);clip-path:inset(12% 0 30% 0)}100%{transform:none}}
+
+  @media (max-width:900px){
+    .dz{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"g g" "l r"}
+    .gwrap{height:min(78vw,440px)}
+  }
+  @media (max-width:640px){
+    .dz{display:flex;flex-direction:column;flex:none}
+    .gwrap{height:min(92vw,380px);flex:none;order:-1}
+    .feedbox{flex:none;height:150px}
+    .syn{margin-left:0;text-align:left}
+    .mx i{font-size:12px}
+  }
+  @media (prefers-reduced-motion:reduce){ .feed li{animation:none} .term.hit{animation:none} }
+</style>
+</head>
+<body data-channel data-self="dissertation" data-brand="[K·A·M LAB]" data-icons="⚠ ◎ ⌖" data-unit="DISSERTATION · WAR · STEREO RED · UNIT 07" data-status="THEATRE" data-status-tail="SYNTHETIC"
+      data-mock="synthetic · nothing on screen is a research result" style="--a:#ff3030;--b:#ff5050">
+<div class="term" id="term">
+  <header data-frame></header>
+  <main class="t-body">
+    <div class="top">
+      <div>
+        <div class="t-title" id="ttl">Great Power War as a Process</div>
+        <div class="t-sub">What structural indicators of systemic conflict can, and cannot, predict</div>
+        <div class="t-sub2">Dissertation · final year · in progress</div>
+      </div>
+      <div class="syn">Synthetic display. Nothing on screen is a research result.</div>
+    </div>
+
+    <div class="dz">
+      <div class="col l">
+        <p class="q">Major war read as a <em>long structural process</em>, not a dated event. Two tiers, two different questions.</p>
+
+        <section class="t-box" aria-labelledby="h-sys">
+          <div class="hd"><b id="h-sys">SYSTEMIC TIER</b><span>NO PROBABILITY</span></div>
+          <p class="t-p">The condition of the <b>international system from 1816 to 2022</b>, compared with the build-ups to <b>1914</b> and <b>1939</b>. It describes how close the system's structure looks to those two moments. It does not attach a probability to war.</p>
+          <div class="strip" aria-hidden="true"><svg id="strip"></svg></div>
+          <div class="sr" aria-hidden="true"><span>SCAN <span class="y" id="yr">1816</span></span><span>VS BUILD-UPS <b style="color:var(--a)">1914 · 1939</b></span><span class="np">P(WAR) — NONE</span></div>
+        </section>
+
+        <section class="t-box" aria-labelledby="h-dy">
+          <div class="hd"><b id="h-dy">DYADIC TIER</b><span>PAIRS OF STATES</span></div>
+          <p class="t-p">Asks whether a <b>pair of states</b> starts a militarised dispute the <b>next year</b>. Trained on 1816–1989, tested on 1990–2014: split by time, <b>never at random</b>, so the model never sees the future it is tested on.</p>
+          <div class="split" aria-hidden="true"><div class="tr">TRAIN</div><div class="gap"></div><div class="te">TEST</div></div>
+          <div class="splab" aria-hidden="true"><span>1816</span><span><b>1989 │ 1990</b></span><span>2014</span></div>
+          <div class="ask">› pair (A, B) in year t → dispute begins in t + 1 ?</div>
+        </section>
+      </div>
+
+      <div class="gwrap">
+        <div class="stage" id="stage">
+          <canvas id="globe" tabindex="0" role="img" aria-label="A rotating wireframe globe showing synthetic activity: pulsing hotspots and arcs between pairs of states. Mock data; drag or use the arrow keys to turn it."></canvas>
+          <i class="brk a"></i><i class="brk b"></i><i class="brk c"></i><i class="brk d"></i>
+          <div class="hud tl"><b>THEATRE</b> ▸ <span class="s">SYNTHETIC</span><br>LENS · RISK (MOCK)</div>
+          <div class="hud tr">DYADS <span class="seg" id="nArc" data-ghost="88">07</span><br>HOTSPOTS <span class="seg" id="nHot" data-ghost="88">00</span></div>
+          <div class="hud bl" id="ll">λ 000.0° φ 00.0°</div>
+          <div class="hud br">DRAG · ←↑→↓</div>
+        </div>
+        <div class="gcap">MOCK ASSET · RANDOM ACTIVITY · NOT A MODEL OUTPUT</div>
+      </div>
+
+      <div class="col r">
+        <section class="t-box" aria-labelledby="h-mx">
+          <div class="hd"><b id="h-mx">HONEST SCORING</b><span>ALWAYS TOGETHER</span></div>
+          <div class="mx" aria-label="Every result reports four measures together">
+            <div><i aria-hidden="true">8.888</i><span>BASE RATE</span></div>
+            <div><i aria-hidden="true">8.888</i><span>AUROC</span></div>
+            <div><i aria-hidden="true">8.888</i><span>AUPR</span></div>
+            <div><i aria-hidden="true">8.888</i><span>BRIER</span></div>
+          </div>
+          <p class="t-p" style="margin-top:7px">Every result reports all four, against <b>honest baselines</b>. The LEDs stay dark here on purpose: this page shows no results.</p>
+          <div class="acc"><s>ACCURACY</s><span>Predicting "no war" is almost always right, so accuracy rewards silence.</span></div>
+        </section>
+
+        <section class="t-box feedbox" aria-labelledby="h-fd">
+          <div class="hd"><b id="h-fd">DYAD READOUT</b><span>SYN · RANDOM</span></div>
+          <ul class="feed" id="feed" aria-hidden="true"></ul>
+          <div class="ft">▲ RANDOM IDS AND TIERS · NOT DATA · NOT A FORECAST</div>
+        </section>
+
+        <section class="t-box" aria-labelledby="h-lab">
+          <div class="hd"><b id="h-lab">THE LAB</b><span>BUILT FOR IT</span></div>
+          <p class="t-p">The dissertation incorporates its own forecasting software: <b>the lab</b>, a local research instrument with this globe as its theatre. Next year: a <b>master's in International Security</b>.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" id="bRun" aria-pressed="false"><span>‖ PAUSE</span></button>
+    <button class="t-btn" id="bArc" aria-pressed="true"><span>DYADS</span></button>
+    <button class="t-btn" id="bHot" aria-pressed="true"><span>HOTSPOTS</span></button>
+    <button class="t-btn" id="bTk"><span>⚠ TAKEOVER</span></button>
+    <span class="sp"></span>
+  </div>
+  <nav data-hub></nav>
+</div>
+
+<div class="tk" id="tk" hidden aria-hidden="true">
+  <div class="tk-bars" id="tkBars"></div>
+  <div class="tk-txt" id="tkTxt"></div>
+  <div class="tk-sub" id="tkSub"></div>
+  <span class="tk-skip">[ CLICK · ANY KEY ▸ SKIP ]</span>
+</div>
+
+<script src="../../_frame/frame.js"></script>
+<script src="assets/d3.v7.9.0.min.js"></script>
+<script src="assets/topojson-client.v3.1.0.min.js"></script>
+<script src="assets/world-110m.js"></script>
+<script src="assets/globe.js"></script>
+<script>
+(() => {
+  const reduce = KB.reduce, $ = id => document.getElementById(id);
+
+  /* ---------- arrival: the evil takeover (≤1.8 s, skippable, skipped under reduced motion) ---------- */
+  const tk = $('tk'), tkTxt = $('tkTxt'), tkSub = $('tkSub'), tkBars = $('tkBars'), term = $('term');
+  const NOISE = '█▓▒░#%&@$!?<>/\\|=+*01ΣΞΔ¥§';
+  const scramble = (s, f) => s.split('').map(ch => ch === ' ' || ch === '\n' || Math.random() < f ? ch : NOISE[Math.floor(Math.random() * NOISE.length)]).join('');
+  let tkRaf = 0, tkDone = null;
+  function takeover(){
+    if (reduce) return;
+    cancelAnimationFrame(tkRaf);
+    tk.hidden = false; tk.classList.remove('out'); term.style.visibility = 'hidden';
+    const start = performance.now(), A = 'WAR.SYS\nOVERRIDE', B = 'GREAT POWER WAR\nAS A PROCESS';
+    const finish = () => {
+      if (tkDone === null) return; tkDone = null;
+      cancelAnimationFrame(tkRaf); term.classList.remove('hit'); term.style.visibility = '';
+      term.classList.remove('on'); void term.offsetWidth; term.classList.add('on');
+      tk.classList.add('out'); setTimeout(() => { tk.hidden = true; tkBars.innerHTML = ''; }, 300);
+      removeEventListener('keydown', finish, true); tk.removeEventListener('pointerdown', finish);
+    };
+    tkDone = finish;
+    addEventListener('keydown', finish, true); tk.addEventListener('pointerdown', finish);
+    const frame = now => {
+      const t = now - start;
+      tk.classList.toggle('flash', t < 110 || (t > 520 && t < 570) || (t > 1080 && t < 1120));
+      if (t < 1050){
+        tkTxt.textContent = scramble(A, Math.max(0, (t - 200) / 700));
+        tkSub.textContent = scramble('SIGNAL CAPTURED · CHANNEL 07 · DISSERTATION', Math.max(0, (t - 300) / 600));
+      } else if (t < 1450){
+        tkTxt.textContent = scramble(B, (t - 1050) / 300);
+        tkSub.textContent = 'STRUCTURE · NOT A DATED EVENT';
+      } else { tkTxt.textContent = B; }
+      // tearing bars
+      if (t < 1300 && Math.random() < .55){
+        tkBars.innerHTML = Array.from({ length: 2 + Math.floor(Math.random() * 5) }, () =>
+          `<i style="top:${Math.random() * 100}%;height:${1 + Math.random() * 18}px;opacity:${(.15 + Math.random() * .5).toFixed(2)};transform:translateX(${(Math.random() * 40 - 20).toFixed(0)}px)"></i>`).join('');
+        tkTxt.style.transform = `translate(${(Math.random() * 10 - 5).toFixed(1)}px,${(Math.random() * 4 - 2).toFixed(1)}px)`;
+      } else if (t >= 1300){ tkBars.innerHTML = ''; tkTxt.style.transform = ''; }
+      if (t > 1450) return finish();
+      tkRaf = requestAnimationFrame(frame);
+    };
+    tkRaf = requestAnimationFrame(frame);
+  }
+  $('bTk').addEventListener('click', () => { KB.beep(110, 160, .05); takeover(); });
+  if (reduce) term.classList.add('on'); else takeover();
+
+  /* ---------- the globe (mock asset) ---------- */
+  const pad2 = n => String(n).padStart(2, '0');
+  const g = WarGlobe({
+    canvas: $('globe'), stage: $('stage'), feed: $('feed'), reduce,
+    onCount(a, h, rot){
+      $('nArc').textContent = pad2(a); $('nHot').textContent = pad2(h);
+      const lon = ((-rot[0] % 360) + 540) % 360 - 180, lat = -rot[1];
+      $('ll').textContent = `λ ${lon >= 0 ? '+' : '−'}${Math.abs(lon).toFixed(1).padStart(5, '0')}° φ ${lat >= 0 ? '+' : '−'}${Math.abs(lat).toFixed(1).padStart(4, '0')}°`;
+    },
+  });
+  const run = $('bRun');
+  if (reduce){ run.querySelector('span').textContent = '▸ RUN'; }
+  run.addEventListener('click', () => {
+    const on = g.toggle(); run.querySelector('span').textContent = on ? '‖ PAUSE' : '▸ RUN'; run.setAttribute('aria-pressed', !on); KB.beep(on ? 660 : 330, 50);
+  });
+  [['bArc', 'arcs'], ['bHot', 'hot']].forEach(([b, fn]) => $(b).addEventListener('click', e => {
+    const btn = e.currentTarget, on = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', on); g[fn](on); KB.beep(on ? 880 : 440, 40);
+  }));
+
+  /* ---------- systemic strip: 1816–2022 scanned against the 1914 and 1939 build-ups ---------- */
+  const svg = d3.select('#strip'), box = $('strip').parentNode;
+  let x;
+  function strip(){
+    const w = box.clientWidth; if (!w) return;
+    x = d3.scaleLinear([1816, 2022], [0, w]);
+    svg.selectAll('*').remove();
+    svg.append('line').attr('class', 'ax').attr('x1', 0).attr('x2', w).attr('y1', 26).attr('y2', 26);
+    d3.range(1820, 2021, 10).forEach(y => svg.append('line').attr('class', 'tk').attr('x1', x(y)).attr('x2', x(y)).attr('y1', 26).attr('y2', y % 50 === 0 ? 33 : 29));
+    [1850, 1900, 1950, 2000].forEach(y => svg.append('text').attr('x', x(y)).attr('y', 43).attr('text-anchor', 'middle').text(y));
+    [[1904, 1914], [1930, 1939]].forEach(([a, b]) => {
+      svg.append('rect').attr('class', 'bu').attr('x', x(a)).attr('width', x(b) - x(a)).attr('y', 12).attr('height', 14);
+      svg.append('text').attr('class', 'hi').attr('x', x(b)).attr('y', 8).attr('text-anchor', 'end').text(b);
+    });
+    svg.append('line').attr('class', 'cur').attr('id', 'cur').attr('y1', 10).attr('y2', 30);
+    paint(curY);
+  }
+  let curY = 1816;
+  function paint(y){ curY = y; if (!x) return; svg.select('#cur').attr('x1', x(y)).attr('x2', x(y)); $('yr').textContent = Math.round(y); }
+  new ResizeObserver(strip).observe(box); strip();
+  if (!reduce){
+    let last = performance.now();
+    const scan = now => { if (!document.hidden && g.running){ curY += (now - last) * 0.02; if (curY > 2022) curY = 1816; paint(curY); } last = now; requestAnimationFrame(scan); };
+    requestAnimationFrame(scan);
+  } else paint(1914);
+})();
+</script>
+</body>
+</html>

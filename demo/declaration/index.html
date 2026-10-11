@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Declaration System (replica)</title>
+<meta name="description" content="Interactive replica of the Command dashboard's AI Declaration panel: log AI-assisted sessions and generate a three-step declaration, on demo data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ═══ COMMAND replica · KAM palette (from Command.html :root + RESET) ═══ */
+  :root{
+    --zone-c:#00d4ff;
+    --av-bg:#04080f; --av-text:#aacce0;
+    --av-yerdad:#00d4ff; --av-scout:#00ff88; --av-builder:#ff7700; --av-analyst:#ffcc00;
+    --av-reviewer:#eef6ff; --av-envoy:#44aaff; --av-archivist:#aa66ff; --av-sentinel:#ff3355;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'IBM Plex Mono','SF Mono',Menlo,monospace;background:#070e1c;color:#eef6ff;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  ::selection{background:#00d4ff44;color:#fff}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:#070e1c}
+  ::-webkit-scrollbar-thumb{background:#3a5c7a;border-radius:0}
+  ::-webkit-scrollbar-thumb:hover{background:#00d4ff}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes tpulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+  @keyframes scanline{0%{top:38px;opacity:0}10%{opacity:.6}90%{opacity:.6}100%{top:100%;opacity:0}}
+  @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  @keyframes rowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @keyframes cortexNodePulse{0%,100%{opacity:.6}50%{opacity:1}}
+  :focus-visible{outline:1px solid var(--zone-c);outline-offset:1px}
+
+  /* ═══ APP LAYOUT · header / agent-view rail / workspace / ticker ═══ */
+  .app{display:grid;grid-template-rows:44px 1fr 30px;grid-template-columns:clamp(210px,24vw,250px) 1fr;height:100vh;width:100vw;gap:1px;background:#00d4ff15}
+  .header{grid-column:1/-1;grid-row:1}
+  .brain{grid-column:1;grid-row:2}
+  .work{grid-column:2;grid-row:2}
+  .ticker{grid-column:1/-1;grid-row:3}
+
+  .header{background:#070e1c;border-bottom:1px solid var(--zone-c);display:flex;align-items:stretch;z-index:20;position:relative;
+    box-shadow:0 1px 0 var(--zone-c),0 6px 32px color-mix(in srgb,var(--zone-c) 22%,transparent);transition:border-color .6s,box-shadow .6s}
+  .header-left{display:flex;align-items:stretch;flex:0 0 auto;height:100%}
+  .brand{font-size:10px;color:#00d4ff;text-shadow:0 0 8px #00d4ff66;letter-spacing:5px;font-weight:700;display:flex;align-items:center;padding:0 14px;border-right:1px solid #1e3a5f;white-space:nowrap;cursor:default}
+  .brand .dot{color:#00ff88;margin-right:6px;animation:pulse 2.4s ease-in-out infinite}
+  .hbtn{display:flex;align-items:center;height:100%;padding:0 12px;border:none;border-right:1px solid #1e3a5f;background:transparent;color:#6a8eaa;font-size:9px;letter-spacing:2px;transition:color .15s,background .15s;white-space:nowrap}
+  .hbtn:hover{background:#00d4ff10;color:#00d4ff}
+  #yerdad-jump-chip{display:flex;align-items:center;gap:6px;align-self:center;background:transparent;border:1px solid #aa66ff66;color:#aa66ff;font-size:10px;letter-spacing:2px;padding:5px 10px;margin:0 8px;transition:filter .12s,border-color .12s;white-space:nowrap}
+  #yerdad-jump-chip:hover{filter:brightness(1.4);border-color:#aa66ff}
+  .yj-dot{width:6px;height:6px;border-radius:50%;background:#aa66ff;box-shadow:0 0 6px #aa66ff;animation:pulse 1.6s infinite}
+  .livestrip{display:flex;flex:1;flex-wrap:nowrap;align-items:stretch;overflow-x:auto;overflow-y:hidden;height:100%;min-width:0}
+  .livestrip::-webkit-scrollbar{height:2px}
+  .live-stat{display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid #1e3a5f;height:100%;flex-shrink:0;white-space:nowrap}
+  .live-stat:hover{background:color-mix(in srgb,var(--zone-c) 6%,transparent)}
+  .live-stat-icon{font-size:11px;line-height:1}
+  .live-stat-val{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .live-stat-cap{font-size:7px;color:#4a6888;letter-spacing:2px;margin-left:3px}
+  .header-right{display:flex;align-items:stretch;flex:0 0 auto}
+  .header-right>*{display:flex;align-items:center;padding:0 12px;border:none;border-left:1px solid #1e3a5f;background:transparent;white-space:nowrap}
+  .clock{font-variant-numeric:tabular-nums;color:#00d4ff;letter-spacing:2px;font-size:11px}
+
+  /* ═══ BRAIN RAIL · AGENT VIEW ═══ */
+  .brain{background:#070e1c;border-right:1px solid color-mix(in srgb,var(--zone-c) 30%,#3a5c7a 70%);overflow:hidden;min-height:0;display:grid}
+  .cortex{background:#050a14;position:relative;overflow:hidden;box-shadow:inset 0 0 60px color-mix(in srgb,var(--zone-c) 12%,transparent)}
+  #agent-view-rail{display:flex;flex-direction:column;height:100%;padding:10px 12px;gap:10px;color:#aacce0;overflow-y:auto}
+  .av-lab{font-size:8px;color:#1e3a5f;letter-spacing:3px}
+  .av-agent-row{display:grid;grid-template-columns:8px 1fr auto;gap:6px;align-items:center;padding:3px 5px;border-left:2px solid currentColor;opacity:.5;transition:opacity .3s,background .3s}
+  .av-agent-row.on{opacity:1;background:color-mix(in srgb,currentColor 7%,transparent)}
+  .av-agent-row .d{width:6px;height:6px;background:currentColor;border-radius:50%}
+  .av-agent-row.on .d{box-shadow:0 0 6px currentColor;animation:pulse 1s infinite}
+  .av-agent-row .t{font-size:9px;color:var(--av-text);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .av-agent-row strong{color:currentColor}
+  .av-agent-row .s{font-size:7px;color:#4a6888;letter-spacing:2px}
+  .av-agent-row.on .s{color:currentColor}
+  .av-agent-row[data-agent="scout"]{color:var(--av-scout)}
+  .av-agent-row[data-agent="builder"]{color:var(--av-builder)}
+  .av-agent-row[data-agent="analyst"]{color:var(--av-analyst)}
+  .av-agent-row[data-agent="reviewer"]{color:var(--av-reviewer)}
+  .av-agent-row[data-agent="envoy"]{color:var(--av-envoy)}
+  .av-agent-row[data-agent="archivist"]{color:var(--av-archivist)}
+  .av-agent-row[data-agent="sentinel"]{color:var(--av-sentinel)}
+
+  /* ═══ WORKSPACE · tabs + views ═══ */
+  .work{background:#04080f;overflow:hidden;position:relative;display:grid;grid-template-rows:38px 1fr;min-width:0}
+  .work::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,#00000060 100%);z-index:1}
+  .work::before{content:"";position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00d4ff44,transparent);pointer-events:none;z-index:3;top:38px;animation:scanline 7s linear infinite;opacity:.6}
+  .work-tabs{display:flex;border-bottom:1px solid #162540;background:#060d1a;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .work-tabs::-webkit-scrollbar{display:none}
+  .work-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#4a6888;padding:10px 16px;font-size:9px;letter-spacing:3px;transition:all .15s;white-space:nowrap;--tc:#00d4ff}
+  .work-tab[data-view="missions"]{--tc:#ff3355}.work-tab[data-view="territory"]{--tc:#00ff88}.work-tab[data-view="people"]{--tc:#44aaff}
+  .work-tab[data-view="inbox"]{--tc:#44aaff}.work-tab[data-view="timeline"]{--tc:#aa66ff}.work-tab[data-view="career"]{--tc:#ffcc00}
+  .work-tab[data-view="academic"]{--tc:#aa66ff}.work-tab[data-view="sports"]{--tc:#00ff88}.work-tab[data-view="resell"]{--tc:#ff66aa}
+  .work-tab[data-view="routine"]{--tc:#ff7a00}.work-tab[data-view="strategy"]{--tc:#aa66ff}.work-tab[data-view="skills"]{--tc:#00ff88}.work-tab[data-view="builder"]{--tc:#ff7700}
+  .work-tab:hover{color:var(--tc);filter:brightness(1.2)}
+  .work-tab.active{color:var(--tc);border-bottom-color:var(--tc);text-shadow:0 0 8px var(--tc)}
+  .work-tab[aria-disabled="true"]{opacity:.55}
+  .view{overflow:hidden;position:absolute;top:38px;left:0;right:0;bottom:0;opacity:0;transform:translateY(8px);transition:opacity .32s ease,transform .32s ease;pointer-events:none;visibility:hidden}
+  .view.active{opacity:1;transform:none;pointer-events:auto;visibility:visible;z-index:2}
+  .view-inner{height:100%;overflow-y:auto;overflow-x:hidden}
+
+  /* ═══ TICKER ═══ */
+  .ticker{background:#060d1a;border-top:1px solid #00ff8822;display:flex;align-items:center;padding:0 14px;gap:14px;overflow:hidden;position:relative}
+  .ticker-label{font-size:8px;color:#00ff88;letter-spacing:3px;font-weight:700;padding-right:14px;border-right:1px solid #1e3c58;white-space:nowrap}
+  .ticker-stream{flex:1;overflow:hidden;white-space:nowrap;display:flex;gap:28px;align-items:center;min-width:0}
+  .ticker-item{font-size:9px;color:#c0d8f0;letter-spacing:1px;animation:rowIn .4s both}
+  .ticker-item .cat{color:#00ff88;padding-right:6px}
+  .ticker-pulse{color:#00ff88;font-size:12px;line-height:0;animation:tpulse 1.6s ease-in-out infinite}
+  .replica-tag{font-size:8px;letter-spacing:2px;color:#ffcc00;border:1px solid #ffcc0055;background:#ffcc000d;padding:2px 7px;white-space:nowrap;text-transform:lowercase}
+
+  /* ═══ CARDS / PILLS / TOAST / DRAWER ═══ */
+  .card{background:#060d1a;border:1px solid #1e3c58;padding:12px 14px;transition:all .2s;box-shadow:0 2px 0 #00000050}
+  .card:hover{border-color:#00d4ff66;background:#08152e;box-shadow:0 4px 18px #00d4ff22,0 0 0 1px #00d4ff44 inset}
+  .card-title{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+  .card-meta{font-size:9px;color:#4a6888;letter-spacing:2px;margin-bottom:6px}
+  .card-body{font-size:10px;color:#c0d8f0;line-height:1.5}
+  .pill{display:inline-block;padding:2px 7px;font-size:8px;letter-spacing:2px;margin-right:4px;font-weight:700}
+  .section-label{font-size:9px;color:#1e3a5f;letter-spacing:3px;text-transform:uppercase}
+  .toast{position:fixed;bottom:42px;right:14px;max-width:calc(100vw - 28px);visibility:hidden;background:#04080f;border:1px solid #00d4ff;padding:10px 14px;font-size:10px;color:#00d4ff;box-shadow:0 8px 32px #00000099,0 0 20px #00d4ff44;z-index:300;transform:translateX(calc(100% + 40px));transition:transform .4s,visibility .4s;letter-spacing:1px}
+  .toast.show{transform:translateX(0);visibility:visible}
+  .modal-backdrop{position:fixed;inset:0;z-index:200;display:none;pointer-events:none}
+  .modal-backdrop.open{display:block}
+  .modal-backdrop.open .modal{pointer-events:auto}
+  .modal{position:fixed;top:44px;right:0;bottom:30px;background:#04080ff5;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-left:2px solid var(--zone-c);box-shadow:-12px 0 32px #000000aa,-2px 0 28px color-mix(in srgb,var(--zone-c) 22%,transparent);width:min(560px,100vw);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;animation:slideInRight .28s cubic-bezier(.22,.61,.36,1)}
+  .modal-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #3a5c7a;background:linear-gradient(180deg,#0b1830 0%,#050a14 100%)}
+  .modal-title{font-size:15px;color:var(--zone-c);letter-spacing:4px;text-shadow:0 0 10px color-mix(in srgb,var(--zone-c) 50%,transparent)}
+  .modal-sub{font-size:9px;color:#6a8eaa;letter-spacing:2px;margin-top:2px;word-break:break-all}
+  .modal-close{background:transparent;border:1px solid #3a5c7a;color:#6a8eaa;width:30px;height:30px;font-size:14px;line-height:1;flex-shrink:0;transition:all .15s}
+  .modal-close:hover{background:#ff335515;color:#ff3355;border-color:#ff3355}
+  .modal-body{overflow-y:auto;padding:18px 22px;font-size:12px;line-height:1.7;color:#b0c8e0}
+  .modal-body h1{font-size:18px;color:var(--zone-c);letter-spacing:2px;margin:0 0 12px;line-height:1.35}
+  .modal-body h2{font-size:15px;color:color-mix(in srgb,var(--zone-c) 80%,#c0d8f0);letter-spacing:3px;margin:18px 0 10px}
+  .modal-body h3{font-size:13px;color:#aa66ff;letter-spacing:2px;margin:14px 0 8px;font-weight:700}
+  .modal-body h4{font-size:12px;color:#00d4ff;letter-spacing:1px;margin:12px 0 6px;font-weight:700}
+  .modal-body p{margin-bottom:10px}
+  .modal-body strong{color:#fff;font-weight:700}
+  .modal-body em{color:#c0d8f0;font-style:italic}
+  .modal-body code{color:var(--zone-c);background:#050a14;padding:1px 6px;font-size:.9em}
+  .modal-body ul{margin:6px 0 12px 20px}
+  .modal-body li{margin-bottom:5px}
+  .modal-body hr{border:none;border-top:1px solid #3a5c7a;margin:16px 0}
+  .modal-foot{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #3a5c7a;background:#050a14;flex-wrap:wrap}
+  .modal-foot .meta{font-size:8px;color:#6a8eaa;letter-spacing:2px}
+  .modal-btn{background:transparent;border:1px solid #00d4ff66;color:#00d4ff;padding:7px 12px;font-size:9px;letter-spacing:2px;font-weight:600;transition:all .15s}
+  .modal-btn:hover{background:#00d4ff15}
+  .modal-btn.primary{border-color:#00ff88;color:#00ff88}
+  .modal-btn.primary:hover{background:#00ff8815}
+
+  /* ═══ PHONE · 720px breakpoint (Command: hide AV column, single column) ═══ */
+  @media (max-width:720px){
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr 30px}
+    .brain{display:none}
+    .work{grid-column:1}
+    .header{flex-wrap:wrap;height:auto;min-height:44px}
+    .header-left{height:44px}
+    .hbtn,.global-search,.clock,.hide-sm{display:none !important}
+    .livestrip{order:3;flex:1 1 100%;height:34px;border-top:1px solid #1e3a5f}
+    .header-right{margin-left:auto;height:44px}
+    .header-right>*{padding:0 10px}
+    .live-stat-cap{display:none}
+    .work-tab{padding:10px 12px}
+    .ticker-label{padding-right:10px}
+    .modal{width:100vw;top:0;bottom:0;border-left:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  }
+
+  :root{--zone-c:#aa66ff}
+  .app{grid-template-columns:1fr}
+  .work{grid-column:1}
+  /* AI Declaration form (Academic) · from Command.html */
+  .decl-label{display:block;font-size:9px;color:#aa66ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;font-weight:400}
+  .decl-input,.decl-textarea{width:100%;padding:8px 10px;background:#04080f;border:1px solid #1e3a5f;border-radius:0;color:#c0d8f0;font-size:11px;letter-spacing:.5px;-webkit-appearance:none;appearance:none}
+  select.decl-input{background-image:linear-gradient(45deg,transparent 50%,#aa66ff 50%),linear-gradient(135deg,#aa66ff 50%,transparent 50%);background-position:calc(100% - 13px) 50%,calc(100% - 8px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:24px}
+  input[type=date].decl-input{color-scheme:dark;min-height:34px}
+  .decl-textarea{padding:9px 11px;line-height:1.55;resize:vertical;min-height:44px}
+  .decl-input:focus,.decl-textarea:focus{outline:none;border-color:#aa66ff;box-shadow:0 0 0 1px #aa66ff}
+  .decl-input::placeholder,.decl-textarea::placeholder{color:#2c4a6a}
+  .row1{display:grid;grid-template-columns:1fr 1fr 1.4fr 150px;gap:10px;margin-bottom:10px}
+  .fld{margin-bottom:10px}
+  .abtn{background:transparent;padding:11px 18px;font-size:10px;letter-spacing:3px;font-weight:700;transition:background .15s}
+  .abtn:hover{background:color-mix(in srgb,currentColor 10%,transparent)}
+  .acad-decl{border:1px solid #aa66ff33;border-left:3px solid #aa66ff;background:#04080f;padding:10px 12px;cursor:pointer;transition:border-color .15s,background .15s;text-align:left;font:inherit;color:inherit;width:100%}
+  .acad-decl:hover{border-color:#aa66ff88;background:#0a0f1e}
+  .crumb{padding:10px 22px;border-bottom:1px solid #162540;background:#020a14;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  #decl-status{font-size:10px;color:#4a6888;letter-spacing:1px;flex:1;min-width:200px;word-break:break-word}
+  @media (max-width:860px){ .row1{grid-template-columns:1fr 1fr} }
+  @media (max-width:720px){
+    .row1{grid-template-columns:1fr}
+    .panel{padding:14px 12px !important}
+    .crumb{padding:8px 12px}
+    .abtn{flex:1 1 auto;padding:11px 10px}
+    #decl-status{min-width:100%}
+  }
+</style>
+</head>
+<body data-view="academic">
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="brand"><span class="dot">●</span>BINNING.AI · HQ</div>
+      <button id="yerdad-jump-chip" class="hide-sm" title="Not wired in this replica"><span class="yj-dot"></span>YER DAD</button>
+    </div>
+    <div class="livestrip">
+      <div class="live-stat" title="Session-log entries in this demo ledger"><span class="live-stat-icon" style="color:#aa66ff">◈</span><span class="live-stat-val" id="ls-entries">0</span><span class="live-stat-cap">LOG ENTRIES</span></div>
+      <div class="live-stat" title="Distinct assessments with entries"><span class="live-stat-icon" style="color:#00ff88">▣</span><span class="live-stat-val" id="ls-assess">0</span><span class="live-stat-cap">ASSESSMENTS</span></div>
+      <div class="live-stat" title="Declarations generated this visit"><span class="live-stat-icon" style="color:#00d4ff">⎘</span><span class="live-stat-val" id="ls-gen">0</span><span class="live-stat-cap">GENERATED</span></div>
+    </div>
+    <div class="header-right"><span class="clock" id="clock">—</span></div>
+  </header>
+
+  <main class="work">
+    <div class="work-tabs" id="work-tabs">
+      <button class="work-tab" data-view="hq" aria-disabled="true">▣ COMMAND</button>
+      <button class="work-tab" data-view="office" aria-disabled="true">⊞ OFFICE</button>
+      <button class="work-tab" data-view="career" aria-disabled="true">▲ CAREER</button>
+      <button class="work-tab" data-view="skills" aria-disabled="true">◇ SKILLS</button>
+      <button class="work-tab active" data-view="academic">◈ ACADEMIC</button>
+      <button class="work-tab" data-view="timeline" aria-disabled="true">◷ TIMELINE</button>
+      <button class="work-tab" data-view="vault" aria-disabled="true">⌕ VAULT</button>
+    </div>
+    <section class="view active" id="view-academic">
+      <div class="view-inner">
+        <div class="crumb">
+          <div>
+            <div class="section-label">DEPARTMENT · ACADEMIC</div>
+            <div style="font-size:9px;color:#4a6888;letter-spacing:2px;margin-top:2px">MODULE ▸ <span style="color:#aa66ff">DEMO101 · RESEARCH METHODS</span> <span style="color:#1e3a5f">· example module</span></div>
+          </div>
+          <span class="replica-tag">replica · demo data</span>
+        </div>
+
+        <!-- AI DECLARATION SYSTEM · Loughborough compliance -->
+        <div class="panel" style="background:#020a14;border-top:1px solid #aa66ff;padding:18px 22px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div>
+              <div style="font-size:8px;color:#1e3a5f;letter-spacing:3px">COMPLIANCE LEDGER</div>
+              <div style="font-size:14px;color:#aa66ff;letter-spacing:5px;text-shadow:0 0 12px #aa66ff44;font-weight:700;margin-top:3px">◈ AI DECLARATION · LOUGHBOROUGH</div>
+            </div>
+            <div id="decl-server-status" style="font-size:9px;color:#00ff88;letter-spacing:2px">● DEMO LEDGER · IN-BROWSER</div>
+          </div>
+
+          <div style="font-size:10px;color:#c0d8f0;line-height:1.6;margin-bottom:14px;padding:10px 14px;background:#04080f;border-left:3px solid #aa66ff">
+            Every AI-assisted academic session must be logged. This panel writes to
+            <code style="color:#aa66ff">AI-Declaration-System/logs/</code> <span style="color:#4a6888">(in this replica: memory only — nothing leaves the page)</span>.
+            <strong style="color:#ffcc00">Be exact with prompts and outputs</strong> — Loughborough requires specificity.
+            Reviewer stamps before submission.
+          </div>
+
+          <div class="row1">
+            <div>
+              <label class="decl-label" for="decl-tool">TOOL USED *</label>
+              <select id="decl-tool" class="decl-input">
+                <option value="Claude" selected>Claude</option>
+                <option value="Claude Code">Claude Code</option>
+                <option value="ChatGPT">ChatGPT</option>
+                <option value="Yer Dad (this dashboard)">Yer Dad (this dashboard)</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="decl-label" for="decl-sessionType">SESSION TYPE *</label>
+              <select id="decl-sessionType" class="decl-input">
+                <option value="Academic Work">Academic Work</option>
+                <option value="Development">Development</option>
+                <option value="Both">Both</option>
+              </select>
+            </div>
+            <div>
+              <label class="decl-label" for="decl-assessment">ASSESSMENT NAME *</label>
+              <input type="text" id="decl-assessment" class="decl-input" list="decl-assessment-list" placeholder="e.g. DEMO101 Research Methods Essay" autocomplete="off">
+              <datalist id="decl-assessment-list"></datalist>
+            </div>
+            <div>
+              <label class="decl-label" for="decl-date">DATE *</label>
+              <input type="date" id="decl-date" class="decl-input">
+            </div>
+          </div>
+
+          <div class="fld">
+            <label class="decl-label" for="decl-purpose">PURPOSE · WHAT DID YOU USE AI FOR? *</label>
+            <textarea id="decl-purpose" class="decl-textarea" rows="2" placeholder="e.g. Research-question refinement and literature-area identification for DEMO101."></textarea>
+          </div>
+          <div class="fld">
+            <label class="decl-label" for="decl-prompts">PROMPTS USED · BE SPECIFIC *</label>
+            <textarea id="decl-prompts" class="decl-textarea" rows="3" placeholder="- Discussion of [topic] features and academic relevance&#10;- Research-question refinement (iterative)&#10;- Literature-review structure discussion"></textarea>
+          </div>
+          <div class="fld">
+            <label class="decl-label" for="decl-output">OUTPUT OBTAINED *</label>
+            <textarea id="decl-output" class="decl-textarea" rows="3" placeholder="- Candidate research-question drafts&#10;- Literature-area framework&#10;- Source suggestions (to verify independently)"></textarea>
+          </div>
+          <div class="fld">
+            <label class="decl-label" for="decl-adapted">HOW DID YOU ADAPT / BUILD ON IT? * <span style="color:#ff3355">CRITICAL FOR COMPLIANCE</span></label>
+            <textarea id="decl-adapted" class="decl-textarea" rows="3" placeholder="Show you BUILT on the output, not just accepted it.&#10;- Research question developed independently over multiple iterations&#10;- All sources independently verified&#10;- All writing my own"></textarea>
+          </div>
+          <div class="fld">
+            <label class="decl-label" for="decl-ipNote">IP NOTE (OPTIONAL · for Binning.AI records)</label>
+            <textarea id="decl-ipNote" class="decl-textarea" rows="2" placeholder="e.g. Work conducted on own infrastructure; drafts kept under version control."></textarea>
+          </div>
+          <div style="margin-bottom:14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+            <div>
+              <label class="decl-label" for="decl-recording">LINKED RECORDING (OPTIONAL)</label>
+              <input type="text" id="decl-recording" class="decl-input" list="decl-recording-list" placeholder="filename of screen recording, if any" autocomplete="off">
+              <datalist id="decl-recording-list"><option value="screen-recording-demo-0412.mov"><option value="screen-recording-demo-0398.mov"></datalist>
+            </div>
+            <button id="decl-recording-latest" class="abtn" style="border:1px solid #ffcc00;color:#ffcc00;padding:8px 14px;font-size:9px;font-weight:400">↑ LATEST</button>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button id="decl-save" class="abtn" style="border:2px solid #00ff88;color:#00ff88">▣ SAVE TO LOG</button>
+            <button id="decl-generate" class="abtn" style="border:2px solid #aa66ff;color:#aa66ff">▣ GENERATE DECLARATION</button>
+            <button id="decl-view-log" class="abtn" style="border:1px solid #00d4ff;color:#00d4ff;padding:10px 16px;font-size:9px;font-weight:400">▸ VIEW LOG</button>
+            <button id="decl-clear" class="abtn" style="border:1px solid #4a6888;color:#4a6888;padding:10px 16px;font-size:9px;font-weight:400">CLEAR</button>
+            <button id="decl-example" class="abtn" title="Replica helper · fills the form with a worked example" style="border:1px dashed #ffcc0088;color:#ffcc00;padding:10px 16px;font-size:9px;font-weight:400">✎ FILL EXAMPLE</button>
+            <div id="decl-status" role="status"></div>
+          </div>
+
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid #162540">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <span style="font-size:9px;color:#aa66ff;letter-spacing:3px;font-weight:600">▸ FILED ASSESSMENTS</span>
+              <span style="flex:1"></span>
+              <span style="font-size:9px;color:#4a6888;letter-spacing:2px" id="acad-decl-count">—</span>
+            </div>
+            <div id="acad-decl-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ticker">
+    <span class="ticker-label">◉ LIVE</span>
+    <div class="ticker-stream" id="ticker-stream"><span class="ticker-item"><span class="cat">LEDGER</span>demo session logs loaded · append-only</span></div>
+    <span class="replica-tag">replica · demo data</span>
+    <span class="ticker-pulse">●</span>
+  </footer>
+</div>
+
+<!-- note drawer · same shell Command uses for openNote() -->
+<div class="modal-backdrop" id="note-modal">
+  <div class="modal" role="dialog" aria-modal="false" aria-labelledby="note-modal-title">
+    <div class="modal-head">
+      <div style="min-width:0">
+        <div class="modal-title" id="note-modal-title">NOTE</div>
+        <div class="modal-sub" id="note-modal-path">—</div>
+      </div>
+      <button class="modal-close" id="note-modal-close" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="note-modal-body"></div>
+    <div class="modal-foot">
+      <div class="meta" id="note-modal-meta">—</div>
+      <div style="display:flex;gap:6px">
+        <button class="modal-btn" id="note-modal-copy">⎘ COPY</button>
+        <button class="modal-btn primary" id="note-modal-dl">↓ .MD</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pad = (n) => String(n).padStart(2, '0');
+  const now = () => new Date();
+  const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const isoMin = (d) => `${isoDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const daysAgo = (n) => { const d = now(); d.setDate(d.getDate() - n); return isoDate(d); };
+
+  // ── server constants, ported from serve-dashboard.py (ADS_LOG_FILES · ADS_HARVARD) ──
+  const ADS_LOG_FILES = { 'Claude': 'logs/claude-sessions.md', 'Claude Code': 'logs/claude-code-sessions.md', 'ChatGPT': 'logs/chatgpt-sessions.md' };
+  const ADS_HARVARD = {
+    'Claude':      'Anthropic (2026) *Claude* [online]. Available from: https://claude.ai [Accessed {dates}].',
+    'Claude Code': 'Anthropic (2026) *Claude Code* [online]. Available from: https://claude.ai/code [Accessed {dates}].',
+    'ChatGPT':     'OpenAI (2026) *ChatGPT* [online]. Available from: https://chat.openai.com [Accessed {dates}].',
+  };
+  const STUDENT = 'Karam Binning';
+
+  // In-memory log files · header block exactly as _declaration_save initialises one
+  const LOGS = {};
+  for (const t of Object.keys(ADS_LOG_FILES)) {
+    LOGS[t] = `# ${t} Sessions — AI Declaration Log\n\nHarvard reference for this tool:\n> ${ADS_HARVARD[t].replace('{dates}', '(session dates)')}\n\n---\n\n`;
+  }
+
+  // ── _declaration_save · entry format ported verbatim ──
+  function declarationSave(body) {
+    const required = ['tool', 'sessionType', 'assessment', 'date', 'purpose', 'prompts', 'output', 'adapted'];
+    const missing = required.filter(f => !(body[f] || '').trim());
+    if (missing.length) return { status: 400, error: `missing required field(s): ${missing.join(', ')}` };
+    const tool = body.tool.trim();
+    if (!(tool in ADS_LOG_FILES)) return { status: 400, error: `unknown tool '${tool}' — must be one of: ${Object.keys(ADS_LOG_FILES).join(', ')}` };
+    const captured = isoMin(now());
+    const date = body.date.trim(), assessment = body.assessment.trim(), sessionType = body.sessionType.trim();
+    let entry = `## ${date} — ${assessment}
+
+- **Tool:** ${tool}
+- **Session Type:** ${sessionType}
+- **Assessment:** ${assessment}
+- **Date:** ${date}
+- **Captured:** ${captured}
+
+**What I used AI for**
+${body.purpose.trim()}
+
+**Prompts used**
+${body.prompts.trim()}
+
+**Output obtained**
+${body.output.trim()}
+
+**How I adapted / built on it**
+${body.adapted.trim()}
+`;
+    if ((body.ipNote || '').trim()) entry += `\n**IP note**\n${body.ipNote.trim()}\n`;
+    if ((body.recording || '').trim()) entry += `\n**Linked recording**\n\`12 - LIBRARY/Recordings/videos/${body.recording.trim()}\`\n`;
+    entry += '\n---\n\n';
+    // newest entry goes on top, below the header block
+    const existing = LOGS[tool];
+    const m = existing.match(/^(#[\s\S]*?^---\s*\n+)(?=^##|$(?![\s\S]))/m);
+    LOGS[tool] = m ? m[1] + entry + existing.slice(m.index + m[1].length) : existing.trimEnd() + '\n\n' + entry;
+    return { status: 200, ok: true, tool, path: ADS_LOG_FILES[tool], bytesWritten: entry.length, captured };
+  }
+
+  // ── _parse_log_entries ──
+  function parseLogEntries(text) {
+    const parts = text.split(/(?=^##\s)/m);
+    const entries = [];
+    for (const block of parts.slice(1)) {
+      const m = block.match(/^##\s+(.*)/);
+      const heading = m ? m[1].trim() : '';
+      let date = '', assessment = heading;
+      if (heading.includes('—')) { const i = heading.indexOf('—'); date = heading.slice(0, i).trim(); assessment = heading.slice(i + 1).trim(); }
+      const am = block.match(/^\s*-\s*\*\*Assessment:\*\*\s*(.+)$/m); if (am) assessment = am[1].trim();
+      const tm = block.match(/^\s*-\s*\*\*Tool:\*\*\s*(.+)$/m);
+      const dm = block.match(/^\s*-\s*\*\*Date(?:\s+range)?:\*\*\s*(.+)$/m); if (dm) date = dm[1].trim();
+      entries.push({ heading, date, assessment, tool: tm ? tm[1].trim() : '', body: block.trim() });
+    }
+    return entries;
+  }
+  const allEntries = () => Object.keys(LOGS).flatMap(t => parseLogEntries(LOGS[t]));
+  const assessments = () => [...new Set(allEntries().map(e => (e.assessment || '').trim()).filter(Boolean))].sort();
+
+  // ── _declaration_generate · three-step template ported from the server ──
+  function declarationGenerate(body) {
+    const assessment = (body.assessment || '').trim();
+    if (!assessment) return { status: 400, error: 'assessment required' };
+    const q = assessment.toLowerCase();
+    const perTool = {};
+    for (const tool of Object.keys(ADS_LOG_FILES)) {
+      const entries = parseLogEntries(LOGS[tool]).filter(e => (e.assessment || '').toLowerCase().includes(q));
+      if (entries.length) perTool[tool] = entries;
+    }
+    if (!Object.keys(perTool).length) return { status: 404, error: `no log entries found with assessment matching '${assessment}'`, hint: 'check your assessment name spelling — it must match how you typed it when saving entries' };
+    const student = body.studentName || STUDENT;
+    const studentId = body.studentId || '[TO COMPLETE — student ID]';
+    const module = body.module || '[TO COMPLETE — module code + name]';
+    const submission = body.submissionDate || '[TO COMPLETE — submission date]';
+    const dateRange = (entries) => {
+      const dates = [...new Set(entries.map(e => e.date).filter(Boolean))].sort();
+      if (!dates.length) return '(dates unrecorded)';
+      if (dates.length === 1) return dates[0];
+      return `${dates[0]} to ${dates[dates.length - 1]}`;
+    };
+    const vendor = { 'Claude': 'Anthropic', 'Claude Code': 'Anthropic', 'ChatGPT': 'OpenAI' };
+    const step1 = Object.keys(perTool).map(t => `- **${t} (${vendor[t] || ''})** — used across ${perTool[t].length} session(s) for this assessment.`).join('\n');
+    const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const KEYS = ['What I used AI for', 'Prompts used', 'Prompts used (exact / paraphrased)', 'Output obtained', 'How I adapted / built on it', 'IP note', 'Linked recording'];
+    const step2 = Object.entries(perTool).map(([tool, entries]) => {
+      const lines = [`### Tool: ${tool}`, '', `**Dates of use:** ${dateRange(entries)}`, ''];
+      for (const e of entries) {
+        lines.push(`#### Session — ${e.date}`, '');
+        for (const key of KEYS) {
+          const m = e.body.match(new RegExp(`\\*\\*${reEsc(key)}\\*\\*\\s*\\n+([\\s\\S]+?)(?=\\n\\s*\\*\\*[A-Z]|\\n---|$(?![\\s\\S]))`));
+          if (m) lines.push(`**${key.split(' (')[0]}**`, m[1].trim(), '');
+        }
+        lines.push('');
+      }
+      return lines.join('\n');
+    }).join('\n');
+    const step3 = Object.entries(perTool).map(([t, entries]) => `- ${(ADS_HARVARD[t] || '').replace('{dates}', dateRange(entries))}`).join('\n');
+    const recs = [];
+    for (const entries of Object.values(perTool)) for (const e of entries) {
+      const m = e.body.match(/\*\*Linked recording\*\*\s*\n+[`']?([^\n`']+)[`']?/m);
+      if (m) recs.push(m[1].trim().replace(/^[`']+|[`']+$/g, ''));
+    }
+    const recordingsBlock = recs.length ? ['- **Session video recordings** (in-vault):', ...recs.map(r => `  - \`${r}\``)].join('\n') + '\n' : '';
+    const nowIso = isoMin(now());
+    const declaration = `# AI Usage Declaration — ${assessment}
+
+**Student:** ${student}
+**Student ID:** ${studentId}
+**Module:** ${module}
+**Assessment:** ${assessment}
+**Submission date:** ${submission}
+
+This declaration follows the Loughborough University three-step format for
+acknowledging AI-tool use in academic work.
+
+---
+
+## STEP 1 — ACKNOWLEDGEMENT
+
+In the preparation of this assessment I have used the following AI tool(s):
+
+${step1}
+
+---
+
+## STEP 2 — DESCRIPTION
+
+${step2}
+
+---
+
+## STEP 3 — REFERENCES
+
+AI tools are cited in Harvard format:
+
+${step3}
+
+---
+
+## SUPPORTING EVIDENCE
+
+- Session logs: \`AI-Declaration-System/logs/\`
+${recordingsBlock}- **Google Drive Video Evidence: [LINK TO BE ADDED]**
+
+---
+
+**Declaration**
+
+I confirm that this declaration is accurate, that all AI outputs used in this
+submission have been critically evaluated and built upon, and that the
+substantive intellectual content of the submission is my own work.
+
+Signed: ${student}
+Date: ${submission}
+
+---
+
+*Auto-generated from AI-Declaration-System logs at ${nowIso}. The session logs
+themselves are the authoritative source record — this file is derived output.*
+`;
+    const slug = assessment.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const d = now();
+    const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    return { status: 200, ok: true, assessment, tools: Object.keys(perTool), entryCount: Object.values(perTool).reduce((a, v) => a + v.length, 0), declaration, path: `declarations/generated/${slug}-${stamp}.md` };
+  }
+
+  // ── seed · generic example sessions (no real modules) ──
+  const SEED = [
+    { tool:'Claude', sessionType:'Academic Work', assessment:'DEMO101 Research Methods Essay', date:daysAgo(9),
+      purpose:'Scoping the research question and identifying candidate literature areas.',
+      prompts:'- Asked for the main debates around measuring public trust in institutions\n- Iterated on three framings of the research question',
+      output:'- Four candidate research questions\n- A map of five literature areas to check',
+      adapted:'- Chose and rewrote the question myself after reading the core sources\n- Every suggested source located and verified in the library catalogue\n- All writing my own' },
+    { tool:'ChatGPT', sessionType:'Academic Work', assessment:'DEMO101 Research Methods Essay', date:daysAgo(6),
+      purpose:'Checking my understanding of sampling terminology.',
+      prompts:'- "Explain the difference between stratified and cluster sampling with one example each"',
+      output:'- Plain-language explanation with two worked examples',
+      adapted:'- Cross-checked against the module textbook; used the textbook definitions in the essay\n- No AI text used in the submission' },
+    { tool:'Claude', sessionType:'Academic Work', assessment:'DEMO101 Research Methods Essay', date:daysAgo(3),
+      purpose:'Feedback on the structure of my methods section.',
+      prompts:'- Pasted my own outline and asked where the argument was weakest',
+      output:'- Note that the limitations paragraph came too late\n- Suggestion to justify the sample size earlier',
+      adapted:'- Moved limitations forward and rewrote the justification in my own words\n- Rejected a suggestion to add a second method (out of scope)',
+      recording:'screen-recording-demo-0398.mov' },
+    { tool:'Claude Code', sessionType:'Development', assessment:'DEMO204 Data Analysis Report', date:daysAgo(4),
+      purpose:'Debugging a plotting script for the report figures.',
+      prompts:'- Asked why the histogram bins were misaligned and how to fix the axis labels',
+      output:'- Explanation of the off-by-one in the bin edges and a corrected snippet',
+      adapted:'- Applied the fix, re-ran on my own data, checked every figure by hand\n- Analysis and interpretation entirely my own' },
+  ];
+  SEED.forEach(declarationSave);
+
+  // ── UI wiring · mirrors Command.html's AI DECLARATION block ──
+  const FIELDS = ['tool', 'sessionType', 'assessment', 'date', 'purpose', 'prompts', 'output', 'adapted', 'ipNote', 'recording'];
+  const _declPayload = () => Object.fromEntries(FIELDS.map(f => [f, ($('decl-' + f)?.value || '').trim()]));
+  function _declStatus(msg, col) { const el = $('decl-status'); el.textContent = msg; el.style.color = col || '#4a6888'; }
+  let generated = 0;
+
+  function refreshAssessments() {
+    const items = assessments();
+    $('decl-assessment-list').innerHTML = items.map(a => `<option value="${esc(a)}">`).join('');
+    $('acad-decl-count').textContent = items.length + ' DECLARATION' + (items.length === 1 ? '' : 'S');
+    const entries = allEntries();
+    $('ls-entries').textContent = entries.length;
+    $('ls-assess').textContent = items.length;
+    $('acad-decl-list').innerHTML = items.length ? items.slice(0, 8).map(a => {
+      const es = entries.filter(e => e.assessment === a);
+      const last = es.map(e => e.date).sort().pop() || '';
+      const tools = [...new Set(es.map(e => e.tool))].join(' · ');
+      return `<button class="acad-decl" data-title="${esc(a)}" type="button">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <span style="font-size:10px;color:#aa66ff;letter-spacing:2px;font-weight:600">${esc(a.split(' ')[0])}</span>
+          <span style="font-size:8px;color:#ffcc00;letter-spacing:2px;padding:1px 5px;background:#ffcc0014">DRAFT</span>
+        </div>
+        <div style="font-size:10px;color:#c0d8f0;margin-top:5px;line-height:1.4">${esc(a.slice(0, 70))}</div>
+        <div style="font-size:8px;color:#4a6888;letter-spacing:2px;margin-top:4px">${es.length} SESSION${es.length === 1 ? '' : 'S'} · ${esc(tools)} · LAST ${esc(last)}</div>
+      </button>`;
+    }).join('') : '<div style="color:#1e3a5f;font-size:9px;letter-spacing:2px;padding:14px 8px">no declarations filed yet · fill the form above + SAVE TO LOG</div>';
+  }
+  $('acad-decl-list').addEventListener('click', (e) => {
+    const el = e.target.closest('.acad-decl'); if (!el) return;
+    const a = $('decl-assessment'); a.value = el.dataset.title; a.dispatchEvent(new Event('input'));
+    _declStatus('assessment set · ' + el.dataset.title + ' · now GENERATE DECLARATION', '#aa66ff');
+    a.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  $('decl-date').value = isoDate(now());
+
+  $('decl-save').addEventListener('click', async () => {
+    const p = _declPayload();
+    if (!p.tool || !p.sessionType || !p.assessment || !p.date || !p.purpose || !p.prompts || !p.output || !p.adapted) {
+      _declStatus('✗ FILL ALL REQUIRED FIELDS (marked *)', '#ff3355'); return;
+    }
+    _declStatus('⌛ saving…', '#ffcc00');
+    await new Promise(r => setTimeout(r, 350));
+    const d = declarationSave(p);
+    if (d.status !== 200) {
+      _declStatus('✗ HTTP ' + d.status + ' · ' + d.error + ' · falling back to clipboard', '#ff7700');
+      try { await navigator.clipboard.writeText(JSON.stringify(p, null, 2)); } catch {}
+      return;
+    }
+    _declStatus('✓ SAVED · ' + d.path, '#00ff88');
+    tick('LOG', `${p.tool} · ${p.assessment} · ${p.date}`);
+    refreshAssessments();
+  });
+
+  $('decl-generate').addEventListener('click', async () => {
+    _declStatus('⌛ generating…', '#aa66ff');
+    await new Promise(r => setTimeout(r, 450));
+    const d = declarationGenerate(_declPayload());
+    if (d.status !== 200) { _declStatus('✗ generation failed: HTTP ' + d.status + ' · ' + d.error, '#ff3355'); return; }
+    generated++; $('ls-gen').textContent = generated;
+    _declStatus(`✓ GENERATED · ${d.path} · ${d.entryCount} session(s) · ${d.tools.join(', ')}`, '#00ff88');
+    tick('DECLARE', `${d.assessment} · ${d.entryCount} session(s)`, '#aa66ff');
+    openDoc(d.path, d.declaration);
+  });
+
+  $('decl-view-log').addEventListener('click', () => {
+    const md = Object.keys(LOGS).map(t => LOGS[t].trimEnd()).join('\n\n');
+    openDoc('AI-Declaration-System/logs/session-logs.md', md, 'SESSION LOGS');
+  });
+  $('decl-clear').addEventListener('click', () => {
+    ['decl-purpose', 'decl-prompts', 'decl-output', 'decl-adapted', 'decl-ipNote', 'decl-recording'].forEach(id => { $(id).value = ''; });
+    _declStatus('cleared', '#4a6888');
+  });
+  $('decl-recording-latest').addEventListener('click', () => {
+    $('decl-recording').value = 'screen-recording-demo-0412.mov';
+    _declStatus('latest recording · screen-recording-demo-0412.mov', '#ffcc00');
+  });
+  $('decl-example').addEventListener('click', () => {
+    const ex = { tool:'Claude', sessionType:'Academic Work', assessment:'DEMO101 Research Methods Essay', date:isoDate(now()),
+      purpose:'Proof-reading check on the discussion section for clarity (no new content).',
+      prompts:'- Pasted my own discussion section and asked which sentences were ambiguous\n- Asked whether the conclusion followed from the results as written',
+      output:'- Five sentences flagged as ambiguous\n- Note that one claim in the conclusion overstated the results',
+      adapted:'- Rewrote the flagged sentences myself; kept two as they were after checking\n- Softened the overstated claim and added the supporting figure reference\n- All writing my own',
+      ipNote:'', recording:'' };
+    for (const [k, v] of Object.entries(ex)) $('decl-' + k).value = v;
+    _declStatus('example filled · now ▣ SAVE TO LOG, then ▣ GENERATE DECLARATION', '#ffcc00');
+  });
+
+  // ── markdown → html (subset used by the declaration template) ──
+  function inline(s) {
+    return esc(s)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+      .replace(/\[([^\]]+)\]/g, '[$1]');
+  }
+  function mdToHtml(md) {
+    const out = []; let list = 0, para = [];
+    const flush = () => { if (para.length) { out.push('<p>' + para.map((l, i) => (i && /^<strong>/.test(l) ? '<br>' : (i ? ' ' : '')) + l).join('') + '</p>'); para = []; } };
+    const closeLists = (to = 0) => { while (list > to) { out.push('</ul>'); list--; } };
+    for (const raw of md.split('\n')) {
+      const line = raw.replace(/\s+$/, '');
+      let m;
+      if (!line.trim()) { flush(); closeLists(); continue; }
+      if ((m = line.match(/^(#{1,4})\s+(.*)$/))) { flush(); closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
+      if (/^---+$/.test(line)) { flush(); closeLists(); out.push('<hr>'); continue; }
+      if ((m = line.match(/^>\s?(.*)$/))) { flush(); closeLists(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); continue; }
+      if ((m = line.match(/^(\s*)-\s+(.*)$/))) {
+        flush();
+        const depth = m[1].length >= 2 ? 2 : 1;
+        while (list < depth) { out.push('<ul>'); list++; }
+        closeLists(depth);
+        out.push(`<li>${inline(m[2])}</li>`); continue;
+      }
+      closeLists(); para.push(inline(line));
+    }
+    flush(); closeLists();
+    return out.join('\n');
+  }
+
+  // ── drawer ──
+  let docText = '', docPath = '';
+  function openDoc(path, text, title) {
+    docText = text; docPath = path;
+    $('note-modal-title').textContent = title || path.split('/').pop().replace(/\.md$/, '').replace(/-/g, ' ').toUpperCase();
+    $('note-modal-path').textContent = path;
+    $('note-modal-body').innerHTML = mdToHtml(text);
+    $('note-modal-body').scrollTop = 0;
+    $('note-modal-meta').textContent = `${text.length.toLocaleString()} chars · derived output`;
+    $('note-modal').classList.add('open');
+    $('note-modal-close').focus();
+  }
+  const closeDoc = () => $('note-modal').classList.remove('open');
+  $('note-modal-close').addEventListener('click', closeDoc);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDoc(); });
+  $('note-modal-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(docText); toast('⎘ copied markdown', '#00ff88'); } catch { toast('clipboard blocked in this frame', '#ff7700'); }
+  });
+  $('note-modal-dl').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([docText], { type: 'text/markdown' }));
+    a.download = docPath.split('/').pop();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+
+  // ── chrome ──
+  let toastT;
+  function toast(msg, col) { const t = $('toast'); t.textContent = msg; t.style.color = col; t.style.borderColor = col; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+  function tick(cat, msg, col) {
+    const s = $('ticker-stream'); const el = document.createElement('span'); el.className = 'ticker-item';
+    el.innerHTML = `<span class="cat" style="color:${col || '#00ff88'}">${esc(cat)}</span>${esc(msg)}`;
+    s.prepend(el); while (s.children.length > 5) s.removeChild(s.lastChild);
+  }
+  $('work-tabs').addEventListener('click', (e) => { const b = e.target.closest('.work-tab'); if (b && b.getAttribute('aria-disabled') === 'true') toast('this tab is not part of the declaration replica', '#4a6888'); });
+  $('yerdad-jump-chip').addEventListener('click', () => toast('not wired in this replica', '#4a6888'));
+  const clock = () => { $('clock').textContent = new Date().toTimeString().slice(0, 8); };
+  setInterval(clock, 1000); clock();
+  refreshAssessments();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+K·A·M Notch window — audio licence record
+==========================================
+
+File:       assets/gymnopedie-no1.mp3  (128 kbit/s stereo MP3, 3:04, 2,938,854 bytes)
+Work:       Gymnopédie No. 1 ("Lent et douloureux"), Erik Satie (1866–1925), composed 1888
+Performer:  Robin Alciatore, piano
+Producer:   Musopen (https://musopen.org)
+Source:     Wikimedia Commons
+            https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+            Downloaded 2026-10-11 from the Commons MP3 transcode of that file:
+            https://upload.wikimedia.org/wikipedia/commons/transcoded/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg.mp3
+            (SHA-256 of the download: 664bd754fd049c9b80a3f62fd4e4138d22dad83e54eaa04ec253c5ad826af632)
+Licence:    Public domain. Commons metadata at download time: LicenseShortName "Public domain",
+            License "pd", UsageTerms "Public domain", AttributionRequired "false".
+            The composition is public domain (Satie died 1925); the recording was released
+            by Musopen into the public domain.
+Changes:    Re-encoded from the 187 kbit/s transcode to 128 kbit/s with ffmpeg to keep the
+            file under 4 MB; metadata stripped and replaced with title/performer/licence tags.
+Credit:     Not required, but given in the window: "Robin Alciatore, piano, via Musopen.
+            Public domain, from Wikimedia Commons."
+
+The other two tracks in the player ("Neon Static" by "Glass Harbour", "Paper Satellites" by
+"Lumen Drift") are invented mock entries with no audio.

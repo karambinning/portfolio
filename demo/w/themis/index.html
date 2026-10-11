@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THEMIS — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  :root{--ok:#00ff88;--abs:#ff8a3d;--ref:#ff3355}
+  .th{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;flex:1;min-height:0}
+  .left{display:flex;flex-direction:column;gap:12px;min-height:0}
+  .pane{display:none} .pane.on{display:block}
+  .pane .t-p{font-size:12.8px}
+  .pane .t-list li{font-size:12.3px;padding:4px 0 4px 18px}
+
+  /* trust boundary: official sources inside a gold dashed border, the open web outside */
+  .tb{position:relative;border:1px dashed var(--b);padding:10px 10px 8px;margin-top:4px;box-shadow:inset 0 0 22px color-mix(in srgb,var(--b) 10%,transparent)}
+  .tb .cap{position:absolute;top:-7px;left:10px;background:var(--screen);padding:0 6px;font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--b)}
+  .tb .src{display:flex;justify-content:space-between;gap:8px;font:600 11px/1.75 var(--mono);color:var(--text)}
+  .tb .src em{font-style:normal;color:var(--dim)}
+  .tb .src i{font-style:normal;color:var(--ok)}
+  .outside{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font:700 10px/1 var(--mono);letter-spacing:.06em;color:var(--dim)}
+  .outside s{color:var(--ref);text-decoration:line-through}
+
+  /* the pipeline: each gate lights as a question passes through it */
+  .pipe{display:flex;flex-direction:column;gap:3px}
+  .stg{display:grid;grid-template-columns:22px 92px minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--line);
+    font:600 11.5px/1.25 var(--mono);color:var(--dim);transition:background .2s,border-color .2s,color .2s}
+  .stg b{font-weight:800;letter-spacing:.06em;color:var(--violet)}
+  .stg .n{color:var(--line);font-weight:800}
+  .stg .r{font-size:10px;letter-spacing:.1em}
+  .stg.lit{border-color:color-mix(in srgb,var(--c,var(--a)) 60%,transparent);background:color-mix(in srgb,var(--c,var(--a)) 9%,transparent);color:var(--body)}
+  .stg.lit b,.stg.lit .n,.stg.lit .r{color:var(--c,var(--a))}
+  .stg.stop .r{text-shadow:0 0 8px currentColor}
+  .stg.off{opacity:.38}
+
+  /* right: the query terminal */
+  .right{display:flex;flex-direction:column;gap:10px;min-height:0}
+  .tally{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tally .t-stat{border:1px solid var(--line);padding:6px 10px 5px;flex-direction:row;align-items:baseline;gap:10px}
+  .tally .t-stat strong{font-size:30px;color:var(--c)}
+  .tally .t-stat span{color:var(--c)}
+  .con{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:rgba(0,0,0,.35);
+    box-shadow:inset 0 0 30px color-mix(in srgb,var(--a) 6%,transparent)}
+  .log{flex:1;min-height:0;overflow:auto;padding:10px 12px;font:500 12.5px/1.5 var(--mono);color:var(--body);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .log .sys{color:var(--dim)} .log .sys b{color:var(--a);font-weight:700}
+  .log .q{color:var(--text);margin-top:10px} .log .q::before{content:"> ";color:var(--a)}
+  .log .step{color:var(--dim);font-size:11.5px} .log .step::before{content:"  · "}
+  .log .step.ok::after{content:" ✓";color:var(--ok)}
+  .res{margin:6px 0 4px;border-left:3px solid var(--c);padding:6px 0 4px 10px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,transparent),transparent 70%)}
+  .res .tag{font:800 11px/1 var(--mono);letter-spacing:.14em;color:var(--c)}
+  .res .tag i{display:inline-block;width:8px;height:8px;background:var(--c);margin-right:7px;box-shadow:0 0 8px var(--c)}
+  .res .why{font-size:11px;color:var(--dim);margin-top:3px}
+  .conf{display:flex;align-items:center;gap:8px;margin:7px 0 2px;font:700 11px/1 var(--mono);color:var(--violet)}
+  .conf .fill{position:relative;flex:1;height:12px;background:repeating-linear-gradient(90deg,var(--line) 0 5px,transparent 5px 8px)}
+  .conf .fill i{position:absolute;inset:0;width:var(--p);background:var(--c);box-shadow:0 0 8px color-mix(in srgb,var(--c) 50%,transparent)}
+  .conf .fill u{position:absolute;top:-4px;bottom:-4px;left:var(--t);width:2px;background:var(--text)}
+  .conf .v{color:var(--c);min-width:34px}
+  .quote{margin:7px 0 0;padding:5px 8px;border:1px dashed var(--line);font-size:11.5px;color:var(--text)}
+  .quote .ref{display:block;font:700 10px/1.3 var(--mono);letter-spacing:.06em;color:var(--b);margin-bottom:2px}
+  .quote .ref em{font-style:normal;color:var(--dim)}
+  .ans{margin-top:7px;color:var(--body);font-size:12.3px}
+  .ans p+p,.ans ol+p,.ans p+ol{margin-top:5px}
+  .ans ol{padding-left:22px} .ans q{color:var(--text)} .ans q::before{content:"“"} .ans q::after{content:"”"}
+  .ans em{color:var(--text)}
+  .cite{color:var(--b);font-weight:700}
+  .decl{margin-top:6px;font-size:10px;letter-spacing:.04em;color:var(--dim)}
+  .decl b{color:var(--violet)}
+  .presets{display:flex;flex-wrap:wrap;gap:5px 6px;padding:8px 10px 0;border-top:1px solid var(--line)}
+  .pre{all:unset;cursor:pointer;font:700 10.5px/1 var(--mono);padding:5px 7px;border:1px solid var(--line);color:var(--body);white-space:nowrap}
+  .pre::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;background:var(--c);vertical-align:1px}
+  .pre:hover,.pre:focus-visible{border-color:var(--c);color:var(--text);box-shadow:0 0 10px color-mix(in srgb,var(--c) 35%,transparent)}
+  .ask{display:flex;align-items:center;gap:8px;padding:8px 10px 9px}
+  .ask label{font:800 14px/1 var(--mono);color:var(--a)}
+  .ask input{all:unset;flex:1;min-width:0;font:500 13px/1.4 var(--mono);color:var(--text);caret-color:var(--a);border-bottom:1px dashed var(--line);padding:3px 0}
+  .ask input::placeholder{color:var(--dim)}
+  .ask input:focus{border-bottom-color:var(--a)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font:700 10px/1 var(--mono);color:var(--dim);letter-spacing:.08em}
+  .legend i{display:inline-block;width:7px;height:7px;margin-right:6px;vertical-align:0}
+
+  @media (max-width:760px){
+    .th{grid-template-columns:1fr;flex:none}
+    .right{order:-1}
+    .con{min-height:430px}
+    .tally .t-stat{padding:5px 7px;gap:6px} .tally .t-stat strong{font-size:24px} .tally .t-stat span{font-size:9.5px}
+    .stg{grid-template-columns:18px 80px minmax(0,1fr)} .stg .r{grid-column:2/-1}
+  }
+</style>
+</head>
+<body data-self="themis" data-brand="[THEMIS]" data-icons="§ ¶ ⚖" data-unit="THEMIS · LEGAL RESEARCH AGENT · UNIT 03" data-status="MODELS" data-status-tail="LOCAL"
+      data-mock="mock answers · public law only" style="--a:#ffcc00;--b:#e0a526">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div>
+      <div class="t-title">Themis</div>
+      <div class="t-sub">A legal-research agent that would rather refuse than guess</div>
+      <div class="t-sub2">UK capacity law · Mental Capacity Act 2005 · Court of Protection</div>
+    </div>
+    <div class="th">
+      <div class="left">
+        <div class="pane on" id="p-what">
+          <div class="t-label">What it is</div>
+          <p class="t-p">THEMIS answers questions about UK capacity law: the <b>Mental Capacity Act 2005</b>, the <b>Court of Protection Rules</b> and the <b>Code of Practice</b>. I built it for a setting where a wrong answer has real consequences, so its first job is to know when <b>not</b> to answer.</p>
+          <p class="t-p" style="margin-top:6px">It runs entirely on one machine with local models. It quotes the law before it says anything about it, and it tells you plainly when it does not know.</p>
+        </div>
+        <div class="pane" id="p-how">
+          <div class="t-label">How it works</div>
+          <ul class="t-list">
+            <li><b>Refuses advice.</b> "Will I win?" or "what should I do?" is turned away before any search.</li>
+            <li><b>Hybrid retrieval.</b> Meaning-based search and exact keyword search (section numbers, case names) run together and are merged.</li>
+            <li><b>Abstains.</b> If the best passage falls below a confidence threshold, it says so instead of guessing.</li>
+            <li><b>Quote, then point.</b> Every point follows the verbatim text it rests on, with a citation.</li>
+            <li><b>Local models.</b> Embedding and language model run on the machine; nothing is sent out.</li>
+          </ul>
+        </div>
+        <div class="pane" id="p-sources">
+          <div class="t-label">Where its knowledge comes from</div>
+          <div class="tb" aria-label="Trust boundary: official sources only">
+            <span class="cap">TRUST BOUNDARY · OFFICIAL SOURCES ONLY</span>
+            <div class="src"><span>legislation.gov.uk</span><em>sha256 3f9a…b41d</em><i>✓</i></div>
+            <div class="src"><span>Court of Protection Rules 2017</span><em>sha256 a07c…19e2</em><i>✓</i></div>
+            <div class="src"><span>MCA Code of Practice · gov.uk</span><em>sha256 6d21…f08a</em><i>✓</i></div>
+            <div class="src"><span>Judgments · BAILII · UKSC</span><em>sha256 c4e8…72b0</em><i>✓</i></div>
+          </div>
+          <div class="outside"><span>OUTSIDE:</span><s>open web</s><s>forums</s><s>news</s><s>AI summaries</s></div>
+          <p class="t-p" style="margin-top:8px">Each document is hashed on arrival and logged in an append-only custody log; a changed file is recorded, never silently replaced.</p>
+        </div>
+        <div>
+          <div class="t-label">Every question passes these gates</div>
+          <div class="pipe" id="pipe"></div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="tally" aria-live="polite">
+          <div class="t-stat" style="--c:var(--ok)"><strong id="n-ok">0</strong><span>answered</span></div>
+          <div class="t-stat" style="--c:var(--abs)"><strong id="n-abs">0</strong><span>abstained</span></div>
+          <div class="t-stat" style="--c:var(--ref)"><strong id="n-ref">0</strong><span>refused</span></div>
+        </div>
+        <div class="con">
+          <div class="log" id="log" aria-live="polite"></div>
+          <div class="presets" id="presets" aria-label="Example questions"></div>
+          <form class="ask" id="ask"><label for="q">&gt;</label><input id="q" autocomplete="off" spellcheck="false" placeholder="ask about the Mental Capacity Act…" maxlength="200"></form>
+        </div>
+        <div class="legend"><span><i style="background:var(--ok)"></i>ANSWERED · QUOTED</span><span><i style="background:var(--abs)"></i>ABSTAINED · WEAK EVIDENCE</span><span><i style="background:var(--ref)"></i>REFUSED · ADVICE</span></div>
+      </div>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" data-pane="what" aria-pressed="true"><span>WHAT</span></button>
+    <button class="t-btn" data-pane="how"><span>HOW</span></button>
+    <button class="t-btn" data-pane="sources"><span>SOURCES</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" id="clear"><span>CLEAR</span></button>
+    <button class="t-btn" id="demo"><span>▸ DEMO</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script>
+(() => {
+  const THRESH = 0.45;
+  const LG = 'legislation.gov.uk/ukpga/2005/9';
+  // Canned, keyword-routed answers. Public law only.
+  const A = {
+    s2: { kind:'ok', conf:.94,
+      sources:[{ n:1, ref:'MCA 2005 s.2(1)', url:LG+'/section/2', quote:'a person lacks capacity in relation to a matter if at the material time he is unable to make a decision for himself in relation to the matter because of an impairment of, or a disturbance in the functioning of, the mind or brain.' },
+               { n:2, ref:'MCA 2005 s.1(2)', url:LG+'/section/1', quote:'A person must be assumed to have capacity unless it is established that he lacks capacity.' }],
+      body:'<p>The test is in s.2(1) <span class="cite">[1]</span>. It is decision-specific and time-specific; the impairment may be permanent or temporary (s.2(2)), and incapacity cannot be established merely by reference to age, appearance, or a condition or behaviour (s.2(3)).</p><p>The starting point is the presumption of capacity in s.1(2) <span class="cite">[2]</span>, displaced only on the balance of probabilities (s.2(4)). Inability to decide is defined by the functional test in s.3(1).</p>' },
+    s3: { kind:'ok', conf:.96,
+      sources:[{ n:1, ref:'MCA 2005 s.3(1)', url:LG+'/section/3', quote:'a person is unable to make a decision for himself if he is unable— (a) to understand the information relevant to the decision, (b) to retain that information, (c) to use or weigh that information as part of the process of making the decision, or (d) to communicate his decision (whether by talking, using sign language or any other means).' }],
+      body:'<p>Four abilities: <b>understand</b>, <b>retain</b>, <b>use or weigh</b>, and <b>communicate</b> <span class="cite">[1]</span>. The limbs are disjunctive: failing any one is enough.</p><p>A person is not to be regarded as unable to understand if they can understand an explanation given in a way appropriate to their circumstances (s.3(2)); retaining information only briefly does not by itself prevent a decision (s.3(3)).</p>' },
+    s15: { kind:'ok', conf:.95,
+      sources:[{ n:1, ref:'MCA 2005 s.15(1)–(2)', url:LG+'/section/15', quote:'The court may make declarations as to— (a) whether a person has or lacks capacity to make a decision specified in the declaration; (b) whether a person has or lacks capacity to make decisions on such matters as are described in the declaration; (c) the lawfulness or otherwise of any act done, or yet to be done, in relation to that person. (2) "Act" includes an omission and a course of conduct.' },
+               { n:2, ref:'MCA 2005 s.16(2)', url:LG+'/section/16', quote:'The court may— (a) by making an order, make the decision or decisions on P\'s behalf …, or (b) appoint a person (a "deputy") to make decisions on P\'s behalf …' }],
+      body:'<p>The Court of Protection may declare whether a person has or lacks capacity for a specific decision or a described class of decisions, and the lawfulness of any act done or yet to be done in relation to them <span class="cite">[1]</span>.</p><p>A declaration states the legal position. It does not make a decision on the person\'s behalf: that is the separate power in s.16 <span class="cite">[2]</span>.</p>' },
+    s16: { kind:'ok', conf:.93,
+      sources:[{ n:1, ref:'MCA 2005 s.16(1)–(2)', url:LG+'/section/16', quote:'This section applies if a person ("P") lacks capacity in relation to a matter or matters concerning— (a) P\'s personal welfare, or (b) P\'s property and affairs.' },
+               { n:2, ref:'MCA 2005 s.16(4)', url:LG+'/section/16', quote:'(a) a decision by the court is to be preferred to the appointment of a deputy to make a decision, and (b) the powers conferred on a deputy should be as limited in scope and duration as is reasonably practicable in the circumstances.' }],
+      body:'<p>Where P lacks capacity on a welfare or property-and-affairs matter <span class="cite">[1]</span>, the court may make the decision itself by order, or appoint a deputy (s.16(2)).</p><p>A court decision is preferred to appointing a deputy, and a deputy\'s powers should be as limited in scope and duration as is reasonably practicable <span class="cite">[2]</span>. Every decision remains subject to s.1 and best interests under s.4 (s.16(3)).</p>' },
+    jb: { kind:'ok', conf:.91,
+      sources:[{ n:1, ref:'A Local Authority v JB [2021] UKSC 52', url:'supremecourt.uk · judgments', quote:'Judgment of the Supreme Court (2021). Held in the corpus as a summary; read the judgment for the court\'s own words.' },
+               { n:2, ref:'MCA 2005 s.2(1)', url:LG+'/section/2', quote:'… unable to make a decision for himself in relation to the matter because of an impairment of, or a disturbance in the functioning of, the mind or brain.' }],
+      body:'<p>The Supreme Court\'s leading statement of how ss.2–3 fit together <span class="cite">[1]</span>. Summarised, not quoted:</p><ol><li>Identify the "matter" the decision relates to.</li><li>Identify the information relevant to that decision.</li><li>Ask whether the person is unable to decide under s.3.</li><li>Ask whether that inability is <em>because of</em> an impairment of the mind or brain: the causative link in s.2(1) <span class="cite">[2]</span>.</li></ol>' },
+    abstain: { kind:'abs', conf:.41,
+      why:'2 candidate passages · best 0.41, below the 0.45 threshold',
+      body:'<p>Insufficient evidence in the corpus, so no case names are given. Naming cases without a verified passage behind them is how invented citations reach a court.</p><p>Manual research needed: search the judgments (EWCOP) directly.</p>' },
+    unknown: { kind:'abs', conf:.22,
+      why:'no passage near the question · best 0.22',
+      body:'<p>That is not in the documents I hold.</p><p>This demo corpus covers MCA 2005 ss.1–3 and 15–16, and <em>A Local Authority v JB</em> [2021] UKSC 52.</p>' },
+    refuse: { kind:'ref',
+      why:'advice / outcome prediction detected · stopped before search',
+      body:'<p>THEMIS does not give legal advice or predict outcomes. It finds, quotes and cites what the law says, so a qualified lawyer can check every line.</p><p>Try asking what a section of the Mental Capacity Act says.</p>' },
+  };
+  const KIND = { ok:['ANSWERED','var(--ok)'], abs:['ABSTAINED','var(--abs)'], ref:['REFUSED','var(--ref)'] };
+  const PRESETS = [
+    ['s.2 · the capacity test', 'What is the legal test for lack of capacity under MCA 2005 s.2?', 'ok'],
+    ['s.3 · four abilities', 'What are the four limbs of the functional test in s.3(1)?', 'ok'],
+    ['s.15 · declarations', 'What declarations can the Court of Protection make under s.15?', 'ok'],
+    ['s.16 · deputies', 'When can the court appoint a deputy under s.16?', 'ok'],
+    ['JB [2021] UKSC 52', 'What did the Supreme Court decide in A Local Authority v JB?', 'ok'],
+    ['cite three EWCOP cases', 'Cite three EWCOP cases on deprivation of liberty', 'abs'],
+    ['will I win?', 'Will I win if I apply to the Court of Protection?', 'ref'],
+  ];
+  function route(raw){
+    const q = ' ' + raw.toLowerCase().replace(/\s+/g, ' ') + ' ';
+    if (/\bwill i (win|lose)\b|\bwin my\b|\bchances?\b|\bshould i\b|\badvise me\b|\badvice\b|\bpredict|\blikely (to|outcome)|\bwhat will happen\b|\bmy case\b|\bam i going to\b|\bwhat should\b/.test(q)) return 'refuse';
+    if (/\bcite (two|three|four|five|\d+|some|me)\b|\blist (of )?(the )?cases\b|\bewcop cases\b|\bcases on\b|\bcase law on\b|\bauthorities on\b/.test(q)) return 'abstain';
+    if (/\bjb\b|uksc 52|\bsupreme court\b|\blocal authority v\b/.test(q)) return 'jb';
+    if (/\bdeput(y|ies)\b|\bs\.? ?16\b|\bsection 16\b/.test(q)) return 's16';
+    if (/\bdeclar(e|ation|ations)\b|\bs\.? ?15\b|\bsection 15\b|\blawfulness\b/.test(q)) return 's15';
+    if (/\bs\.? ?3\b|\bsection 3\b|\bfunctional\b|\bfour (limbs|abilities)\b|\bunderstand\b|\bretain\b|\bweigh\b|\bcommunicate\b/.test(q)) return 's3';
+    if (/\bs\.? ?2\b|\bsection 2\b|\bcapacity\b|\bimpairment\b|\bmental capacity act\b|\bmca\b|\bpresum/.test(q)) return 's2';
+    return 'unknown';
+  }
+
+  // ---- pipeline ----
+  const STAGES = [
+    ['CLASSIFY', 'advice or prediction?', 'REFUSE'],
+    ['RETRIEVE', 'meaning + keyword search, fused', ''],
+    ['GATE', `confidence ≥ ${THRESH.toFixed(2)}?`, 'ABSTAIN'],
+    ['QUOTE', 'verbatim source text first', ''],
+    ['ANSWER', 'every point cited', ''],
+    ['DECLARE', 'not advice · audit id', ''],
+  ];
+  const pipe = document.getElementById('pipe');
+  pipe.innerHTML = STAGES.map(([k, d, r], i) => `<div class="stg" data-i="${i}"><span class="n">0${i + 1}</span><b>${k}</b><span>${d}</span><span class="r">${r ? '→ ' + r : ''}</span></div>`).join('');
+  const stg = [...pipe.children];
+  const resetPipe = () => stg.forEach(s => { s.className = 'stg'; s.style.removeProperty('--c'); });
+
+  // ---- terminal ----
+  const log = document.getElementById('log'), input = document.getElementById('q');
+  const counts = { ok:0, abs:0, ref:0 };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const wait = ms => new Promise(r => setTimeout(r, KB.reduce ? 0 : ms));
+  const hex = n => Array.from({ length:n }, () => '0123456789abcdef'[Math.random() * 16 | 0]).join('');
+  const line = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; };
+  function boot(){
+    log.innerHTML = '';
+    line('sys', '<b>THEMIS</b> · local legal research · demo corpus loaded');
+    line('sys', 'corpus: MCA 2005 · COP Rules 2017 · Code of Practice · 1 UKSC judgment');
+    line('sys', `models: local · network calls: 0 · abstain below ${THRESH.toFixed(2)}`);
+    line('sys', 'Ask a question, or pick one below. Answers are canned from public law.');
+  }
+  function confBar(v, c){
+    return `<div class="conf" style="--c:${c}">CONF [<span class="fill" style="--p:${Math.round(v * 100)}%;--t:${THRESH * 100}%"><i></i><u title="threshold"></u></span>] <span class="v">${v.toFixed(2)}</span></div>`;
+  }
+  let busy = false;
+  async function run(q){
+    q = (q || '').trim(); if (!q || busy) return;
+    busy = true; input.value = ''; resetPipe();
+    const key = route(q), ans = A[key], [tag, c] = KIND[ans.kind];
+    line('q', esc(q)); KB.beep(660, 30);
+    const light = (i, col) => { stg[i].classList.add('lit'); stg[i].style.setProperty('--c', col || 'var(--a)'); };
+    const stopAt = (i, col) => { stg[i].classList.add('lit', 'stop'); stg[i].style.setProperty('--c', col); stg.slice(i + 1).forEach(s => s.classList.add('off')); };
+    // 1 classify
+    let s = line('step', 'classify request'); light(0); await wait(320);
+    if (ans.kind === 'ref'){ s.textContent = 'classify request · advice / prediction detected'; stopAt(0, c); }
+    else {
+      s.classList.add('ok');
+      s = line('step', 'hybrid retrieval · meaning + keyword → fused'); light(1); await wait(420); s.classList.add('ok');
+      s = line('step', `confidence gate · threshold ${THRESH.toFixed(2)}`); light(2); await wait(360);
+      if (ans.kind === 'abs') stopAt(2, c);
+      else { s.classList.add('ok'); light(3); await wait(160); light(4); await wait(160); light(5); stg.forEach(x => x.style.setProperty('--c', c)); }
+    }
+    await wait(160);
+    // result
+    let h = `<div class="tag"><i></i>${tag}</div>`;
+    if (ans.why) h += `<div class="why">${ans.why}</div>`;
+    if (ans.conf != null) h += confBar(ans.conf, c);
+    (ans.sources || []).forEach(x => { h += `<div class="quote"><span class="ref">[${x.n}] ${esc(x.ref)} <em>· ${esc(x.url)}</em></span>“${esc(x.quote)}”</div>`; });
+    h += `<div class="ans">${ans.body}</div>`;
+    h += `<div class="decl"><b>DECLARATION</b> · not legal advice · qualified review required · audit themis-demo-${hex(6)}${ans.sources ? ` · ${ans.sources.length} cited` : ''}</div>`;
+    const r = line('res', h); r.style.setProperty('--c', c);
+    log.scrollTop = r.offsetTop - log.offsetTop - 40;
+    KB.twitch(r); KB.beep(ans.kind === 'ok' ? 880 : ans.kind === 'abs' ? 440 : 220, 70);
+    counts[ans.kind]++;
+    document.getElementById('n-ok').textContent = counts.ok;
+    document.getElementById('n-abs').textContent = counts.abs;
+    document.getElementById('n-ref').textContent = counts.ref;
+    busy = false;
+  }
+
+  const pre = document.getElementById('presets');
+  PRESETS.forEach(([label, q, k]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pre'; b.textContent = label;
+    b.style.setProperty('--c', KIND[k][1]); b.title = q;
+    b.addEventListener('click', () => run(q)); pre.appendChild(b);
+  });
+  document.getElementById('ask').addEventListener('submit', e => { e.preventDefault(); run(input.value); });
+  document.getElementById('clear').addEventListener('click', () => { boot(); resetPipe(); KB.beep(520, 40); });
+  document.querySelectorAll('[data-pane]').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-pane]').forEach(x => x.setAttribute('aria-pressed', x === btn));
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + btn.dataset.pane));
+    KB.twitch(document.getElementById('p-' + btn.dataset.pane)); KB.beep(520, 40);
+  }));
+  let demo = null;
+  document.getElementById('demo').addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    if (demo){ demo = null; btn.setAttribute('aria-pressed', 'false'); return; }
+    const token = demo = {}; btn.setAttribute('aria-pressed', 'true');
+    for (const i of [0, 5, 6, 1]){
+      if (demo !== token) return;
+      const q = PRESETS[i][1]; input.value = '';
+      for (const ch of q){ if (demo !== token) return; input.value += ch; await wait(18); }
+      await run(q); await wait(2400);
+    }
+    if (demo === token){ demo = null; btn.setAttribute('aria-pressed', 'false'); }
+  });
+  boot();
+})();
+</script>
+</body>
+</html>

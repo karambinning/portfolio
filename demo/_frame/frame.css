@@ -1,0 +1,121 @@
+/* K·B terminal frame — the shared window for every project.
+   Vocabulary from the K·A·M Notch terminal theme: bracketed wordmark and controls, "> TITLE_" prompt,
+   unit/status line, bracketed bars, segmented meters, a coloured hub bar, CRT scanlines and power-on.
+   Each window sets its own --a (accent) and --b (second ink) on <body>. */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Bebas+Neue&family=Silkscreen:wght@400;700&family=Press+Start+2P&display=swap');
+
+:root{
+  --screen:#07010f;  --panel:#0d0620;  --line:#2a1f4d;  --lineh:#3d2f6e;
+  --ink:#ffe400;     --pink:#ff2e88;   --violet:#6c5cff; --cyan:#00f0ff;
+  --text:#e9e4ff;    --body:#b9b0e0;   --dim:#7a6fb0;
+  /* hub colours, as on the notch hub bar */
+  --hub-hub:#8b7bff; --hub-kam:#00d4ff; --hub-command:#3388ff; --hub-work:#ff7a00; --hub-intel:#00ff88; --hub-lab:#ff3355;
+  --a:var(--ink); --b:var(--pink);
+  --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,monospace;
+  --display:'Bebas Neue',Impact,sans-serif;
+  --pixel:'Silkscreen',var(--mono);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+html,body{height:100%}
+body{background:var(--screen);color:var(--text);font:500 14px/1.55 var(--mono);-webkit-font-smoothing:antialiased;overflow:hidden}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+::selection{background:var(--a);color:var(--screen)}
+
+/* ---------- the tube ---------- */
+.term{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--a) 6%,transparent),transparent 60%),var(--screen)}
+.term::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:30;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.32) 0 1px,transparent 1px 3px)}
+/* no vignette: the screen stays evenly lit to its edges */
+.term .roll{position:absolute;left:0;right:0;height:22%;top:-22%;pointer-events:none;z-index:32;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--a) 7%,transparent) 50%,transparent);animation:t-roll 6s linear infinite}
+@keyframes t-roll{to{transform:translateY(560%)}}
+.term.on{animation:t-on .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes t-on{0%{transform:scaleY(.004) scaleX(.4);filter:brightness(5)}35%{transform:scaleY(.004) scaleX(1);filter:brightness(3)}70%{transform:scaleY(1);filter:brightness(1.3)}100%{transform:none;filter:none}}
+body{animation:t-flicker 6s steps(1) infinite}
+@keyframes t-flicker{0%,100%{opacity:1}43%{opacity:.97}44%{opacity:1}77%{opacity:.955}78%{opacity:1}}
+
+/* ---------- header ---------- */
+.t-head{display:flex;align-items:center;gap:18px;padding:14px 22px 6px;position:relative;z-index:2}
+.t-brand{font:800 18px/1 var(--mono);color:var(--a);letter-spacing:.04em;text-shadow:0 0 14px color-mix(in srgb,var(--a) 55%,transparent);white-space:nowrap}
+.t-icons{display:flex;gap:14px;color:var(--b);font-weight:700}
+.t-head .sp{flex:1}
+.t-link{font:700 13px/1 var(--mono);color:var(--a);text-decoration:none;letter-spacing:.04em;white-space:nowrap}
+.t-link:hover{text-decoration:underline}
+.t-unit{display:flex;justify-content:space-between;gap:12px;padding:2px 22px 10px 64px;font:700 11px/1.2 var(--mono);color:var(--violet);letter-spacing:.06em;position:relative;z-index:2}
+.t-unit .live{color:var(--violet)} .t-unit .live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--a);margin:0 6px 1px;box-shadow:0 0 8px var(--a);animation:t-blink 1.6s steps(1) infinite;vertical-align:middle}
+@keyframes t-blink{50%{opacity:.25}}
+
+/* ---------- prompt title ---------- */
+.t-title{font:800 clamp(18px,2.2vw,24px)/1.2 var(--mono);color:var(--a);letter-spacing:.02em;text-transform:uppercase}
+.t-title::before{content:"> ";color:var(--violet)}
+.t-title::after{content:"_";animation:t-blink 1s steps(1) infinite;margin-left:2px}
+.t-sub{font:700 clamp(14px,1.5vw,17px)/1.35 var(--mono);color:var(--b);text-transform:uppercase;margin-top:6px}
+.t-sub2{font:600 clamp(13px,1.3vw,15px)/1.4 var(--mono);color:var(--violet);text-transform:uppercase;margin-top:2px}
+
+/* ---------- body ---------- */
+.t-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;padding:10px 22px 12px;position:relative;z-index:2;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.t-p{color:var(--body);max-width:72ch;font-size:13.5px;font-weight:500}
+.t-p b{color:var(--text);font-weight:700}
+.t-label{font:700 10.5px/1.2 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.t-box{border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 70%,transparent);padding:12px 14px;position:relative}
+.t-box.hot{border-color:color-mix(in srgb,var(--a) 55%,transparent);box-shadow:inset 0 0 24px color-mix(in srgb,var(--a) 8%,transparent)}
+.t-row{display:flex;gap:14px;flex-wrap:wrap}
+.t-grid{display:grid;gap:12px}
+.t-list{list-style:none}
+.t-list li{padding:6px 0 6px 18px;position:relative;color:var(--body);font-size:13px;border-bottom:1px dashed var(--line)}
+.t-list li::before{content:"›";position:absolute;left:2px;color:var(--a)}
+.t-list li b{color:var(--text)}
+.t-stat{display:flex;flex-direction:column}
+.t-stat strong{font:400 clamp(30px,3.4vw,44px)/.95 var(--display);color:var(--a);letter-spacing:.02em}
+.t-stat span{font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.t-tag{display:inline-block;font:700 10.5px/1 var(--mono);padding:4px 7px;border:1px solid currentColor;letter-spacing:.08em;text-transform:uppercase}
+.t-honest{color:var(--ink)}
+
+/* bracketed progress bar: [██████······] */
+.t-bar{display:flex;align-items:center;gap:2px;font:700 14px/1 var(--mono);color:var(--violet)}
+.t-bar .fill{flex:1;height:16px;background:repeating-linear-gradient(90deg,var(--line) 0 5px,transparent 5px 8px);position:relative;overflow:hidden}
+.t-bar .fill i{position:absolute;inset:0;width:var(--p,40%);background:var(--a);box-shadow:0 0 10px color-mix(in srgb,var(--a) 50%,transparent);transition:width .4s}
+/* segmented level meter */
+.t-meter{display:flex;gap:3px;align-items:flex-end;height:16px}
+.t-meter i{width:9px;background:var(--line)} .t-meter i.on{background:var(--a)}
+
+/* ---------- bracketed controls ---------- */
+.t-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;padding:10px 22px 12px;border-top:1px solid var(--line);position:relative;z-index:2}
+.t-btn{all:unset;cursor:pointer;font:700 15px/1 var(--mono);color:var(--violet);white-space:nowrap;letter-spacing:.02em}
+.t-btn::before{content:"[ ";}
+.t-btn::after{content:" ]";}
+.t-btn span{color:var(--a)}
+.t-btn:hover span,.t-btn:focus-visible span,.t-btn[aria-pressed="true"] span{color:var(--b);text-shadow:0 0 10px currentColor}
+.t-btn:focus-visible{outline:1px dashed var(--a);outline-offset:4px}
+.t-btn[disabled]{opacity:.4;cursor:not-allowed}
+.t-ctl .sp{flex:1}
+
+/* ---------- hub bar ---------- */
+.t-hub{display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 22px 14px;border-top:1px solid var(--line);font:700 13px/1 var(--mono);position:relative;z-index:2}
+.t-hub button{all:unset;cursor:pointer;color:var(--c,var(--violet));white-space:nowrap}
+.t-hub button.br::before{content:"[";} .t-hub button.br::after{content:"]";}
+.t-hub button:hover,.t-hub button:focus-visible{text-shadow:0 0 10px currentColor;text-decoration:underline}
+.t-hub button[aria-current="true"]{text-shadow:0 0 12px currentColor}
+
+/* corner label */
+.t-hub .t-mock{position:static;margin-left:auto}
+.t-mock{position:absolute;right:12px;bottom:10px;z-index:40;font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim);border:1px solid var(--line);padding:4px 6px;background:var(--screen);text-transform:uppercase;pointer-events:none}
+
+/* glitch slice for interactions */
+.t-twitch{animation:t-twitch .22s steps(2) 1}
+@keyframes t-twitch{0%{transform:translateX(-4px);text-shadow:-2px 0 var(--pink),2px 0 var(--cyan);clip-path:inset(15% 0 45% 0)}50%{transform:translateX(3px);clip-path:inset(55% 0 5% 0)}100%{transform:none;text-shadow:none;clip-path:none}}
+
+@media (max-width:640px){
+  body{font-size:13px}
+  .t-head{padding:12px 14px 4px;gap:10px} .t-icons{display:none}
+  .t-unit{padding:2px 14px 8px}
+  .t-body{padding:8px 14px 10px}
+  .t-ctl,.t-hub{padding:8px 14px 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  body,.term .roll,.term.on,.t-title::after,.t-unit .live i,.t-twitch{animation:none}
+  .term .roll{display:none}
+}

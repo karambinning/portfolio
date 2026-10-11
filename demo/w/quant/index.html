@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantitative work — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  .t-body{gap:10px}
+  .q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;flex:1;min-height:0}
+  .half{display:flex;flex-direction:column;gap:7px;min-height:0;min-width:0}
+  .half + .half{border-left:1px dashed var(--line);padding-left:22px}
+  .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .hd b{font:800 15px/1 var(--mono);color:var(--a);letter-spacing:.08em;text-shadow:0 0 12px color-mix(in srgb,var(--a) 50%,transparent)}
+  .hd .k{font:700 10px/1 var(--mono);color:var(--dim);letter-spacing:.12em}
+  .paper{margin-left:auto;font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--b);border:1px solid currentColor;padding:3px 5px}
+  .half .t-p{font-size:12.5px;line-height:1.5}
+  .viz{flex-shrink:0;position:relative;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 60%,transparent)}
+  .viz canvas{display:block;width:100%;height:100%}
+  .eq{height:144px} .br{height:122px}
+  .cap{font:600 10.5px/1.4 var(--mono);color:var(--dim)}
+  .cap b{color:var(--body)}
+  .grid{height:46px}
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:auto}
+  .st{display:flex;flex-direction:column;min-width:0}
+  .st strong{font:400 26px/1 var(--display);color:var(--a);letter-spacing:.03em;white-space:nowrap}
+  .st strong s{color:var(--dim);text-decoration-thickness:2px;text-decoration-color:var(--a)}
+  .st span{font:700 9.5px/1.25 var(--mono);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+  .clv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+  .clv .viz{height:58px}
+  .dir{display:flex;flex-direction:column;gap:5px;justify-content:center}
+  .dir .row{display:grid;grid-template-columns:auto minmax(0,1fr) 34px;gap:6px;align-items:center;font:700 10px/1 var(--mono);color:var(--dim);letter-spacing:.06em}
+  .dir .row em{font-style:normal;color:var(--text);text-align:right}
+  .dir .t-bar{font-size:12px} .dir .t-bar .fill{height:11px}
+  .dir .row.c .t-bar .fill i{background:var(--dim);box-shadow:none}
+  .gloss{font:600 10.5px/1.45 var(--mono);color:var(--dim);border-left:2px solid var(--b);padding-left:8px}
+  .gloss b{color:var(--b)}
+  .verdict{font:700 11px/1.45 var(--mono);color:var(--body)}
+  .verdict b{color:var(--a)}
+  .t-ctl .note{font:700 10.5px/1.2 var(--mono);color:var(--dim);letter-spacing:.1em}
+  @media (max-width:860px){
+    .q{grid-template-columns:1fr;gap:18px;flex:none}
+    .half{min-height:auto}
+    .half + .half{border-left:0;padding-left:0;border-top:1px dashed var(--line);padding-top:14px}
+    .eq{height:180px} .br{height:150px}
+  }
+  @media (max-width:420px){
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .clv{grid-template-columns:1fr}
+    .t-ctl .note{display:none}
+    .grid{height:84px}
+  }
+</style>
+</head>
+<body data-self="quant" data-brand="[QUANT]" data-unit="K·B QUANT TERMINAL · MARKETS + MODELS · UNIT 04" data-status="PAPER ONLY" data-status-tail="NO CAPITAL AT RISK"
+      data-mock="paper data · real extracts" style="--a:#ff3355;--b:#ffb000">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div>
+      <div class="t-title">Quantitative work</div>
+      <div class="t-sub">Two market experiments, tested honestly</div>
+      <div class="t-sub2">War Room · crypto prediction markets &nbsp;/&nbsp; World Cup · in-play model &nbsp;·&nbsp; both run by my agent Krabs</div>
+    </div>
+    <div class="q">
+      <!-- ============ WAR ROOM ============ -->
+      <section class="half" aria-labelledby="wr-h">
+        <div class="hd"><b id="wr-h">WAR ROOM</b><span class="k">POLYMARKET · 5-MIN CRYPTO · RUN BY KRABS</span><span class="paper">PAPER</span></div>
+        <p class="t-p">A bot that bet on whether SOL, ETH, XRP, BTC or DOGE would be <b>up or down five minutes later</b>, retuning its own settings as it went. Its best paper run turned <b>$50 into $106.56</b> over 289 trades. Then I checked whether those trades could really have been filled.</p>
+        <div class="viz eq"><canvas id="eq" role="img" aria-label="Equity curve of the v91_final paper run: $50 to $106.56 over 289 trades in about ten hours, peak $109.71, maximum drawdown 5.66 percent. Marked invalid: every entry assumed a fill at the $0.52 midpoint."></canvas></div>
+        <div class="viz grid"><canvas id="fill" role="img" aria-label="Fill check: the midpoint engine assumed 304 of 304 orders at $0.52 filled; checked against the real order book, 2 of 304 did."></canvas></div>
+        <div class="verdict" id="wr-verdict">Every entry assumed a fill at the <b>$0.52 midpoint</b>. Against the real order book, <b>2 of 304</b> did. I marked the P&amp;L <b>invalid</b> and kept only the direction calls.</div>
+        <div class="stats">
+          <div class="st"><strong><s>+113%</s></strong><span>$50 → $106.56 · void</span></div>
+          <div class="st"><strong>289</strong><span>trades · 187W 99L 3 flat</span></div>
+          <div class="st"><strong>5.66%</strong><span>max drawdown</span></div>
+          <div class="st"><strong>46.8M</strong><span>trade prints collected</span></div>
+        </div>
+      </section>
+      <!-- ============ KRABS ============ -->
+      <section class="half" aria-labelledby="kr-h">
+        <div class="hd"><b id="kr-h">WORLD CUP</b><span class="k">IN-PLAY MODEL · RUN BY KRABS</span><span class="paper">PAPER</span></div>
+        <p class="t-p">A machine-learning model that watched World Cup matches live, <b>priced each market itself</b> from the match stats, and flagged where its price and the market's disagreed. Run on paper across <b>7 matches</b>.</p>
+        <div class="viz br"><canvas id="brier" role="img" aria-label="Brier score at three reported checkpoints: 0.24 at the start, 0.14 midway, 0.117 after seven World Cup matches. 0.25 is a coin flip; lower is better."></canvas></div>
+        <div class="clv">
+          <div class="viz"><canvas id="clv" role="img" aria-label="Closing-line value: after a Krabs flag, the market moved on average 2.24 points toward Krabs' price."></canvas></div>
+          <div class="dir">
+            <div class="row"><span>MODEL ≠ MARKET</span><span id="dirA"></span><em id="dirAv">67%</em></div>
+            <div class="row c"><span>CORNERS MODEL&nbsp;</span><span id="dirB"></span><em id="dirBv">49%</em></div>
+            <div class="cap">calls the market then moved the model's way · corners was a coin flip: retracted</div>
+          </div>
+        </div>
+        <div class="gloss"><b>Brier score</b> — the gap between forecast odds and what happened: 0 is perfect, 0.25 a coin flip.<br><b>Closing-line value</b> — does the market later move toward your price? Tests the forecast, not luck.</div>
+        <div class="stats">
+          <div class="st"><strong>0.24→0.12</strong><span>Brier · lower is better</span></div>
+          <div class="st"><strong>+2.24</strong><span>pts avg move to Krabs</span></div>
+          <div class="st"><strong>67%</strong><span>right when it disagreed</span></div>
+          <div class="st"><strong>7</strong><span>World Cup matches</span></div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" id="b-wr"><span>▸ REPLAY RUN</span></button>
+    <button class="t-btn" id="b-fill"><span>▸ FILL CHECK</span></button>
+    <button class="t-btn" id="b-kr"><span>▸ REPLAY WORLD CUP</span></button>
+    <span class="sp"></span>
+    <span class="note">ALL FIGURES PAPER · NO CAPITAL AT RISK</span>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script src="assets/quant.js"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICARUS — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  .ica{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:20px;flex:1;min-height:0}
+  .left{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:4px}
+  .pane{display:none} .pane.on{display:flex;flex-direction:column;gap:7px}
+  .t-p{font-size:12.5px;line-height:1.5}
+  .t-list li{font-size:12px;padding:4px 0 4px 18px;line-height:1.42}
+  .st{display:inline-block;font:700 9.5px/1 var(--mono);letter-spacing:.08em;padding:2px 5px;margin-left:6px;border:1px solid currentColor;vertical-align:1px}
+  .st.ok{color:#00ff88} .st.nf{color:var(--b)} .st.pz{color:var(--ink)}
+  .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .rule{border:1px solid var(--line);padding:7px 8px;background:color-mix(in srgb,var(--panel) 70%,transparent)}
+  .rule b{display:block;font:700 11px/1.2 var(--mono);color:var(--a);letter-spacing:.06em;margin-bottom:4px}
+  .rule span{font-size:11px;color:var(--body);line-height:1.38;display:block}
+  .tests{display:flex;flex-wrap:wrap;gap:6px 12px;font:700 10.5px/1 var(--mono);letter-spacing:.06em;color:var(--dim)}
+  .tests span::before{content:"✓ ";color:#00ff88}
+  .crash{border-left:2px solid var(--a);padding:2px 0 2px 10px}
+  .crash .k{font:700 11px/1.3 var(--mono);color:var(--a);letter-spacing:.08em}
+  .crash p{font-size:12px;color:var(--body);line-height:1.45;margin-top:2px}
+  .crash p i{font-style:normal;color:var(--text)}
+  .crash.hand{border-left-color:var(--ink)} .crash.hand .k{color:var(--ink)}
+  /* the flight-video slot: a later <video> drops into .slot */
+  .slot{position:relative;aspect-ratio:16/9;border:1px dashed color-mix(in srgb,var(--a) 55%,transparent);background:
+    repeating-linear-gradient(135deg,transparent 0 14px,color-mix(in srgb,var(--a) 5%,transparent) 14px 15px),var(--screen);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .slot video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+  .slot .wait{text-align:center;font:700 12px/1.6 var(--mono);color:var(--a);letter-spacing:.14em}
+  .slot .wait small{display:block;color:var(--dim);font-size:10px;letter-spacing:.12em}
+  .slot .rec{position:absolute;left:10px;top:8px;font:700 10px/1 var(--mono);color:var(--dim);letter-spacing:.12em}
+  /* the simulation */
+  .sim{display:flex;flex-direction:column;gap:6px;min-height:0;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);
+    box-shadow:inset 0 0 24px color-mix(in srgb,var(--a) 7%,transparent);padding:8px 10px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
+  .srow{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap}
+  .srow .sp{flex:1}
+  .sb{all:unset;cursor:pointer;font:700 11.5px/1 var(--mono);color:var(--violet);white-space:nowrap}
+  .sb::before{content:"["} .sb::after{content:"]"}
+  .sb span{color:var(--a)} .sb:hover span,.sb:focus-visible span,.sb[aria-pressed="true"] span{color:var(--b);text-shadow:0 0 8px currentColor}
+  .sb:focus-visible{outline:1px dashed var(--a);outline-offset:3px}
+  .sb.warn span{color:var(--ink)} .sb.stop span{color:#ff3355}
+  .sb[hidden]{display:none}
+  .alt{font:700 11.5px/1 var(--mono);color:var(--text);min-width:58px;text-align:center}
+  .alt small{color:var(--dim);font-size:9.5px;letter-spacing:.1em;margin-right:4px}
+  .cv{position:relative;flex:1;min-height:200px;border:1px solid var(--line);cursor:crosshair;touch-action:manipulation}
+  .cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .verdict{min-height:34px;font:600 11.5px/1.45 var(--mono);color:var(--body);border-top:1px dashed var(--line);padding-top:5px}
+  .verdict .r{font-weight:800;letter-spacing:.06em;margin-right:6px}
+  .verdict .r.ok{color:#00ff88} .verdict .r.no{color:#ff3355} .verdict .r.wn{color:var(--ink)} .verdict .r.cl{color:var(--b)}
+  .tele{display:flex;flex-wrap:wrap;gap:4px 14px;font:700 10.5px/1.2 var(--mono);color:var(--dim);letter-spacing:.06em}
+  .tele b{color:var(--text);font-weight:700}
+  .tele .on{color:var(--a)}
+  .log{font:500 11px/1.5 var(--mono);color:var(--body);max-height:170px;overflow:auto;border:1px solid var(--line);padding:6px 8px;background:var(--screen);white-space:pre-wrap;scrollbar-width:thin}
+  .log .W{color:var(--ink)} .log .E{color:#ff3355} .log .V{color:var(--b)}
+  .keys{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:11.5px;color:var(--body)}
+  .keys b{color:var(--a);font-weight:700}
+  @media (max-width:760px){
+    .ica{grid-template-columns:1fr;flex:none} .left{overflow:visible;padding-right:0}
+    .cv{flex:none;height:300px} .rules{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){ .t-ctl{gap:8px 12px} .t-ctl .t-btn{font-size:12.5px} }
+  @media (max-height:600px) and (min-width:761px){ .t-sub2{display:none} }
+</style>
+</head>
+<body data-self="icarus" data-brand="[ICARUS]" data-icons="◬ ◎ ⟲" data-unit="ICARUS · AUTONOMOUS FLIGHT TERMINAL · UNIT 03"
+      data-status="BENCH SIM" data-status-tail="READY" data-mock="simulation · real control law, simple aircraft"
+      style="--a:#ff8a3d;--b:#38e8ff">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div>
+      <div class="t-title">ICARUS</div>
+      <div class="t-sub">A consumer drone that flies itself</div>
+      <div class="t-sub2">DJI Mini 2 · a 2019 Android phone as the flight computer · nothing in the cloud</div>
+    </div>
+    <div class="ica">
+      <div class="left">
+
+        <section class="pane on" id="p-what" aria-label="What it does">
+          <p class="t-p">ICARUS turns a <b>DJI Mini 2</b>, a 249 g camera drone, into an aircraft that flies itself. A <b>2019 Android phone</b> on the remote is the flight computer: it reads the video and telemetry, decides, and sends a movement command <b>ten times a second</b>. All of it runs on the phone, even offline.</p>
+          <ul class="t-list">
+            <li><b>Flies set moves:</b> go to a point, climb, turn, spin, and nod “yes” or shake “no”. <span class="st ok">WORKING</span></li>
+            <li><b>Listens:</b> hold to talk. It knows a fixed list of commands, so a misheard phrase does nothing. <span class="st ok">WORKING</span></li>
+            <li><b>Thinks, within limits:</b> a small language model on the phone can only choose from that same list. It cannot invent a move. <span class="st ok">WORKING</span></li>
+            <li><b>Sees:</b> spots people, and runs short missions: climb, look round, count, report aloud. <span class="st ok">WORKING</span></li>
+            <li><b>Moves across the ground and follows the pilot:</b> built and tested on the desk. <span class="st nf">NOT YET FLOWN</span></li>
+            <li><b>Hand control:</b> steer it with an open palm. <span class="st pz">PAUSED</span> See LESSONS.</li>
+          </ul>
+        </section>
+
+        <section class="pane" id="p-safety" aria-label="Safety">
+          <p class="t-p">The Mini 2 has <b>no obstacle sensing</b>, so the limits live in software. Every command passes one guard before it is sent.</p>
+          <div class="rules">
+            <div class="rule"><b>FAIL CLOSED</b><span>An unknown limit gets the cautious answer: an unmeasured radius means 100 m, not “unlimited”.</span></div>
+            <div class="rule"><b>SAY WHY</b><span>A refusal names the rule and by how much. Silence teaches the pilot to distrust it.</span></div>
+            <div class="rule"><b>LATE MEANS STOP</b><span>A missed beat sends zero, so it hovers. An old command is never repeated.</span></div>
+          </div>
+          <ul class="t-list">
+            <li><b>Envelope:</b> 120 m ceiling, 100 m radius, 2.5 m keep-out around the pilot. Slow on purpose: 3 m/s across, 1 m/s vertical.</li>
+            <li><b>The keep-out only warns, for now,</b> at my request while testing: its range reading was too rough to trust. The others refuse.</li>
+            <li><b>Hands back:</b> nothing moves unless armed and running. ABORT, the mode switch or “stop” returns control.</li>
+            <li><b>Checks its axes:</b> if the drone keeps moving against the command, the flight stops.</li>
+          </ul>
+          <div>
+            <div class="t-label">Self-tests on the phone at every launch · all pass</div>
+            <div class="tests"><span>GUARD</span><span>AUTOPILOT</span><span>AXES</span><span>VISION</span><span>VIDEO</span><span>VOICE</span><span>HAND CONTROL</span><span>MISSION</span></div>
+          </div>
+        </section>
+
+        <section class="pane" id="p-lessons" aria-label="Lessons">
+          <p class="t-p">Three crashes, each with the fix it forced. The thread: <b>reject the impossible before it reaches anything that flies.</b></p>
+          <div class="crash"><div class="k">01 · INTO A WALL</div><p>Hand control asked for a point 8 m away, in a garden that does not have 8 m. <i>The reach of a control has to fit the space it is used in.</i> It became 3 m.</p></div>
+          <div class="crash"><div class="k">02 · INTO A TREE</div><p>The “below ground” rule aborted mid-flight on a barometer reading of −0.2 m, and the first fix re-checked the same bad number. <i>A floor is somewhere to stop, not a reason to abandon the flight.</i> Now it holds height instead.</p></div>
+          <div class="crash"><div class="k">03 · A BROKEN PROPELLER</div><p>A small patch of fence was taken for a hand. As the drone moved, the false target moved with it, and the loop chased it for eleven seconds. <i>Too small to be real is rejected,</i> and a hand must belong to a person.</p></div>
+          <div class="crash hand"><div class="k">HAND CONTROL · PAUSED</div><p>Beyond about <i>5.8 m</i> the camera cannot resolve a hand; anything reported past that is noise. Flights were happening further out, so it is paused, not abandoned.</p></div>
+        </section>
+
+        <section class="pane" id="p-footage" aria-label="Flight footage">
+          <!-- FLIGHT VIDEO SLOT: drop a <video controls playsinline muted src="…"></video> inside .slot; the placeholder can stay or go. -->
+          <div class="slot" id="footage" data-slot="flight-video">
+            <span class="rec">● REC · CH 01</span>
+            <div class="wait">FLIGHT FOOTAGE<br>COMING SOON<small>a recorded ICARUS flight will play here</small></div>
+          </div>
+          <p class="t-p">A flight filmed from the ground, with the deck's view beside it, goes here. Until then, the simulation on the right runs the same guard and control law the phone runs.</p>
+        </section>
+
+        <section class="pane" id="p-sim" aria-label="How the simulation works">
+          <p class="t-p">The guard, the moves and the command loop are <b>the real logic, ported to the browser</b>. The aircraft is simplified: commands arrive half a second late, like the real link, and there is no wind.</p>
+          <div class="keys">
+            <b>TAP MAP</b><span>set a target; the guard accepts, refuses or warns before anything moves</span>
+            <b>CLAMP</b><span>pulls a refused target back onto the boundary, keeping its bearing</span>
+            <b>ALT − +</b><span>target height; try above 120 m</span>
+            <b>ZOOM</b><span>12 m view shows the keep-out around the pilot</span>
+          </div>
+          <div class="t-label" style="margin:0">Flight log</div>
+          <div class="log" id="log" aria-live="polite"></div>
+        </section>
+
+      </div>
+
+      <div class="sim" aria-label="Flight simulation">
+        <div class="srow">
+          <span class="t-label" style="margin:0">PLAN VIEW · NORTH UP</span><span class="sp"></span>
+          <button class="sb" id="zoom" aria-label="Toggle zoom"><span>ZOOM 120 m</span></button>
+          <button class="sb" id="speed" aria-label="Toggle simulation speed"><span>TIME ×4</span></button>
+          <button class="sb" id="reset"><span>RESET</span></button>
+        </div>
+        <div class="cv" id="cv"><canvas id="map" role="img" aria-label="Plan view: the pilot at the centre, the 100 metre radius, the aircraft and its target. Tap to set a target."></canvas></div>
+        <div class="srow">
+          <button class="sb" id="altDn" aria-label="Lower target altitude"><span>ALT −</span></button>
+          <span class="alt" id="alt"><small>ALT</small>10 m</span>
+          <button class="sb" id="altUp" aria-label="Raise target altitude"><span>ALT +</span></button>
+          <span class="sp"></span>
+          <button class="sb" data-move="yes"><span>YES</span></button>
+          <button class="sb" data-move="no"><span>NO</span></button>
+          <button class="sb" data-move="spin"><span>360°</span></button>
+          <button class="sb" id="land"><span>LAND</span></button>
+          <button class="sb stop" id="abort"><span>ABORT</span></button>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"><span class="r ok">READY</span><span class="msg">Tap the map to set a target.</span> <button class="sb warn" id="clamp" hidden><span>CLAMP &amp; FLY</span></button></div>
+        <div class="tele" id="tele"></div>
+      </div>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" data-pane="what" aria-pressed="true"><span>WHAT IT DOES</span></button>
+    <button class="t-btn" data-pane="safety"><span>SAFETY</span></button>
+    <button class="t-btn" data-pane="lessons"><span>LESSONS</span></button>
+    <button class="t-btn" data-pane="footage"><span>FOOTAGE</span></button>
+    <button class="t-btn" data-pane="sim"><span>SIM LOG</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" id="demo"><span>▸ DEMO</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script src="assets/icarus-core.js"></script>
+<script src="assets/sim.js"></script>
+</body>
+</html>

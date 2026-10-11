@@ -1,0 +1,64 @@
+/* Replica-only additions to the shipped deck. Everything here uses the deck's own tokens. */
+html,body{background:#070e1c}            /* on the phone the native root view paints this colour */
+#plan{touch-action:none;cursor:crosshair}
+
+/* HAND: paused, not removed — it keeps its slot and explains itself */
+.cbtn.paused{border-style:dashed;border-color:#6a5a20;color:#8a7a3a;background:transparent;position:relative}
+
+.tgt .clampnote{margin-top:6px;padding-top:5px;border-top:1px dashed #6a5a20;font-size:8.5px;color:#ffd98a;line-height:1.5}
+.tgt .clampnote b{color:var(--amber)}
+.tgt .altrow{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:8px;color:var(--muted);letter-spacing:1px}
+.tgt .altrow button{background:#00d4ff10;border:1px solid var(--bdim);color:var(--cyan);font-family:var(--mono);
+  font-size:10px;width:22px;height:18px;padding:0;line-height:1}
+.tgt .altrow b{color:var(--text);min-width:38px;text-align:center}
+.tgt .altrow small{font-size:6.5px;color:var(--dim);letter-spacing:.5px}
+
+#handcard{left:auto;right:9px;top:38px;max-width:300px;border-top-color:var(--amber);z-index:10}
+#handcard .t{color:var(--amber)}
+#handcard .calc{margin-top:5px;font-size:8.5px;color:#8fb0cc;line-height:1.6}
+#handcard .calc b{color:var(--text)}
+#handcard .live{margin-top:5px;font-size:8.5px}
+
+/* ── pre-flight self-test (what the handset writes to logcat at every launch, shown on screen) ── */
+#selftest{position:absolute;inset:0;z-index:30;background:var(--bg2);display:flex;gap:18px;
+  padding:16px 18px 14px 20px;transition:opacity .35s ease}
+#selftest.gone{opacity:0;pointer-events:none}
+#selftest .lc{width:318px;flex:none;display:flex;flex-direction:column;min-height:0}
+#selftest .rc{flex:1;min-width:0;display:flex;flex-direction:column;border:1px solid var(--bdim);background:#050b16}
+#selftest h2{font-family:var(--disp);font-weight:400;font-size:26px;letter-spacing:5px;color:var(--cyan);line-height:1}
+#selftest .sub{font-size:7.5px;color:var(--muted);letter-spacing:1.4px;margin:6px 0 10px;line-height:1.6}
+#selftest .suites{display:flex;flex-direction:column;gap:3px;flex:1;min-height:0}
+#selftest .su{display:grid;grid-template-columns:118px 1fr 52px 34px;align-items:center;gap:7px;font-size:8.5px;
+  padding:3px 0;border-bottom:1px solid #0d1e35}
+#selftest .su .nm{color:#8fb0cc;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#selftest .su .nm small{display:block;font-size:6.5px;color:var(--dim);letter-spacing:1px}
+#selftest .su .bar{height:4px;background:#0d1e35;position:relative;overflow:hidden}
+#selftest .su .bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--cyan)}
+#selftest .su.done .bar i{background:var(--green)}
+#selftest .su .ct{text-align:right;color:var(--muted);font-weight:600}
+#selftest .su .st{font-size:7px;font-weight:600;letter-spacing:1px;color:var(--dim);text-align:right}
+#selftest .su.run .st{color:var(--amber)} #selftest .su.done .st{color:var(--green)}
+#selftest .su.done .ct{color:var(--text)}
+#selftest .tot{margin-top:8px;display:flex;align-items:baseline;justify-content:space-between;
+  border-top:2px solid var(--cyan);padding-top:6px}
+#selftest .tot .k{font-size:7px;color:var(--muted);letter-spacing:2px}
+#selftest .tot .v{font-family:var(--disp);font-size:24px;letter-spacing:2px;color:var(--text)}
+#selftest .tot.ok{border-top-color:var(--green)} #selftest .tot.ok .v{color:var(--green)}
+#selftest .rh{display:flex;justify-content:space-between;align-items:center;padding:5px 9px;
+  border-bottom:1px solid var(--bdim);font-size:7px;letter-spacing:1.6px;color:var(--muted)}
+#selftest .rh button{background:none;border:1px solid var(--bdim);color:var(--muted);font-size:7px;letter-spacing:1.4px;
+  padding:3px 8px;font-weight:600}
+#selftest .log{flex:1;min-height:0;overflow:hidden;padding:5px 9px;font-size:8px;line-height:1.55;
+  display:flex;flex-direction:column;justify-content:flex-end}
+#selftest .log div{flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9cb8d0}
+#selftest .log .p{color:var(--green);font-weight:600;margin-right:6px}
+#selftest .log .g{color:var(--dim);margin-right:6px;display:inline-block;width:70px}
+#selftest .log .sum{color:var(--cyan);font-weight:600}
+#selftest .done-line{padding:6px 9px;border-top:1px solid var(--bdim);font-size:8px;letter-spacing:1.4px;
+  color:var(--muted);min-height:24px}
+#selftest .done-line.ok{color:var(--green);font-weight:600}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  #sweep{display:none}
+}

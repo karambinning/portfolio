@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Declaration — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  .decl{display:grid;grid-template-columns:256px minmax(0,.82fr) minmax(0,1.3fr);gap:18px;flex:1;min-height:0}
+  .col{display:flex;flex-direction:column;min-height:0;min-width:0}
+
+  /* left: what it is */
+  .about .t-title{font-size:22px}
+  .about .t-sub{font-size:13px;margin-top:4px}
+  .about .t-sub2{font-size:11.5px}
+  .about .t-label{margin:11px 0 4px}
+  .about .t-p{font-size:11.5px;line-height:1.48}
+  .steps{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .steps li{display:grid;grid-template-columns:26px 1fr;font-size:11px;line-height:1.45;color:var(--body)}
+  .steps li b{color:var(--a);font-weight:800}
+  .steps li span b{color:var(--text);font-weight:700}
+  .use{margin-top:auto;border-left:2px solid var(--b);padding:8px 10px;background:color-mix(in srgb,var(--panel) 70%,transparent)}
+  .use .t-label{margin:0 0 4px;color:var(--b)}
+  .use .t-p{font-size:11px}
+
+  /* middle: the log form */
+  .panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:800 12px/1 var(--mono);letter-spacing:.14em;color:var(--a);margin-bottom:10px;text-transform:uppercase}
+  .panel-h small{font:700 9.5px/1 var(--mono);color:var(--dim);letter-spacing:.12em}
+  .form{display:flex;flex-direction:column;gap:7px;flex:1;min-height:0}
+  .row3{display:grid;grid-template-columns:1fr 1.1fr;gap:8px}
+  .f label{display:flex;justify-content:space-between;font:700 9.5px/1.2 var(--mono);letter-spacing:.12em;color:var(--violet);text-transform:uppercase;margin-bottom:3px}
+  .f label em{font-style:normal;color:var(--b)}
+  .in{width:100%;background:var(--screen);border:1px solid var(--line);border-radius:0;color:var(--text);font:500 11.5px/1.45 var(--mono);padding:5px 8px;-webkit-appearance:none;appearance:none}
+  select.in{background-image:linear-gradient(45deg,transparent 50%,var(--a) 50%),linear-gradient(135deg,var(--a) 50%,transparent 50%);background-position:calc(100% - 12px) 50%,calc(100% - 7px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:22px}
+  textarea.in{resize:none;display:block}
+  .in:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 1px var(--a),0 0 14px color-mix(in srgb,var(--a) 30%,transparent)}
+  .f.grow{flex:1;display:flex;flex-direction:column;min-height:0} .f.grow textarea{flex:1;min-height:50px}
+  .ledger{border:1px solid var(--line);padding:7px 9px;font:700 10px/1.5 var(--mono);color:var(--dim);letter-spacing:.06em}
+  .ledger .k{color:var(--a);letter-spacing:.14em}
+  .ledger .e{display:inline-block;margin:3px 6px 0 0;padding:2px 5px;border:1px solid color-mix(in srgb,var(--a) 40%,transparent);color:var(--text)}
+  .ledger .e.new{border-color:var(--b);color:var(--b)}
+
+  /* right: the generated page */
+  .sheet{flex:1;min-height:0;position:relative;border:1px solid color-mix(in srgb,var(--a) 55%,transparent);
+    background:linear-gradient(180deg,#120827,#0b0518);box-shadow:inset 0 0 30px color-mix(in srgb,var(--a) 10%,transparent),0 0 22px color-mix(in srgb,var(--a) 12%,transparent);
+    padding:12px 14px;overflow:hidden;font-size:10.5px;line-height:1.45;color:var(--body)}
+  .sheet .doc-h{font:400 2em/1 var(--display);letter-spacing:.06em;color:var(--a);text-shadow:0 0 14px color-mix(in srgb,var(--a) 45%,transparent)}
+  .sheet .meta{display:grid;grid-template-columns:auto 1fr auto auto;gap:1px 10px;margin:.7em 0 .5em;font-size:.95em}
+  .sheet .meta dt{color:var(--dim);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+  .sheet .meta dd{color:var(--text)}
+  .sheet .lead{font-size:.95em;color:var(--dim);border-bottom:1px dashed var(--line);padding-bottom:.5em}
+  .sheet h3{font:800 1em/1.2 var(--mono);color:var(--b);letter-spacing:.12em;text-transform:uppercase;margin:.75em 0 .3em}
+  .sheet h3 span{color:var(--violet)}
+  .sheet ul{list-style:none} .sheet li{padding-left:1.1em;position:relative} .sheet li::before{content:"›";position:absolute;left:.2em;color:var(--a)}
+  .sheet .sess{margin-bottom:.4em}
+  .sheet .sess .d{color:var(--text);font-weight:700}
+  .sheet .sess i{font-style:normal;color:var(--a);font-weight:700}
+  .sheet .ref{font-size:.95em}
+  .sheet .ref em{color:var(--text)}
+  .sheet .sign{margin-top:.7em;border-top:1px dashed var(--line);padding-top:.5em}
+  .sheet .sign .who{display:flex;justify-content:space-between;gap:10px;margin-top:.35em;color:var(--text);font-weight:700}
+  .sheet .sign .who span:first-child{font-style:italic}
+  .sheet .foot{margin-top:.5em;font-size:.85em;color:var(--dim);letter-spacing:.06em}
+  .sheet .stamp{position:absolute;top:12px;right:14px;font:800 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--b);border:1px solid var(--b);padding:4px 6px;transform:rotate(4deg)}
+  .sheet.print > *{animation:pr .35s steps(3) both;animation-delay:calc(var(--i) * 55ms)}
+  @keyframes pr{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+
+  #status{font:700 11px/1.3 var(--mono);color:var(--dim);letter-spacing:.06em;min-width:0}
+
+  @media (max-width:900px){
+    .decl{grid-template-columns:1fr 1fr}
+    .about{grid-column:1/-1}
+    .use{margin-top:12px}
+  }
+  @media (max-width:640px){
+    .decl{grid-template-columns:1fr;flex:none}
+    .f.grow textarea{flex:none;height:64px}
+    .sheet{flex:none;overflow:visible}
+    .t-ctl{gap:10px 14px} .t-btn{font-size:13px}
+    #status{flex-basis:100%}
+  }
+  @media (prefers-reduced-motion:reduce){ .sheet.print > *{animation:none} }
+</style>
+</head>
+<body data-self="declaration" data-brand="[AI·DECL]" data-unit="AI DECLARATION · LOUGHBOROUGH FORMAT · UNIT 05" data-status="LEDGER" data-status-tail="OPEN"
+      data-mock="mock data · example module" style="--a:#c084fc;--b:#f472b6">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div class="decl">
+      <!-- what it is -->
+      <section class="col about" aria-label="About the declaration system">
+        <div class="t-title">AI Declaration</div>
+        <div class="t-sub">Log the use · write the page</div>
+        <div class="t-sub2">Loughborough's three steps</div>
+
+        <div class="t-label">What it is</div>
+        <p class="t-p">It logs how AI was used in a piece of academic work and generates the <b>declaration that sits at the front of the submission</b>, inside Loughborough's guidelines on AI use.</p>
+
+        <div class="t-label">How it works</div>
+        <ol class="steps">
+          <li><b>01</b><span><b>Log</b> each session as it happens: tool, date, what AI did, and how I built on it. Entries are append-only.</span></li>
+          <li><b>02</b><span><b>Generate</b> gathers every entry for one assessment into the three steps: <b>acknowledge</b>, <b>describe</b>, <b>reference</b>.</span></li>
+          <li><b>03</b><span><b>Sign</b>: a dated page with a Harvard reference for each tool, ready for the front of the work.</span></li>
+        </ol>
+
+        <div class="use">
+          <div class="t-label">In use</div>
+          <p class="t-p">My first essay with Claude, on British India. Claude built a reading guide while I read the sources; <b>I wrote the essay myself</b>, and the declaration says so.</p>
+        </div>
+      </section>
+
+      <!-- the log form -->
+      <section class="col" aria-label="Log a session">
+        <div class="panel-h"><span>◈ Log a session</span><small>STEP 1 · 2 INPUT</small></div>
+        <form class="form" id="form" onsubmit="return false">
+          <div class="row3">
+            <div class="f"><label for="tool">Tool <em>*</em></label>
+              <select id="tool" class="in"><option>Claude</option><option>Claude Code</option><option>ChatGPT</option></select></div>
+            <div class="f"><label for="date">Date <em>*</em></label><input id="date" class="in" type="text" inputmode="numeric" autocomplete="off"></div>
+          </div>
+          <div class="f"><label for="assessment">Assessment <em>*</em></label><input id="assessment" class="in" type="text" autocomplete="off"></div>
+          <div class="f grow"><label for="purpose">What AI was used for <em>*</em></label><textarea id="purpose" class="in" rows="2"></textarea></div>
+          <div class="f grow"><label for="output">What it produced <em>*</em></label><textarea id="output" class="in" rows="2"></textarea></div>
+          <div class="f grow"><label for="adapted">How I built on it <em>* key</em></label><textarea id="adapted" class="in" rows="3"></textarea></div>
+          <div class="ledger" id="ledger" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <!-- the generated page -->
+      <section class="col" aria-label="Generated declaration">
+        <div class="panel-h"><span>⎘ Declaration</span><small id="genAt">FRONT PAGE</small></div>
+        <article class="sheet" id="sheet" aria-live="polite"></article>
+      </section>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" id="save" type="button"><span>▣ SAVE TO LOG</span></button>
+    <button class="t-btn" id="gen" type="button"><span>▸ GENERATE</span></button>
+    <button class="t-btn" id="clear" type="button"><span>CLEAR</span></button>
+    <button class="t-btn" id="example" type="button"><span>EXAMPLE</span></button>
+    <span class="sp"></span>
+    <span id="status" role="status">READY · 2 SESSIONS LOGGED FOR DEMO101</span>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const ago = n => { const d = new Date(); d.setDate(d.getDate() - n); return iso(d); };
+  const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const long = s => { const [y, m, d] = s.split('-').map(Number); return `${d} ${MON[m - 1]} ${y}`; };
+  const short = s => { const [, m, d] = s.split('-').map(Number); return `${pad(d)} ${MON[m - 1].slice(0, 3).toUpperCase()}`; };
+
+  const STUDENT = 'Karam Binning', MODULE = 'DEMO101 · Example module', ASSESS = 'DEMO101 Coursework Essay';
+  const VENDOR = { 'Claude':'Anthropic', 'Claude Code':'Anthropic', 'ChatGPT':'OpenAI' };
+  const HARVARD = {
+    'Claude':      ['Anthropic', 'Claude', 'https://claude.ai'],
+    'Claude Code': ['Anthropic', 'Claude Code', 'https://claude.ai/code'],
+    'ChatGPT':     ['OpenAI', 'ChatGPT', 'https://chat.openai.com'],
+  };
+
+  // the ledger: append-only session entries, as the real log keeps them
+  const LOG = [
+    { tool:'Claude', date:ago(9), assessment:ASSESS,
+      purpose:'A reading guide for the set sources: who wrote each one, when, and what to look for.',
+      output:'A one-page guide per source, with questions to keep in mind while reading.',
+      adapted:'Read every source myself and made my own notes; the guide set the questions, not the answers.' },
+    { tool:'Claude', date:ago(5), assessment:ASSESS,
+      purpose:'Checking dates and terms I met in the reading.',
+      output:'Short explanations and a timeline of the period.',
+      adapted:'Checked each date against the module reading; kept only what the sources confirm.' },
+  ];
+  const EXAMPLE = { tool:'Claude', date:iso(new Date()), assessment:ASSESS,
+    purpose:'Feedback on the structure of my own draft (no new content).',
+    output:'A note that the second argument needed evidence earlier.',
+    adapted:'Reordered the section myself; every sentence of the essay is my own writing.' };
+  const FIELDS = ['tool', 'date', 'assessment', 'purpose', 'output', 'adapted'];
+  const read = () => Object.fromEntries(FIELDS.map(f => [f, $(f).value.trim()]));
+  const fill = o => FIELDS.forEach(f => { $(f).value = o[f] || ''; });
+  const same = (a, b) => FIELDS.every(f => (a[f] || '') === (b[f] || ''));
+  let lastNew = null;
+
+  function status(msg, col){ const s = $('status'); s.textContent = msg; s.style.color = col || 'var(--dim)'; KB.twitch(s); }
+
+  function save(){
+    const p = read();
+    const missing = FIELDS.filter(f => !p[f]);
+    if (missing.length){ status('✗ FILL EVERY FIELD MARKED *', '#ff5577'); KB.beep(220, 90); $(missing[0]).focus(); return false; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date)){ status('✗ DATE AS YYYY-MM-DD', '#ff5577'); KB.beep(220, 90); $('date').focus(); return false; }
+    if (LOG.some(e => same(e, p))){ status('ALREADY IN THE LOG · NOTHING ADDED', 'var(--dim)'); return true; }
+    LOG.push(p); lastNew = p;
+    status(`✓ LOGGED · ${p.tool.toUpperCase()} · ${short(p.date)}`, '#7dffb0'); KB.beep(880, 40);
+    ledger(); return true;
+  }
+
+  function entriesFor(a){ const q = a.toLowerCase(); return LOG.filter(e => e.assessment.toLowerCase() === q).sort((x, y) => x.date.localeCompare(y.date)); }
+
+  function ledger(){
+    const a = $('assessment').value.trim() || ASSESS, es = entriesFor(a);
+    $('ledger').innerHTML = `<span class="k">LOG ▸ ${esc(a.split(' ')[0].toUpperCase())}</span> · ${es.length} SESSION${es.length === 1 ? '' : 'S'} LOGGED<br>` +
+      (es.length ? es.map(e => `<span class="e${e === lastNew ? ' new' : ''}">${short(e.date)} · ${esc(e.tool.toUpperCase())}</span>`).join('') : '<span>nothing logged for this assessment yet</span>');
+  }
+
+  // the three-step page, built the way the generator builds it
+  function generate(animate){
+    const a = $('assessment').value.trim() || ASSESS, es = entriesFor(a);
+    if (!es.length){ status('✗ NO LOGGED SESSIONS MATCH THIS ASSESSMENT', '#ff5577'); return; }
+    const tools = [...new Set(es.map(e => e.tool))];
+    const range = list => { const d = [...new Set(list.map(e => e.date))].sort(); return d.length === 1 ? long(d[0]) : `${long(d[0])} to ${long(d[d.length - 1])}`; };
+    const today = long(iso(new Date())), now = new Date();
+    const step1 = tools.map(t => `<li><b>${esc(t)}</b> (${VENDOR[t]}), used in ${es.filter(e => e.tool === t).length} session(s) for this assessment.</li>`).join('');
+    const step2 = es.map(e => `<div class="sess"><span class="d">${long(e.date)} · ${esc(e.tool)}</span><br><i>Used for</i> ${esc(e.purpose)} <i>Produced</i> ${esc(e.output)} <i>Built on</i> ${esc(e.adapted)}</div>`).join('');
+    const step3 = tools.map(t => { const [v, n, u] = HARVARD[t]; return `<li class="ref">${v} (${now.getFullYear()}) <em>${n}</em> [online]. Available from: ${u} [Accessed ${range(es.filter(e => e.tool === t))}].</li>`; }).join('');
+    const parts = [
+      `<div class="stamp">DRAFT · ${es.length} LOGGED</div>`,
+      `<div class="doc-h">AI Usage Declaration</div>`,
+      `<dl class="meta"><dt>Student</dt><dd>${STUDENT}</dd><dt>Date</dt><dd>${today}</dd><dt>Module</dt><dd>${esc(MODULE)}</dd><dt>Work</dt><dd>${esc(a)}</dd></dl>`,
+      `<div class="lead">Follows Loughborough University's three-step format for acknowledging AI use in assessed work.</div>`,
+      `<h3><span>01</span> Acknowledge</h3>`, `<ul>${step1}</ul>`,
+      `<h3><span>02</span> Describe</h3>`, `<div>${step2}</div>`,
+      `<h3><span>03</span> Reference</h3>`, `<ul>${step3}</ul>`,
+      `<div class="sign">I confirm this declaration is accurate, that AI output was checked and built on, and that the substance and the writing of this work are my own.<div class="who"><span>Signed: ${STUDENT}</span><span>${today}</span></div></div>`,
+      `<div class="foot">Generated ${pad(now.getHours())}:${pad(now.getMinutes())} from the session log. The log is the record; this page is derived from it.</div>`,
+    ];
+    const sh = $('sheet');
+    sh.innerHTML = parts.join('');
+    [...sh.children].forEach((c, i) => c.style.setProperty('--i', i));
+    $('genAt').textContent = `GENERATED ${short(iso(now))} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    fit();
+    if (animate && !KB.reduce){ sh.classList.remove('print'); void sh.offsetWidth; sh.classList.add('print'); }
+    return es.length;
+  }
+
+  // keep the whole page in view: step the type down until it fits the sheet
+  function fit(){
+    const sh = $('sheet'); sh.style.fontSize = ''; sh.style.overflowY = '';
+    if (matchMedia('(max-width:640px)').matches) return;
+    let fs = 10.5;
+    while (sh.scrollHeight > sh.clientHeight + 1 && fs > 8){ fs -= .25; sh.style.fontSize = fs + 'px'; }
+    if (sh.scrollHeight > sh.clientHeight + 1) sh.style.overflowY = 'auto';
+  }
+
+  $('save').addEventListener('click', save);
+  $('gen').addEventListener('click', () => {
+    const p = read(), fresh = !LOG.some(e => same(e, p));
+    if (fresh && !save()) return;
+    const n = generate(true);
+    if (n){ status(`✓ DECLARATION GENERATED · ${n} SESSION${n === 1 ? '' : 'S'}${fresh ? ' · NEW ENTRY LOGGED FIRST' : ''}`, 'var(--a)'); KB.beep(660, 50); setTimeout(() => KB.beep(990, 60), 80); KB.twitch($('sheet')); }
+  });
+  $('clear').addEventListener('click', () => { ['purpose', 'output', 'adapted'].forEach(f => { $(f).value = ''; }); status('FORM CLEARED · THE LOG IS UNTOUCHED'); $('purpose').focus(); });
+  $('example').addEventListener('click', () => { fill(EXAMPLE); status('EXAMPLE FILLED · ▸ GENERATE TO LOG IT AND WRITE THE PAGE', 'var(--b)'); KB.beep(520, 40); });
+  $('assessment').addEventListener('input', ledger);
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
+
+  fill(EXAMPLE); ledger(); generate(false);
+  document.fonts && document.fonts.ready.then(fit);
+})();
+</script>
+</body>
+</html>

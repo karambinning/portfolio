@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>War Room Replica</title>
+<meta name="description" content="Offline replica of the War Room paper-trading dashboard and the Krabs in-play football model. Paper data only.">
+<meta name="robots" content="noindex">
+<!--
+  WAR ROOM + KRABS · PUBLIC REPLICA
+  Static, offline re-creation of two dashboards for a portfolio iframe.
+  WAR ROOM: styling ported from units/polymarket_war_room/dashboard/server.py;
+            equity and trades replayed from an aggregate extract of the v91_final
+            PAPER run (assets/data.json). Fill check ports simulate_orderbook_fill().
+  KRABS:    model ported from krabs_trader.py (live-stats Poisson). The match is a
+            scripted DEMO and its market quotes are simulated. Ledger figures are
+            reported summary values; the per-match ledger was not archived.
+  No network, no keys, no wallets, no account data. Nothing here trades.
+-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%2300c8dd' stroke-width='2'/%3E%3Cpath d='M16 3v26M3 16h26' stroke='%2300c8dd' stroke-width='1'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/markets.css">
+</head>
+<body>
+<div class="ov-scan" aria-hidden="true"></div><div class="ov-vig" aria-hidden="true"></div>
+
+<div class="room">
+  <header class="topbar">
+    <div class="left">
+      <span class="home-lnk" aria-hidden="true">&larr; BINNING.AI</span>
+      <nav class="tabs" role="tablist" aria-label="Dashboards">
+        <button class="tab on" role="tab" id="tab-wr" aria-selected="true" aria-controls="p-wr">WAR ROOM</button>
+        <button class="tab" role="tab" id="tab-kr" aria-selected="false" aria-controls="p-kr" tabindex="-1">KRABS</button>
+      </nav>
+    </div>
+    <div class="right">
+      <span id="clock" class="badge b-cyan hide-sm">T+0:00</span>
+      <span class="badge b-amber" title="Paper trading only. No real money.">PAPER</span>
+      <span class="badge b-green hide-sm">REPLAY</span>
+    </div>
+  </header>
+
+  <main class="stage">
+    <!-- ═════════════ WAR ROOM ═════════════ -->
+    <section class="panel on" id="p-wr" role="tabpanel" aria-labelledby="tab-wr">
+      <div class="wr-grid">
+        <div class="col-main">
+          <div class="area-lbl amber">PAPER TRADING ENGINE <span class="cy" id="m-run">v91_final</span> <span class="dimx">· 5-MIN CRYPTO UP/DOWN · SOL ETH XRP BTC DOGE</span></div>
+          <div class="mstrip" id="paper-strip">
+            <div class="mbox mc"><div class="mv" id="m-bal">$50.00</div><div class="ml">BALANCE</div></div>
+            <div class="mbox"><div class="mv" id="m-pnl">$0.00</div><div class="ml">NET PnL</div></div>
+            <div class="mbox"><div class="mv" id="m-wr">--</div><div class="ml">WIN RATE</div></div>
+            <div class="mbox"><div class="mv" id="m-trades">0</div><div class="ml">TRADES</div></div>
+            <div class="mbox hide-xs"><div class="mv" id="m-avgw">--</div><div class="ml">AVG WIN</div></div>
+            <div class="mbox hide-xs"><div class="mv" id="m-avgl">--</div><div class="ml">AVG LOSS</div></div>
+            <div class="mbox"><div class="mv" id="m-sl">0</div><div class="ml">STOP-LOSSES</div></div>
+          </div>
+
+          <div class="dtable perf">
+            <div class="dth grad-g">
+              <span class="dtt big">PERFORMANCE <span class="dimx">· PAPER</span></span>
+              <span class="badge b-green big" id="perf-badge">$0.00</span>
+            </div>
+            <div class="canvas-wrap"><canvas id="pnl-canvas" aria-label="Paper equity curve, $50 start" role="img"></canvas></div>
+            <div class="perf-foot">
+              <span id="perf-wr">Win Rate: --</span>
+              <span id="perf-trades">Trades: 0</span>
+              <span id="perf-cycles" class="hide-xs">Cycles: 0</span>
+              <span id="perf-dd" class="red">DD: 0.0%</span>
+            </div>
+            <div class="replay">
+              <button class="cb cb-g" id="wr-play" aria-label="Play replay">&#9654; PLAY</button>
+              <button class="cb" id="wr-speed" aria-label="Replay speed">x8</button>
+              <input type="range" id="wr-scrub" min="0" max="602" step="0.5" value="0" aria-label="Replay time (minutes since start)">
+              <span class="rtime" id="wr-time">T+0h00</span>
+            </div>
+          </div>
+          <div class="audit" role="note"><b>AUDIT NOTE</b> Every entry in this run filled at the <b>$0.520 midpoint</b>. The later honest paper engine (V24n) checked the real CLOB book first: a $0.52 limit filled <b>2 of 304</b> attempts. The project marked this P/L <b>invalid</b>; the direction calls stood. See FILL CHECK.</div>
+        </div>
+
+        <aside class="col-side">
+          <div class="seg" role="tablist" aria-label="War Room views">
+            <button class="sg on" data-v="tape" role="tab" aria-selected="true">TAPE</button>
+            <button class="sg" data-v="fill" role="tab" aria-selected="false">FILL CHECK</button>
+            <button class="sg" data-v="bots" role="tab" aria-selected="false">BOTS</button>
+          </div>
+
+          <div class="sv on" id="v-tape">
+            <div class="dtable grow">
+              <div class="dth"><span class="dtt">TRADE HISTORY</span><span class="badge b-cyan" id="hist-ct">0</span></div>
+              <div class="dtb" id="hist-list" aria-live="off"><div class="empty">Press play to replay the run.</div></div>
+            </div>
+            <div class="dtable">
+              <div class="dth"><span class="dtt">STRATEGY LOG <span class="dimx">· SELF-TUNING</span></span><span class="badge b-cyan" id="adj-ct">0</span></div>
+              <div class="dtb short" id="adj-list"><div class="empty">No adjustments yet.</div></div>
+            </div>
+          </div>
+
+          <div class="sv" id="v-fill">
+            <div class="dtable grow">
+              <div class="dth"><span class="dtt">ORDER-BOOK FILL CHECK</span><span class="badge b-amber">BUY YES</span></div>
+              <div class="fill-ctl">
+                <label>WINDOW T <output id="f-t-o">40s</output><input type="range" id="f-t" min="0" max="300" step="5" value="40"></label>
+                <label>LIMIT <output id="f-p-o">$0.52</output><input type="range" id="f-p" min="0.30" max="0.99" step="0.01" value="0.52"></label>
+                <label>SIZE <output id="f-a-o">$6</output><input type="range" id="f-a" min="1" max="20" step="1" value="6"></label>
+              </div>
+              <div class="ladder" id="f-ladder" aria-label="Ask ladder"></div>
+              <div class="fill-res">
+                <div class="fr old"><div class="frh">OLD ENGINE · MIDPOINT</div><div class="frv" id="f-old">FILLED</div><div class="frs" id="f-old-s"></div></div>
+                <div class="fr new"><div class="frh">HONEST · WALK THE BOOK</div><div class="frv" id="f-new">--</div><div class="frs" id="f-new-s"></div></div>
+              </div>
+              <div class="fnote">Book is illustrative, shaped on the recorded structure: bids $0.01–0.02 and asks $0.98–0.99 always deep; mid-range asks only early in the 300s window. The walk is a port of <code>simulate_orderbook_fill()</code>.</div>
+            </div>
+          </div>
+
+          <div class="sv" id="v-bots">
+            <div class="dtable">
+              <div class="dth"><span class="dtt">VERDICT BOT · CROSS-ASSET JURY</span><span class="badge" id="jury-b">--</span></div>
+              <div class="jury" id="jury" aria-label="Tap an asset to change its vote"></div>
+              <div class="jury-out" id="jury-out"></div>
+            </div>
+            <div class="bots" id="bots"></div>
+            <div class="dtable">
+              <div class="dth"><span class="dtt">v91_final ENGINE PARAMS <span class="dimx">· AT CLOSE</span></span></div>
+              <div class="dtb short params" id="params"></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ═════════════ KRABS ═════════════ -->
+    <section class="panel" id="p-kr" role="tabpanel" aria-labelledby="tab-kr" hidden>
+      <div class="wr-grid">
+        <div class="col-main">
+          <div class="area-lbl amber">MR KRABS · IN-PLAY PAPER BOOK <span class="dimx">· DEMO MATCH, SCRIPTED STATS · SIMULATED QUOTES · REAL MODEL CODE</span></div>
+          <div class="scoreboard">
+            <div class="sb-team"><span class="sb-n">HOME</span><span class="sb-g" id="k-h">0</span></div>
+            <div class="sb-mid"><div class="sb-min" id="k-min">0'</div><div class="sb-ph" id="k-ph">KICK-OFF</div></div>
+            <div class="sb-team r"><span class="sb-g" id="k-a">0</span><span class="sb-n">AWAY</span></div>
+            <div class="mbox k-st"><div class="mv" id="k-lam">--</div><div class="ml">LIVE &lambda; H/A</div></div>
+            <div class="mbox k-st"><div class="mv" id="k-xg">--</div><div class="ml">xG PROXY H/A</div></div>
+            <div class="mbox k-st"><div class="mv" id="k-cor">0</div><div class="ml">CORNERS</div></div>
+          </div>
+          <div class="dtable perf">
+            <div class="dth grad-c">
+              <span class="dtt big">MODEL FAIR vs MARKET</span>
+              <span class="mk-sel" id="mk-sel" role="radiogroup" aria-label="Market"></span>
+            </div>
+            <div class="canvas-wrap"><canvas id="k-canvas" role="img" aria-label="Model fair probability against market price by minute"></canvas></div>
+            <div class="perf-foot">
+              <span><i class="sw cy"></i>MODEL FAIR</span><span><i class="sw am"></i>MARKET MID</span><span><i class="sw gn"></i>KRABS BUY</span><span class="hide-xs"><i class="sw wt"></i>GOAL</span>
+            </div>
+            <div class="replay">
+              <button class="cb cb-g" id="k-play" aria-label="Play match">&#9654; PLAY</button>
+              <input type="range" id="k-scrub" min="0" max="90" step="1" value="0" aria-label="Match minute">
+              <span class="rtime" id="k-time">0'</span>
+            </div>
+          </div>
+          <div class="read" id="k-read" aria-live="polite">Pre-match — waiting for the whistle.</div>
+        </div>
+
+        <aside class="col-side">
+          <div class="seg" role="tablist" aria-label="Krabs views">
+            <button class="sg on" data-v="edge" role="tab" aria-selected="true">EDGE</button>
+            <button class="sg" data-v="book" role="tab" aria-selected="false">BOOK</button>
+            <button class="sg" data-v="ledger" role="tab" aria-selected="false">LEDGER</button>
+          </div>
+          <div class="sv on" id="v-edge">
+            <div class="dtable grow">
+              <div class="dth"><span class="dtt">EDGE TABLE <span class="dimx">· FAIR − ASK</span></span><span class="badge b-cyan" id="k-ec">0</span></div>
+              <div class="etable" id="k-edge"></div>
+            </div>
+          </div>
+          <div class="sv" id="v-book">
+            <div class="dtable">
+              <div class="dth"><span class="dtt">PAPER BOOK <span class="dimx">· $10 POT</span></span><span class="badge b-green" id="k-pnl">$0.00</span></div>
+              <div class="dtb short" id="k-pos"><div class="empty">No positions.</div></div>
+            </div>
+            <div class="dtable grow">
+              <div class="dth"><span class="dtt">ACTIONS</span><span class="badge b-cyan" id="k-ac">0</span></div>
+              <div class="dtb" id="k-acts"><div class="empty">Holding the book.</div></div>
+            </div>
+          </div>
+          <div class="sv" id="v-ledger">
+            <div class="dtable">
+              <div class="dth"><span class="dtt">CALIBRATION LEDGER</span><span class="badge b-amber">REPORTED</span></div>
+              <div class="ledger">
+                <div class="lg-row"><div class="lg-big" id="lg-brier">0.24 &rarr; 0.117</div><div class="lg-l">BRIER SCORE · LOWER IS BETTER</div></div>
+                <canvas id="lg-canvas" role="img" aria-label="Brier score 0.24, 0.14, 0.117 across the recorded checkpoints"></canvas>
+                <div class="lg-cap" id="lg-cap"></div>
+                <div class="lg-grid">
+                  <div class="mbox mg"><div class="mv" id="lg-clv">+2.24</div><div class="ml">CLV PTS · AVG MOVE</div></div>
+                  <div class="mbox"><div class="mv" id="lg-sig">~5,000</div><div class="ml">SIGNALS</div></div>
+                  <div class="mbox mg"><div class="mv" id="lg-dis">67%</div><div class="ml">RIGHT · MODEL ≠ MKT</div></div>
+                  <div class="mbox"><div class="mv" id="lg-agr">23%</div><div class="ml">MOVED · MODEL = MKT</div></div>
+                </div>
+                <div class="lg-note" id="lg-note"></div>
+              </div>
+            </div>
+            <div class="dtable">
+              <div class="dth"><span class="dtt">THIS DEMO MATCH</span><span class="badge b-cyan">COMPUTED</span></div>
+              <div class="dtb short" id="k-demo"></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="replica-badge" aria-label="This is a replica running on paper data">replica · paper data</div>
+<noscript><p class="nojs">This replica needs JavaScript.</p></noscript>
+<script src="assets/markets.js"></script>
+</body>
+</html>

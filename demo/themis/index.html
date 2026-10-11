@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THEMIS Console Replica</title>
+<meta name="description" content="Interactive replica of the THEMIS legal-research console. Public law only, canned answers, no case data.">
+<meta name="robots" content="noindex">
+<!--
+  THEMIS CONSOLE · PUBLIC REPLICA
+  A static, offline re-creation of the THEMIS console UI for a portfolio iframe.
+  No backend, no network calls, no private data. Every answer is canned and
+  keyword-routed from public law (Mental Capacity Act 2005 + one UKSC authority).
+  The matter vault is shown isolated and empty by design.
+-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 L28 7 V16 C28 22 22 28 16 30 C10 28 4 22 4 16 V7 Z' stroke='%23ffcc00' stroke-width='2' fill='%231c1500'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ═══ RESET + ROOT ═══════════════════════════════════════════════════ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  :root {
+    color-scheme: dark;
+    --bg-body:   #070e1c;
+    --bg-lane:   #020a14;
+    --bg-card:   #04080f;
+    --bg-card-2: #06101e;
+    --grid:      #0a1e35;
+    --border:    #162540;
+    --border-2:  #1e3a5f;
+    --text:      #eef6ff;
+    --text-dim:  #8aa3c0;
+    --label:     #6b88a8;
+    --accent:    #ffcc00;   /* THEMIS yellow · primary */
+    --accent-soft: #ffcc0022;
+    --ok:        #00ff88;
+    --warn:      #ff7700;
+    --bad:       #ff3355;
+    --pending:   #4a5a72;
+    --vault:     #ff7700;   /* isolated vault border */
+  }
+  html { background: var(--bg-body); overflow-x: hidden; }
+  body {
+    font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    background: var(--bg-body);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: -1px -1px;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--accent); color: #000; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-body); }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  :focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+  /* ═══ ANIMATIONS ═════════════════════════════════════════════════════ */
+  @keyframes ledPulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px currentColor; }
+    50%      { opacity: 0.55; box-shadow: 0 0 2px currentColor; }
+  }
+  @keyframes panelReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 0%; }
+    50%      { background-position: 100% 0%; }
+  }
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    47% { opacity: 1; } 48% { opacity: 0.6; } 49% { opacity: 1; }
+    62% { opacity: 1; } 63% { opacity: 0.85; } 64% { opacity: 1; }
+  }
+  @keyframes barRise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ═══ REPLICA RIBBON ═════════════════════════════════════════════════ */
+  .replica-ribbon {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--accent); color: #000;
+    font-size: 9px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    padding: 4px 12px; text-align: center;
+  }
+  .replica-ribbon .sep { opacity: .5; }
+
+  /* ═══ TOP BANNER ═════════════════════════════════════════════════════ */
+  .banner {
+    background: linear-gradient(180deg, #0a1424 0%, #04080f 100%);
+    border-bottom: 1px solid var(--accent);
+    box-shadow: 0 0 30px #ffcc0011 inset, 0 1px 0 #ffcc0033;
+    padding: 18px 28px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, #ffcc0006 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .banner-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .wordmark {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    letter-spacing: 14px;
+    color: var(--accent);
+    text-shadow: 0 0 24px #ffcc0066, 0 0 4px #ffcc00;
+    line-height: 0.9;
+    animation: flicker 9s infinite;
+    white-space: nowrap;
+  }
+  .wordmark .glyph { font-size: 50px; margin-right: 12px; vertical-align: middle; }
+  .sub {
+    font-size: 10px; color: var(--text-dim);
+    letter-spacing: 4px; text-transform: uppercase; margin-top: 6px;
+  }
+  .epigraph {
+    font-size: 10px; color: var(--label); font-style: italic;
+    letter-spacing: 1px; margin-top: 8px;
+  }
+  .epigraph::before { content: "\201C"; color: var(--accent); margin-right: 3px; }
+  .epigraph::after  { content: "\201D"; color: var(--accent); margin-left: 3px; }
+  .status-pills { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px;
+    border: 1px solid var(--border-2);
+    background: #02060f;
+    font-size: 10px; letter-spacing: 1px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .pill .led {
+    width: 7px; height: 7px; border-radius: 50%; flex: none;
+    background: var(--ok); color: var(--ok);
+    animation: ledPulse 2.2s ease-in-out infinite;
+  }
+  .pill.yellow .led { background: var(--accent); color: var(--accent); }
+  .pill.vault .led  { background: var(--vault); color: var(--vault); animation: none; }
+  .pill.dim .led    { background: var(--pending); color: var(--pending); animation: none; }
+
+  /* ═══ TAB STRIP ══════════════════════════════════════════════════════ */
+  .tabs {
+    background: #02060e;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 28px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .tab {
+    appearance: none; background: transparent; border: 0;
+    font-family: inherit;
+    padding: 11px 16px;
+    font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    white-space: nowrap; font-weight: 500;
+  }
+  .tab:hover { color: var(--text); background: #06101e; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: #06101e; }
+  .tab .num { color: var(--label); margin-right: 8px; font-size: 9px; }
+  .tab.active .num { color: var(--accent); }
+
+  /* ═══ MAIN GRID ══════════════════════════════════════════════════════ */
+  .console {
+    padding: 20px 28px 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 16px;
+    max-width: 1900px;
+    margin: 0 auto;
+  }
+  .lane { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .full-row { grid-column: 1 / -1; }
+
+  /* ═══ PANEL ══════════════════════════════════════════════════════════ */
+  .panel {
+    background: var(--bg-lane);
+    border: 1px solid var(--border);
+    position: relative;
+    animation: panelReveal 0.5s ease-out both;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .panel::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, var(--accent) 0%, transparent 60%);
+    opacity: 0.5;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    gap: 14px; flex-wrap: wrap;
+  }
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; color: var(--text); letter-spacing: 4px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .panel-title .pnum {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 7px; letter-spacing: 1px; font-weight: 600;
+    border: 1px solid #ffcc0044;
+  }
+  .panel-meta { font-size: 9px; color: var(--label); letter-spacing: 2px; text-transform: uppercase; }
+  .panel-body { padding: 16px; }
+
+  /* ═══ STREAM CARDS ═══════════════════════════════════════════════════ */
+  .streams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+    gap: 10px;
+  }
+  .stream-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 11px 13px;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s, opacity .2s;
+  }
+  .stream-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px #ffcc0011, 0 0 0 1px #ffcc0033 inset;
+  }
+  .stream-card.pending { opacity: 0.62; }
+  .stream-card.pending:hover { opacity: 1; }
+  .stream-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .stream-id { font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
+  .stream-card.pending .stream-id { color: var(--pending); }
+  .stream-led {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+    white-space: nowrap;
+  }
+  .stream-led .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ok); box-shadow: 0 0 6px currentColor;
+    animation: ledPulse 2.2s ease-in-out infinite;
+  }
+  .stream-led.online { color: var(--ok); }
+  .stream-led.pending { color: var(--pending); }
+  .stream-led.pending .dot { background: var(--pending); box-shadow: none; animation: none; }
+  .stream-src { font-size: 9px; color: var(--text-dim); margin-bottom: 8px; line-height: 1.45; }
+  .stream-row {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--label); letter-spacing: 1px; text-transform: uppercase;
+    padding-top: 5px; border-top: 1px dashed #102438; margin-top: 2px;
+  }
+  .stream-row + .stream-row { border-top: none; padding-top: 1px; }
+  .stream-row span:last-child { color: var(--text); font-weight: 500; }
+  .stream-card.pending .stream-row span:last-child { color: var(--pending); }
+  .stream-target {
+    font-size: 9px; color: var(--accent); margin-top: 6px;
+    border-top: 1px solid var(--border); padding-top: 6px;
+  }
+  .stream-card.pending .stream-target { color: var(--pending); }
+
+  /* ═══ PARTITIONS ═════════════════════════════════════════════════════ */
+  .partitions { display: flex; flex-direction: column; gap: 4px; }
+  .part-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 44px 52px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--bg-card);
+    border-left: 3px solid var(--accent);
+    font-size: 10px;
+    transition: background 0.15s, box-shadow .2s;
+  }
+  .part-row:hover { background: var(--bg-card-2); }
+  .part-row.hit { box-shadow: 0 0 0 1px var(--accent) inset, 0 0 18px #ffcc0022; }
+  .part-row.vault { border-left-color: var(--vault); background: linear-gradient(90deg, #1a0a0a 0%, var(--bg-card) 80%); }
+  .part-row.pending { border-left-color: var(--pending); opacity: 0.7; }
+  .part-name { color: var(--accent); font-weight: 600; font-size: 11px; overflow-wrap: anywhere; }
+  .part-row.vault .part-name { color: var(--vault); }
+  .part-row.pending .part-name { color: var(--text-dim); }
+  .part-meta { color: var(--text-dim); white-space: nowrap; }
+  .part-meta.right { text-align: right; color: var(--text); font-weight: 500; }
+  .part-tag {
+    display: inline-block;
+    font-size: 8px; color: var(--vault);
+    border: 1px solid var(--vault);
+    padding: 1px 5px; letter-spacing: 1px; margin-left: 8px;
+    vertical-align: middle; font-weight: 600; white-space: nowrap;
+  }
+  .part-tag.lock { color: var(--accent); border-color: var(--accent); }
+  .part-divider {
+    font-size: 8px; color: var(--label); letter-spacing: 3px; text-transform: uppercase;
+    padding: 10px 0 4px; border-bottom: 1px dashed var(--border); margin-bottom: 4px;
+  }
+  .vault-note {
+    font-size: 9px; color: var(--text-dim); margin-top: 6px; padding: 7px 10px;
+    border: 1px dashed #ff770066; background: #1a0a0a55; letter-spacing: .3px; line-height: 1.55;
+  }
+  .vault-note b { color: var(--vault); font-weight: 600; }
+
+  /* ═══ VERIFICATION (declaration side) ════════════════════════════════ */
+  .verify-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .spark { background: var(--bg-card); border: 1px solid var(--border); padding: 10px; }
+  .spark h5, .session h5 {
+    font-size: 9px; color: var(--accent); letter-spacing: 2.5px;
+    text-transform: uppercase; margin-bottom: 8px; font-weight: 600;
+  }
+  .spark-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--ok); letter-spacing: 2px; line-height: 1; }
+  .spark-target { font-size: 9px; color: var(--label); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+  .spark-bars { display: flex; align-items: flex-end; gap: 3px; height: 46px; margin-top: 10px; }
+  .spark-bars .bar {
+    flex: 1; background: var(--ok); min-height: 4px;
+    transform-origin: bottom; animation: barRise 0.6s ease-out both;
+  }
+  .spark-axis {
+    display: flex; justify-content: space-between;
+    font-size: 8px; color: var(--label); letter-spacing: 1px; margin-top: 4px; text-transform: uppercase;
+  }
+  .check-row { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--text); margin-top: 8px; }
+  .check-row .chk { color: var(--ok); font-weight: 700; }
+  .session { background: var(--bg-card); border: 1px solid var(--border); padding: 10px; }
+  .session-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .stat { background: #02060e; border: 1px solid var(--border); padding: 7px 8px; }
+  .stat .v { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); letter-spacing: 2px; line-height: 1; }
+  .stat.abst .v { color: var(--warn); }
+  .stat.ref .v { color: var(--bad); }
+  .stat .l { font-size: 8px; color: var(--label); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+  .session-log { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; max-height: 108px; overflow: auto; }
+  .session-log .row {
+    font-size: 9px; color: var(--text-dim); padding: 4px 6px; background: #02060e;
+    border-left: 2px solid var(--accent); animation: fadeUp .3s ease-out both;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .session-log .row.abstain { border-left-color: var(--warn); }
+  .session-log .row.refuse { border-left-color: var(--bad); }
+  .session-log .row.unknown { border-left-color: var(--pending); }
+  .session-log .empty { font-size: 9px; color: var(--pending); font-style: italic; padding: 4px 0; }
+
+  /* ═══ COMPLIANCE ═════════════════════════════════════════════════════ */
+  .compliance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 8px; }
+  .comp-row {
+    background: var(--bg-card); padding: 9px 12px;
+    border-left: 3px solid var(--ok);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .comp-row.warn { border-left-color: var(--warn); }
+  .comp-row.pending { border-left-color: var(--pending); }
+  .comp-name { font-size: 10px; color: var(--text); line-height: 1.4; }
+  .comp-state { font-size: 9px; color: var(--ok); font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+  .comp-row.warn .comp-state { color: var(--warn); }
+  .comp-row.pending .comp-state { color: var(--pending); }
+
+  /* ═══ QUERY INTERFACE ════════════════════════════════════════════════ */
+  .query-box {
+    background: #02060e;
+    border: 2px solid var(--accent);
+    padding: 14px;
+    box-shadow: 0 0 30px #ffcc0022 inset;
+  }
+  .qrow { display: flex; gap: 8px; align-items: stretch; }
+  .query-input {
+    flex: 1; min-width: 0;
+    background: transparent; border: none;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border-2);
+    outline: none;
+  }
+  .query-input::placeholder { color: var(--label); font-style: italic; }
+  .query-input:focus { border-bottom-color: var(--accent); }
+  .ask-btn {
+    background: var(--accent); color: #000; border: none;
+    padding: 0 18px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px;
+    cursor: pointer; transition: box-shadow .2s, opacity .2s;
+  }
+  .ask-btn:hover { box-shadow: 0 0 16px #ffcc0077; }
+  .ask-btn:disabled { opacity: .5; cursor: wait; }
+  .scope-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 6px; }
+  .scope-label {
+    font-size: 8px; color: var(--label); letter-spacing: 2px;
+    text-transform: uppercase; margin-right: 4px; align-self: center;
+  }
+  .scope-chip {
+    appearance: none; font-family: inherit;
+    font-size: 9px; padding: 3px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-2);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px; font-weight: 500;
+  }
+  .scope-chip:hover { color: var(--accent); border-color: var(--accent); }
+  .scope-chip.active { color: #000; background: var(--accent); border-color: var(--accent); font-weight: 700; }
+
+  .recent-queries { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .recent-queries h5 {
+    font-size: 8px; color: var(--label); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 6px; font-weight: 600;
+  }
+  .rq-item {
+    display: block; width: 100%; text-align: left;
+    appearance: none; background: transparent; border: 0; font-family: inherit;
+    font-size: 10px; padding: 4px 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .rq-item:hover, .rq-item:focus-visible { color: var(--accent); background: var(--bg-card); }
+  .rq-item::before { content: "\203A  "; color: var(--accent); }
+  .rq-item .kind { float: right; font-size: 8px; letter-spacing: 1.5px; color: var(--pending); text-transform: uppercase; margin-left: 8px; }
+
+  .response {
+    margin-top: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px;
+    animation: fadeUp .35s ease-out both;
+  }
+  .response.abstain { border-left-color: var(--warn); }
+  .response.refuse  { border-left-color: var(--bad); }
+  .response.unknown { border-left-color: var(--pending); }
+  .resp-label {
+    font-size: 8px; color: var(--accent); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 6px; font-weight: 600;
+  }
+  .response.abstain .resp-label { color: var(--warn); }
+  .response.refuse .resp-label { color: var(--bad); }
+  .response.unknown .resp-label { color: var(--text-dim); }
+  .resp-body { font-size: 11px; color: var(--text); line-height: 1.65; }
+  .resp-body p + p { margin-top: 6px; }
+  .resp-body q { color: #fff3c4; quotes: "\201C" "\201D"; }
+  .resp-body ol { margin: 4px 0 0 18px; }
+  .resp-body li { margin: 2px 0; }
+  .cite {
+    color: var(--accent); font-weight: 600;
+    background: var(--accent-soft);
+    padding: 0 4px; font-size: 10px; white-space: nowrap;
+  }
+  .flag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 8px; margin-bottom: 8px;
+    border: 1px solid var(--warn); color: var(--warn); background: #ff770014;
+  }
+  .flag.refuse { border-color: var(--bad); color: var(--bad); background: #ff335514; }
+  .flag.unknown { border-color: var(--pending); color: var(--text-dim); background: transparent; }
+  .flag .led { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: ledPulse 1.6s ease-in-out infinite; }
+  .progress { font-size: 10px; color: var(--text-dim); line-height: 1.8; }
+  .progress .step { animation: fadeUp .25s ease-out both; }
+  .progress .step::before { content: "\25B8  "; color: var(--accent); }
+  .progress .step.done::after { content: "  ok"; color: var(--ok); font-weight: 600; }
+  .caret { display: inline-block; width: 7px; height: 12px; background: var(--accent); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+
+  .src {
+    background: var(--bg-card-2); border: 1px solid var(--border); border-left: 3px solid #9a8420;
+    padding: 8px 10px; margin-top: 8px; animation: fadeUp .3s ease-out both;
+  }
+  .src .meta { display: flex; gap: 10px; align-items: baseline; color: var(--accent); font-size: 10px; flex-wrap: wrap; }
+  .src .meta b { font-weight: 600; }
+  .src .meta .part { color: var(--text-dim); }
+  .src .meta .sc { margin-left: auto; color: var(--label); }
+  .src .quote { color: var(--text-dim); font-size: 10.5px; margin-top: 5px; border-left: 2px solid var(--border-2); padding-left: 8px; line-height: 1.55; }
+  .resp-footer {
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 8px; color: var(--label);
+    letter-spacing: 1.2px; text-transform: uppercase; line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+  .resp-footer .sig { color: var(--accent); }
+
+  /* ═══ ARCHITECTURE ═══════════════════════════════════════════════════ */
+  .arch-wrap { background: var(--bg-card); padding: 16px; border: 1px solid var(--border); text-align: center; }
+  .arch-wrap svg { display: block; margin: 0 auto; width: 100%; max-width: 1100px; height: auto; }
+  .arch-legend { display: flex; gap: 18px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .arch-legend .item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500;
+  }
+  .arch-legend .sw { width: 12px; height: 12px; border: 1px solid var(--accent); background: var(--accent-soft); }
+  .arch-legend .sw.vault { border-color: var(--vault); background: #ff770022; }
+  .arch-legend .sw.out { border-color: var(--ok); background: #00ff8822; }
+  .flowdot { fill: var(--accent); filter: drop-shadow(0 0 3px #ffcc00); }
+
+  /* ═══ NODE ═══════════════════════════════════════════════════════════ */
+  .node-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; }
+  .node-meta { display: flex; flex-direction: column; gap: 5px; }
+  .node-row {
+    display: grid; grid-template-columns: 110px minmax(0, 1fr);
+    font-size: 10px; padding: 6px 10px; background: var(--bg-card); gap: 12px; align-items: center;
+  }
+  .node-row .k { color: var(--label); letter-spacing: 1.5px; text-transform: uppercase; font-size: 9px; }
+  .node-row .v { color: var(--text); }
+  .node-row .v.yellow { color: var(--accent); font-weight: 600; }
+  .node-row .v.warn { color: var(--warn); font-weight: 600; }
+  .services-list {
+    display: flex; flex-direction: column; gap: 4px;
+    background: var(--bg-card); padding: 12px; border-left: 3px solid var(--pending);
+  }
+  .services-list h5 { font-size: 9px; color: var(--label); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  .svc { font-size: 10px; color: var(--text-dim); padding: 3px 0; border-bottom: 1px dashed var(--border); }
+  .svc:last-child { border-bottom: none; }
+  .svc .port { color: var(--accent); font-weight: 600; }
+
+  /* ═══ AGENT ECONOMY ══════════════════════════════════════════════════ */
+  .agentecon-head { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); letter-spacing: 5px; margin-bottom: 12px; text-align: center; }
+  .agentecon-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .ae-card { background: var(--bg-card); border: 1px solid var(--border); padding: 12px; border-top: 2px solid var(--accent); }
+  .ae-card h5 { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  .ae-card p { font-size: 10px; color: var(--text-dim); line-height: 1.55; }
+  .ae-quote {
+    font-size: 12px; color: var(--text); font-style: italic; text-align: center;
+    padding: 14px 24px;
+    border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent);
+    background: linear-gradient(180deg, var(--accent-soft), transparent, var(--accent-soft));
+    line-height: 1.6;
+  }
+
+  /* ═══ FOOTER ═════════════════════════════════════════════════════════ */
+  .foot { padding: 20px 28px 28px; border-top: 1px solid var(--border); background: #02060e; text-align: center; margin-top: 12px; }
+  .foot-glyph svg { width: 28px; height: 28px; }
+  .foot-line { font-size: 10px; color: var(--label); letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; font-weight: 500; }
+  .foot-line.accent { color: var(--accent); }
+  .foot-disc { font-size: 9px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+
+  /* ═══ RESPONSIVE ═════════════════════════════════════════════════════ */
+  @media (max-width: 1180px) {
+    .verify-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .console { grid-template-columns: minmax(0, 1fr); }
+    .agentecon-grid { grid-template-columns: minmax(0, 1fr); }
+    .node-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .replica-ribbon { font-size: 8px; letter-spacing: 1.5px; }
+    .wordmark { font-size: 44px; letter-spacing: 9px; }
+    .wordmark .glyph { font-size: 36px; margin-right: 8px; }
+    .sub { letter-spacing: 2px; }
+    .banner { padding: 14px 16px 12px; }
+    .banner-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .status-pills { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+    .pill { font-size: 9px; padding: 4px 8px; white-space: normal; }
+    .tabs { padding: 0 8px; }
+    .tab { padding: 10px 10px; letter-spacing: 1.5px; }
+    .console { padding: 12px 16px; gap: 12px; }
+    .panel-body { padding: 12px; }
+    .panel-head { padding: 10px 12px 8px; }
+    .panel-title { font-size: 15px; letter-spacing: 2px; }
+    .query-box { padding: 10px; }
+    .query-input { font-size: 13px; }
+    .verify-grid { grid-template-columns: minmax(0, 1fr); }
+    .part-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .part-row .part-meta:not(.right) { grid-column: 1; font-size: 9px; }
+    .part-row .part-meta.right { grid-column: 2; grid-row: 1; }
+    .part-tag { margin-left: 0; margin-top: 3px; }
+    .node-row { grid-template-columns: 84px minmax(0, 1fr); }
+    .rq-item .kind { display: none; }
+    .ae-quote { padding: 12px 10px; }
+    .foot { padding: 18px 16px 24px; }
+  }
+
+  /* ═══ REDUCED MOTION ═════════════════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+    .flowdot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="replica-ribbon" role="note">replica <span class="sep">·</span> public law only <span class="sep">·</span> no case data</div>
+
+<!-- ═══ BANNER ═══════════════════════════════════════════════════════ -->
+<header class="banner">
+  <div class="banner-grid">
+    <div>
+      <div class="wordmark"><span class="glyph">⚖</span>THEMIS</div>
+      <div class="sub">Private Legal Intelligence Agent · v0.1-phase-1 · replica</div>
+      <div class="epigraph">Themis — mother of Astraea — the agent that prepares what the daughter delivers.</div>
+    </div>
+    <div class="status-pills">
+      <span class="pill"><span class="led"></span>replica : ONLINE · offline page</span>
+      <span class="pill yellow"><span class="led"></span>Corpus : public law · MCA 2005 + COP Rules</span>
+      <span class="pill yellow"><span class="led"></span>Answers : canned · keyword-routed</span>
+      <span class="pill vault"><span class="led"></span>Matter vault : isolated · empty in demo</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ TAB STRIP ════════════════════════════════════════════════════ -->
+<nav class="tabs" id="tabs" aria-label="Console panels">
+  <button class="tab active" data-tab="all"><span class="num">00</span>ALL</button>
+  <button class="tab" data-tab="query"><span class="num">07</span>Query</button>
+  <button class="tab" data-tab="corpus"><span class="num">02</span>Corpus</button>
+  <button class="tab" data-tab="streams"><span class="num">01</span>Streams</button>
+  <button class="tab" data-tab="verify"><span class="num">05</span>Declaration</button>
+  <button class="tab" data-tab="compliance"><span class="num">06</span>Compliance</button>
+  <button class="tab" data-tab="arch"><span class="num">08</span>Architecture</button>
+  <button class="tab" data-tab="node"><span class="num">09</span>Node</button>
+  <button class="tab" data-tab="agentecon"><span class="num">10</span>Agent Economy</button>
+</nav>
+
+<!-- ═══ MAIN CONSOLE ═════════════════════════════════════════════════ -->
+<main class="console">
+
+  <!-- ── LEFT LANE ───────────────────────────────────────────────── -->
+  <div class="lane">
+
+    <!-- PANEL 07 · QUERY INTERFACE -->
+    <section class="panel" data-panel="query">
+      <div class="panel-head">
+        <div class="panel-title"><span class="pnum">07</span>THEMIS QUERY INTERFACE</div>
+        <div class="panel-meta">cite by default · refuse if unsourced</div>
+      </div>
+      <div class="panel-body">
+        <div class="query-box">
+          <form class="qrow" id="qform" autocomplete="off">
+            <label for="q" class="visually-hidden" style="position:absolute;left:-9999px">Ask Themis</label>
+            <input class="query-input" id="q" type="text" placeholder="Ask Themis. Cite by default. Refuse if unsourced." maxlength="240">
+            <button class="ask-btn" id="ask" type="submit">ASK</button>
+          </form>
+          <div class="scope-row" id="scope-row">
+            <span class="scope-label">scope</span>
+            <button class="scope-chip" type="button" data-p="all">ALL public</button>
+            <button class="scope-chip" type="button" data-p="corpus_statute">corpus_statute</button>
+            <button class="scope-chip active" type="button" data-p="corpus_cop">corpus_cop</button>
+            <button class="scope-chip active" type="button" data-p="corpus_mca">corpus_mca</button>
+            <button class="scope-chip active" type="button" data-p="corpus_case_law">corpus_case_law</button>
+            <button class="scope-chip" type="button" data-p="corpus_cpr">corpus_cpr</button>
+            <button class="scope-chip" type="button" data-p="corpus_sra">corpus_sra</button>
+          </div>
+
+          <div class="recent-queries">
+            <h5>Sample queries · click to run</h5>
+            <div id="presets"></div>
+          </div>
+
+          <div id="response" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 01 · STREAM HEALTH -->
+    <section class="panel" data-panel="streams">
+      <div class="panel-head">
+        <div class="panel-title"><span class="pnum">01</span>STREAM HEALTH · PUBLIC FEEDS</div>
+        <div class="panel-meta">11 streams · 6 online · 5 pending deploy</div>
+      </div>
+      <div class="panel-body">
+        <div class="streams-grid" id="streams-grid"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── RIGHT LANE ──────────────────────────────────────────────── -->
+  <div class="lane">
+
+    <!-- PANEL 02 · CORPUS PARTITIONS -->
+    <section class="panel" data-panel="corpus">
+      <div class="panel-head">
+        <div class="panel-title"><span class="pnum">02</span>THEMIS CORPUS · CHROMADB</div>
+        <div class="panel-meta">10 public partitions · 1 vault</div>
+      </div>
+      <div class="panel-body">
+        <div class="partitions" id="partitions"></div>
+        <div class="vault-note"><b>Trust boundary.</b> Public partitions are queried together. A matter vault is a separate store that is never cross-queried and never leaves its node. In this replica it holds nothing.</div>
+      </div>
+    </section>
+
+    <!-- PANEL 05 · DECLARATION / VERIFICATION -->
+    <section class="panel" data-panel="verify">
+      <div class="panel-head">
+        <div class="panel-title"><span class="pnum">05</span>THEMIS DECLARATION</div>
+        <div class="panel-meta">every answer signed · span-checked</div>
+      </div>
+      <div class="panel-body">
+        <div class="verify-grid">
+          <div class="spark">
+            <h5>Hallucination flag rate · 7-day</h5>
+            <div class="spark-num">2.3<span style="font-size:18px;">%</span></div>
+            <div class="spark-target">target &lt; 5% · sample data</div>
+            <div class="spark-bars" id="spark-bars"></div>
+            <div class="spark-axis"><span>d-6</span><span>d-3</span><span>today</span></div>
+            <div class="check-row"><span class="chk">☑</span><span>Span alignment ≥ 0.65</span></div>
+            <div class="check-row"><span class="chk">☑</span><span>Vault isolation 100%</span></div>
+          </div>
+          <div class="session">
+            <h5>This session</h5>
+            <div class="session-stats">
+              <div class="stat"><div class="v" id="n-ans">0</div><div class="l">cited</div></div>
+              <div class="stat abst"><div class="v" id="n-abs">0</div><div class="l">abstained</div></div>
+              <div class="stat ref"><div class="v" id="n-ref">0</div><div class="l">refused</div></div>
+            </div>
+            <div class="session-log" id="session-log"><div class="empty">No queries yet. Ask one.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 06 · COMPLIANCE -->
+    <section class="panel" data-panel="compliance">
+      <div class="panel-head">
+        <div class="panel-title"><span class="pnum">06</span>COMPLIANCE STATUS</div>
+        <div class="panel-meta">SRA · LPP · GDPR · PII</div>
+      </div>
+      <div class="panel-body">
+        <div class="compliance-grid">
+          <div class="comp-row"><span class="comp-name">SRA Code of Conduct 2019</span><span class="comp-state">☑ DECLARATION</span></div>
+          <div class="comp-row"><span class="comp-name">Ayinde v Hackney [2025] EWHC</span><span class="comp-state">☑ AUDIT CHAIN</span></div>
+          <div class="comp-row"><span class="comp-name">Law Society Gen AI essentials</span><span class="comp-state">☑ DISCLOSURE</span></div>
+          <div class="comp-row"><span class="comp-name">CCBE Oct 2025 guide</span><span class="comp-state">☑ ALIGNED</span></div>
+          <div class="comp-row warn"><span class="comp-name">GDPR DPIA</span><span class="comp-state">⚠ PENDING</span></div>
+          <div class="comp-row pending"><span class="comp-name">PII insurer notification</span><span class="comp-state">⏳ PHASE 5</span></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- PANEL 08 · ARCHITECTURE (full row) -->
+  <section class="panel full-row" data-panel="arch">
+    <div class="panel-head">
+      <div class="panel-title"><span class="pnum">08</span>9-LAYER ARCHITECTURE</div>
+      <div class="panel-meta">L1a → L8 · sovereign · local · citation-mandatory</div>
+    </div>
+    <div class="panel-body">
+      <div class="arch-wrap">
+        <svg viewBox="0 0 1100 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Themis 9-layer architecture: public law streams and an isolated vault feed the corpus, then retrieval, generation, citation enforcement, a signed declaration, an audit log and two output surfaces.">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffcc00"/></marker>
+            <marker id="arr-or" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff7700"/></marker>
+            <marker id="arr-gr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#00ff88"/></marker>
+            <filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <g font-family="IBM Plex Mono, monospace">
+            <rect x="40" y="30" width="260" height="64" fill="#06101e" stroke="#ffcc00" stroke-width="1.5"/>
+            <text x="170" y="52" fill="#ffcc00" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L1a · PUBLIC LAW STREAMS</text>
+            <text x="170" y="70" fill="#8aa3c0" font-size="9" text-anchor="middle">11 T-LAW-* feeds · scheduled</text>
+            <text x="170" y="84" fill="#6b88a8" font-size="8" text-anchor="middle">legislation.gov.uk · BAILII · gov.uk · SRA</text>
+
+            <rect x="800" y="30" width="260" height="64" fill="#1a0a0a" stroke="#ff7700" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <text x="930" y="52" fill="#ff7700" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L1b · PRIVATE INTAKE</text>
+            <text x="930" y="70" fill="#8aa3c0" font-size="9" text-anchor="middle">scan · OCR on-device · zero cloud</text>
+            <text x="930" y="84" fill="#6b88a8" font-size="8" text-anchor="middle">disabled in replica</text>
+
+            <rect x="320" y="130" width="460" height="68" fill="#06101e" stroke="#ffcc00" stroke-width="2" filter="url(#glow)"/>
+            <text x="550" y="154" fill="#ffcc00" font-family="Bebas Neue, sans-serif" font-size="18" text-anchor="middle" letter-spacing="3">L2 · THEMIS CORPUS</text>
+            <text x="550" y="172" fill="#eef6ff" font-size="9" text-anchor="middle">ChromaDB · 10 public partitions + isolated vault · nomic-embed-text</text>
+            <text x="550" y="188" fill="#6b88a8" font-size="8" text-anchor="middle">corpus_statute · corpus_case_law · corpus_cop · corpus_mca · vault (empty in demo)</text>
+
+            <rect x="320" y="232" width="460" height="56" fill="#06101e" stroke="#ffcc00" stroke-width="1.5"/>
+            <text x="550" y="254" fill="#ffcc00" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L3 · HYBRID RETRIEVAL</text>
+            <text x="550" y="272" fill="#8aa3c0" font-size="9" text-anchor="middle">dense (ChromaDB) + sparse (BM25) + cross-encoder rerank</text>
+
+            <rect x="320" y="320" width="460" height="56" fill="#06101e" stroke="#ffcc00" stroke-width="1.5"/>
+            <text x="550" y="342" fill="#ffcc00" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L4 · GENERATION · LOCAL LLM</text>
+            <text x="550" y="360" fill="#8aa3c0" font-size="9" text-anchor="middle">Mistral 7B Instruct · temp 0.1 · local · Apple Silicon</text>
+
+            <rect x="320" y="408" width="460" height="56" fill="#06101e" stroke="#ffcc00" stroke-width="1.5"/>
+            <text x="550" y="430" fill="#ffcc00" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L5 · CITATION ENFORCEMENT + SPAN VERIFICATION</text>
+            <text x="550" y="448" fill="#8aa3c0" font-size="9" text-anchor="middle">every claim mapped to a span · similarity ≥ 0.65 · else abstain</text>
+
+            <rect x="320" y="496" width="460" height="56" fill="#1c1500" stroke="#ffcc00" stroke-width="2" filter="url(#glow)"/>
+            <text x="550" y="518" fill="#ffcc00" font-family="Bebas Neue, sans-serif" font-size="16" text-anchor="middle" letter-spacing="3">L6 · THEMIS DECLARATION</text>
+            <text x="550" y="538" fill="#eef6ff" font-size="9" text-anchor="middle">Ed25519 signed · audit_id · per Ayinde v Hackney [2025]</text>
+
+            <rect x="40" y="496" width="240" height="56" fill="#06101e" stroke="#ffcc00" stroke-width="1.5"/>
+            <text x="160" y="518" fill="#ffcc00" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L7 · AUDIT LOG</text>
+            <text x="160" y="538" fill="#8aa3c0" font-size="9" text-anchor="middle">append-only · tamper-evident</text>
+
+            <rect x="320" y="584" width="220" height="44" fill="#03130a" stroke="#00ff88" stroke-width="1.5"/>
+            <text x="430" y="604" fill="#00ff88" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L8a · THEMIS CONSOLE</text>
+            <text x="430" y="620" fill="#8aa3c0" font-size="9" text-anchor="middle">internal surface</text>
+
+            <rect x="560" y="584" width="220" height="44" fill="#03130a" stroke="#00ff88" stroke-width="1.5"/>
+            <text x="670" y="604" fill="#00ff88" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.5">L8b · ASTRAEA BRIEF</text>
+            <text x="670" y="620" fill="#8aa3c0" font-size="9" text-anchor="middle">external surface</text>
+          </g>
+
+          <path id="p-in"  d="M 170 96 Q 170 113 320 145" stroke="#ffcc00" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 930 96 Q 930 113 780 145" stroke="#ff7700" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-or)"/>
+          <path id="p-down" d="M 550 200 L 550 494" stroke="none" fill="none"/>
+          <path d="M 550 200 L 550 230" stroke="#ffcc00" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 550 290 L 550 318" stroke="#ffcc00" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 550 378 L 550 406" stroke="#ffcc00" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 550 466 L 550 494" stroke="#ffcc00" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 320 524 L 282 524" stroke="#ffcc00" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 480 554 L 430 582" stroke="#00ff88" stroke-width="1.5" fill="none" marker-end="url(#arr-gr)"/>
+          <path d="M 620 554 L 670 582" stroke="#00ff88" stroke-width="1.5" fill="none" marker-end="url(#arr-gr)"/>
+
+          <circle class="flowdot" r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#p-in"/></animateMotion></circle>
+          <circle class="flowdot" r="3.5"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#p-down"/></animateMotion></circle>
+        </svg>
+        <div class="arch-legend">
+          <div class="item"><span class="sw"></span>Themis layer · yellow</div>
+          <div class="item"><span class="sw vault"></span>Private · orange isolation</div>
+          <div class="item"><span class="sw out"></span>Output surface · green</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL 09 · NODE -->
+  <section class="panel full-row" data-panel="node">
+    <div class="panel-head">
+      <div class="panel-title"><span class="pnum">09</span>THEMIS-NODE · HARDWARE</div>
+      <div class="panel-meta">private mesh · sovereign · local only</div>
+    </div>
+    <div class="panel-body">
+      <div class="node-grid">
+        <div class="node-meta">
+          <div class="node-row"><span class="k">hostname</span><span class="v yellow">themis-node</span></div>
+          <div class="node-row"><span class="k">network</span><span class="v">private mesh interface only · no public exposure</span></div>
+          <div class="node-row"><span class="k">this page</span><span class="v warn">static replica · no backend</span></div>
+          <div class="node-row"><span class="k">ocr</span><span class="v">Apple Vision · on-device</span></div>
+          <div class="node-row"><span class="k">ram target</span><span class="v">16GB minimum · 32GB preferred</span></div>
+          <div class="node-row"><span class="k">storage</span><span class="v">corpus ~20GB + models ~10GB</span></div>
+        </div>
+        <div class="services-list">
+          <h5>▸ services</h5>
+          <div class="svc">ollama serve <span class="port">· local</span></div>
+          <div class="svc">chromadb <span class="port">· local</span></div>
+          <div class="svc">themis-api <span class="port">:8001</span></div>
+          <div class="svc">themis-console <span class="port">:8002</span></div>
+          <div class="svc">astraea-brief <span class="port">:8003</span> · phase 5</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL 10 · AGENT ECONOMY LAW -->
+  <section class="panel full-row" data-panel="agentecon">
+    <div class="panel-head">
+      <div class="panel-title"><span class="pnum">10</span>AGENT ECONOMY LAW</div>
+      <div class="panel-meta">strategic positioning</div>
+    </div>
+    <div class="panel-body">
+      <div class="agentecon-head">THE VACUUM IS THE OPPORTUNITY</div>
+      <div class="agentecon-grid">
+        <div class="ae-card"><h5>▸ ICO AI guidance</h5><p>Information Commissioner's Office guidance on AI and data protection. Tracked via T-LAW-AI-COMPLIANCE.</p></div>
+        <div class="ae-card"><h5>▸ EU AI Act · Reg 2024/1689</h5><p>In force in EU member states. The UK observes but is not bound. Held as comparative reference in corpus_ai_law.</p></div>
+        <div class="ae-card"><h5>▸ SRA AI guidance</h5><p>SRA Risk Outlook and Standards updates. The Themis Declaration is engineered to exceed the disclosure minimum.</p></div>
+      </div>
+      <div class="ae-quote">The UK has no AI-specific legislation. Whoever builds and runs a sovereign legal AI now is positioned to write the conventions when regulation arrives.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-glyph">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M16 2 L28 7 V16 C28 22 22 28 16 30 C10 28 4 22 4 16 V7 Z" stroke="#ffcc00" stroke-width="1.5" fill="#1c1500"/>
+      <line x1="16" y1="8" x2="16" y2="22" stroke="#ffcc00" stroke-width="1.5"/>
+      <line x1="12" y1="12" x2="20" y2="12" stroke="#ffcc00" stroke-width="1.5"/>
+      <circle cx="16" cy="22" r="1.6" fill="#ffcc00"/>
+    </svg>
+  </div>
+  <div class="foot-line accent">THEMIS · replica · public law only · no case data</div>
+  <div class="foot-disc">Not legal advice. Answers are pre-written samples. Statutory text is from the Mental Capacity Act 2005 (Open Government Licence v3.0).</div>
+  <div class="foot-line" style="margin-top:6px;">Binning.AI · sovereign legal intelligence · audit-by-default</div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ═══ PUBLIC DATA (illustrative) ══════════════════════════════════════
+  var STREAMS = [
+    { id:'T-LAW-STATUTE',   src:'legislation.gov.uk', cadence:'12h', target:'corpus_statute', on:true, last:'4m ago', items:12 },
+    { id:'T-LAW-CASES',     src:'BAILII · EWHC · EWCA · UKSC · UKHL', cadence:'12h', target:'corpus_case_law', on:true, last:'8m ago', items:28 },
+    { id:'T-LAW-COP',       src:'BAILII EWCOP + COP Rules 2017 + Practice Directions', cadence:'12h', target:'corpus_cop', on:true, last:'21m ago', items:3 },
+    { id:'T-LAW-MCA',       src:'MCA 2005 + Code of Practice', cadence:'weekly', target:'corpus_mca', on:true, last:'2d ago', items:1 },
+    { id:'T-LAW-CPR',       src:'justice.gov.uk CPR snapshot', cadence:'12h', target:'corpus_cpr', on:true, last:'2h ago', items:1 },
+    { id:'T-LAW-AGENT-ECON',src:'gov.uk AI · ICO · Law Gazette · EU Digital', cadence:'12h', target:'corpus_ai_law', on:true, last:'1h ago', items:6 },
+    { id:'T-LAW-IMMIGRATION', src:'gov.uk immigration · UKVI guidance', cadence:'12h', target:'corpus_immigration', on:false },
+    { id:'T-LAW-MATRIMONIAL', src:'BAILII EWFC + EWHC (Fam)', cadence:'12h', target:'corpus_matrimonial', on:false },
+    { id:'T-LAW-PROBATE',   src:'BAILII EWHC Chancery probate', cadence:'12h', target:'corpus_probate', on:false },
+    { id:'T-LAW-SRA',       src:'sra.org.uk news + guidance', cadence:'24h', target:'corpus_sra', on:false },
+    { id:'T-LAW-AI-COMPLIANCE', src:'SRA AI · Bar Council AI · ICO AI · Law Society GenAI', cadence:'24h', target:'corpus_sra + corpus_ai_law', on:false }
+  ];
+
+  var PARTITIONS = [
+    { name:'corpus_statute',     chunks:'12,847 chunks', refresh:'4m',      size:'187 MB' },
+    { name:'corpus_case_law',    chunks:'89,234 chunks', refresh:'8m',      size:'1.2 GB' },
+    { name:'corpus_cop',         chunks:'2,118 chunks',  refresh:'21m',     size:'31 MB' },
+    { name:'corpus_mca',         chunks:'1,904 chunks',  refresh:'2d',      size:'24 MB' },
+    { name:'corpus_cpr',         chunks:'1,432 chunks',  refresh:'2h',      size:'18 MB' },
+    { name:'corpus_ai_law',      chunks:'3,421 chunks',  refresh:'1h',      size:'47 MB' },
+    { name:'corpus_immigration', chunks:'—', refresh:'pending', size:'—', cls:'pending' },
+    { name:'corpus_matrimonial', chunks:'—', refresh:'pending', size:'—', cls:'pending' },
+    { name:'corpus_probate',     chunks:'—', refresh:'pending', size:'—', cls:'pending' },
+    { name:'corpus_sra',         chunks:'—', refresh:'pending', size:'—', cls:'pending' }
+  ];
+
+  var SPARK = [1.8, 2.1, 1.4, 3.2, 2.7, 2.0, 2.3];
+
+  // ═══ CANNED ANSWERS · public law only ═════════════════════════════════
+  var LG = 'legislation.gov.uk/ukpga/2005/9';
+  var A = {
+    s2: {
+      kind: 'cited', parts: ['corpus_mca'], retrieved: 4,
+      body:
+        '<p>The test is in the Mental Capacity Act 2005, s.2(1): <q>a person lacks capacity in relation to a matter if at the material time he is unable to make a decision for himself in relation to the matter because of an impairment of, or a disturbance in the functioning of, the mind or brain</q> <span class="cite">[1]</span>.</p>' +
+        '<p>It is decision-specific and time-specific. The impairment may be permanent or temporary (s.2(2)), and incapacity cannot be established merely by reference to age, appearance, or a condition or behaviour that might lead others to make unjustified assumptions (s.2(3)) <span class="cite">[1]</span>. The starting point is the presumption in s.1(2) that a person has capacity unless it is established that they lack it <span class="cite">[2]</span>, decided on the balance of probabilities (s.2(4)) <span class="cite">[1]</span>. Inability to decide is defined by the functional test in s.3(1) <span class="cite">[3]</span>.</p>',
+      sources: [
+        { n:1, ref:'MCA 2005 s.2(1)–(4)', part:'corpus_mca', score:'0.94', url: LG + '/section/2', quote:'(1) For the purposes of this Act, a person lacks capacity in relation to a matter if at the material time he is unable to make a decision for himself in relation to the matter because of an impairment of, or a disturbance in the functioning of, the mind or brain. (2) It does not matter whether the impairment or disturbance is permanent or temporary.' },
+        { n:2, ref:'MCA 2005 s.1(2)', part:'corpus_mca', score:'0.81', url: LG + '/section/1', quote:'(2) A person must be assumed to have capacity unless it is established that he lacks capacity.' },
+        { n:3, ref:'MCA 2005 s.3(1)', part:'corpus_mca', score:'0.77', url: LG + '/section/3', quote:'(1) For the purposes of section 2, a person is unable to make a decision for himself if he is unable— (a) to understand the information relevant to the decision, …' }
+      ]
+    },
+    s3: {
+      kind: 'cited', parts: ['corpus_mca'], retrieved: 3,
+      body:
+        '<p>Section 3(1) sets out four abilities. A person is unable to make a decision for himself if he is unable:</p>' +
+        '<ol type="a"><li><q>to understand the information relevant to the decision</q>,</li>' +
+        '<li><q>to retain that information</q>,</li>' +
+        '<li><q>to use or weigh that information as part of the process of making the decision</q>, or</li>' +
+        '<li><q>to communicate his decision (whether by talking, using sign language or any other means)</q> <span class="cite">[1]</span>.</li></ol>' +
+        '<p>The limbs are disjunctive: failing any one is enough. A person is not to be regarded as unable to understand if they can understand an explanation given in a way appropriate to their circumstances (s.3(2)), and retaining information only for a short period does not prevent them being regarded as able to make the decision (s.3(3)) <span class="cite">[1]</span>.</p>',
+      sources: [
+        { n:1, ref:'MCA 2005 s.3(1)–(3)', part:'corpus_mca', score:'0.96', url: LG + '/section/3', quote:'(1) For the purposes of section 2, a person is unable to make a decision for himself if he is unable— (a) to understand the information relevant to the decision, (b) to retain that information, (c) to use or weigh that information as part of the process of making the decision, or (d) to communicate his decision (whether by talking, using sign language or any other means).' }
+      ]
+    },
+    s15: {
+      kind: 'cited', parts: ['corpus_mca', 'corpus_cop'], retrieved: 4,
+      body:
+        '<p>Under s.15(1) the Court of Protection may make declarations as to:</p>' +
+        '<ol type="a"><li><q>whether a person has or lacks capacity to make a decision specified in the declaration</q>;</li>' +
+        '<li><q>whether a person has or lacks capacity to make decisions on such matters as are described in the declaration</q>;</li>' +
+        '<li><q>the lawfulness or otherwise of any act done, or yet to be done, in relation to that person</q> <span class="cite">[1]</span>.</li></ol>' +
+        '<p>For (c), <q>"Act" includes an omission and a course of conduct</q> (s.15(2)) <span class="cite">[1]</span>. A declaration states the legal position. It does not make a decision on the person\'s behalf: that is the separate power in s.16 <span class="cite">[2]</span>.</p>',
+      sources: [
+        { n:1, ref:'MCA 2005 s.15', part:'corpus_mca', score:'0.95', url: LG + '/section/15', quote:'(1) The court may make declarations as to— (a) whether a person has or lacks capacity to make a decision specified in the declaration; (b) whether a person has or lacks capacity to make decisions on such matters as are described in the declaration; (c) the lawfulness or otherwise of any act done, or yet to be done, in relation to that person. (2) "Act" includes an omission and a course of conduct.' },
+        { n:2, ref:'MCA 2005 s.16(2)', part:'corpus_mca', score:'0.72', url: LG + '/section/16', quote:'(2) The court may— (a) by making an order, make the decision or decisions on P\'s behalf in relation to the matter or matters, or (b) appoint a person (a "deputy") to make decisions on P\'s behalf in relation to the matter or matters.' }
+      ]
+    },
+    s16: {
+      kind: 'cited', parts: ['corpus_mca', 'corpus_cop'], retrieved: 5,
+      body:
+        '<p>Section 16 applies where a person ("P") lacks capacity in relation to a matter concerning P\'s personal welfare or P\'s property and affairs (s.16(1)) <span class="cite">[1]</span>. The court may then <q>by making an order, make the decision or decisions on P\'s behalf</q>, or <q>appoint a person (a "deputy") to make decisions on P\'s behalf</q> (s.16(2)) <span class="cite">[1]</span>.</p>' +
+        '<p>In deciding whether appointing a deputy is in P\'s best interests, the court must have regard to the principles that <q>a decision by the court is to be preferred to the appointment of a deputy to make a decision</q>, and that a deputy\'s powers <q>should be as limited in scope and duration as is reasonably practicable in the circumstances</q> (s.16(4)) <span class="cite">[2]</span>. Every decision remains subject to s.1 and best interests under s.4 (s.16(3)) <span class="cite">[1]</span>.</p>',
+      sources: [
+        { n:1, ref:'MCA 2005 s.16(1)–(3)', part:'corpus_mca', score:'0.93', url: LG + '/section/16', quote:'(1) This section applies if a person ("P") lacks capacity in relation to a matter or matters concerning— (a) P\'s personal welfare, or (b) P\'s property and affairs.' },
+        { n:2, ref:'MCA 2005 s.16(4)', part:'corpus_mca', score:'0.89', url: LG + '/section/16', quote:'(4) When deciding whether it is in P\'s best interests to appoint a deputy, the court must have regard (in addition to the matters mentioned in section 4) to the principles that— (a) a decision by the court is to be preferred to the appointment of a deputy to make a decision, and (b) the powers conferred on a deputy should be as limited in scope and duration as is reasonably practicable in the circumstances.' }
+      ]
+    },
+    jb: {
+      kind: 'cited', parts: ['corpus_case_law', 'corpus_mca'], retrieved: 6,
+      body:
+        '<p><em>A Local Authority v JB</em> [2021] UKSC 52 is the Supreme Court\'s leading statement of how ss.2–3 fit together <span class="cite">[1]</span>. Summarised, not quoted:</p>' +
+        '<ol><li>Identify the "matter" in s.2(1) the decision relates to.</li>' +
+        '<li>Identify the information relevant to that decision under s.3(1)(a).</li>' +
+        '<li>Ask whether the person is unable to make the decision under s.3 (the functional test).</li>' +
+        '<li>Ask whether that inability is <em>because of</em> an impairment of, or disturbance in the functioning of, the mind or brain: the causative nexus in s.2(1).</li></ol>' +
+        '<p>On the facts, the court held that the information relevant to a decision to engage in sexual relations includes the fact that the other person must be able to consent and must give and maintain consent throughout <span class="cite">[1]</span>. The statutory wording it applied is s.2(1) <span class="cite">[2]</span>.</p>',
+      sources: [
+        { n:1, ref:'A Local Authority v JB [2021] UKSC 52', part:'corpus_case_law', score:'0.91', url:'supremecourt.uk · judgments', quote:'Judgment of the Supreme Court (2021). Summary held in corpus; see the judgment for the court\'s own words.' },
+        { n:2, ref:'MCA 2005 s.2(1)', part:'corpus_mca', score:'0.79', url: LG + '/section/2', quote:'(1) For the purposes of this Act, a person lacks capacity in relation to a matter if at the material time he is unable to make a decision for himself in relation to the matter because of an impairment of, or a disturbance in the functioning of, the mind or brain.' }
+      ]
+    },
+    abstain: {
+      kind: 'abstain', parts: ['corpus_case_law', 'corpus_cop'], retrieved: 2,
+      flag: 'ABSTAINED · below evidence threshold',
+      body:
+        '<p>Insufficient corpus evidence for this. Retrieval returned 2 candidate passages; none cleared the span-alignment threshold (top 0.41 &lt; 0.65), so no case names are given. Naming cases without verified spans is how fabricated citations reach a court.</p>' +
+        '<p>Manual research required: search BAILII (EWCOP) and the law reports directly.</p>'
+    },
+    refuse: {
+      kind: 'refuse', parts: [], retrieved: 0,
+      flag: 'REFUSED · advice or prediction',
+      body:
+        '<p>Themis does not give legal advice or predict outcomes. It retrieves, quotes and cites what the law says, and every answer carries a signed declaration so a qualified lawyer can check it.</p>' +
+        '<p>Try asking what a section of the Mental Capacity Act 2005 says.</p>'
+    },
+    unknown: {
+      kind: 'unknown', parts: [], retrieved: 0,
+      flag: 'NO MATCH',
+      body: '<p>That is not in the documents I have.</p><p>This replica holds a small public corpus: MCA 2005 ss.1–3, 15–16 and <em>A Local Authority v JB</em> [2021] UKSC 52.</p>'
+    }
+  };
+
+  var PRESETS = [
+    { q:'What is the legal test for lack of capacity under MCA 2005 s.2?', kind:'cited' },
+    { q:'What are the four limbs of the functional test in s.3(1)?', kind:'cited' },
+    { q:'What declarations can the Court of Protection make under s.15?', kind:'cited' },
+    { q:'When can the court appoint a deputy under s.16?', kind:'cited' },
+    { q:'What did the Supreme Court decide in A Local Authority v JB?', kind:'cited' },
+    { q:'Cite three EWCOP cases on deprivation of liberty', kind:'abstains' },
+    { q:'Will I win if I apply to the Court of Protection?', kind:'refuses' }
+  ];
+
+  function route(raw) {
+    var q = ' ' + raw.toLowerCase().replace(/\s+/g, ' ') + ' ';
+    if (/\bwill i win\b|\bwin my\b|\bchances?\b|\bshould i\b|\badvise me\b|\badvice\b|\bpredict|\blikely (to|outcome)|\bwhat will happen\b|\bmy case\b|\bam i going to\b/.test(q)) return 'refuse';
+    if (/\bcite (two|three|four|five|\d+|some|me)\b|\blist (of )?(the )?cases\b|\bewcop cases\b|\bcases on\b|\bcase law on\b|\bauthorities on\b/.test(q)) return 'abstain';
+    if (/\bjb\b|uksc 52|\bsupreme court\b|\blocal authority v\b/.test(q)) return 'jb';
+    if (/\bdeput(y|ies)\b|\bs\.? ?16\b|\bsection 16\b|\bdecide on (p|their)|\bdecisions? on (p|someone)/.test(q)) return 's16';
+    if (/\bdeclar(e|ation|ations)\b|\bs\.? ?15\b|\bsection 15\b|\blawfulness\b/.test(q)) return 's15';
+    if (/\bs\.? ?3\b|\bsection 3\b|\bfunctional\b|\bfour limbs\b|\bunderstand\b|\bretain\b|\bweigh\b|\bcommunicate\b|\bunable to make a decision\b/.test(q)) return 's3';
+    if (/\bs\.? ?2\b|\bsection 2\b|\bcapacity\b|\bimpairment\b|\bmental capacity act\b|\bmca\b|\bpresum/.test(q)) return 's2';
+    return 'unknown';
+  }
+
+  // ═══ HELPERS ═════════════════════════════════════════════════════════
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function hex(n) { var s = ''; for (var i = 0; i < n; i++) s += '0123456789abcdef'[Math.floor(Math.random() * 16)]; return s; }
+  function auditId() {
+    var d = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+    return 'themis-demo-' + d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) + 'T' + p(d.getUTCHours()) + '-' + p(d.getUTCMinutes()) + '-' + p(d.getUTCSeconds()) + '-' + hex(4);
+  }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, REDUCED ? 0 : ms); }); }
+
+  // ═══ RENDERERS ═══════════════════════════════════════════════════════
+  function renderStreams() {
+    var grid = $('streams-grid');
+    STREAMS.forEach(function (s) {
+      var card = el('div', 'stream-card' + (s.on ? '' : ' pending'));
+      card.innerHTML =
+        '<div class="stream-head"><span class="stream-id">' + s.id + '</span>' +
+        '<span class="stream-led ' + (s.on ? 'online' : 'pending') + '"><span class="dot"></span>' + (s.on ? 'ONLINE' : 'PENDING DEPLOY') + '</span></div>' +
+        '<div class="stream-src">' + s.src + '</div>' +
+        '<div class="stream-row"><span>cadence</span><span>' + s.cadence + '</span></div>' +
+        '<div class="stream-row"><span>last run</span><span>' + (s.on ? s.last : '—') + '</span></div>' +
+        '<div class="stream-row"><span>items / cycle</span><span>' + (s.on ? s.items : '—') + '</span></div>' +
+        '<div class="stream-target">→ ' + s.target + '</div>';
+      grid.appendChild(card);
+    });
+  }
+
+  function renderPartitions() {
+    var wrap = $('partitions');
+    wrap.appendChild(el('div', 'part-divider', '▸ PUBLIC PARTITIONS · yellow border'));
+    PARTITIONS.forEach(function (p) {
+      var row = el('div', 'part-row ' + (p.cls || ''));
+      row.dataset.p = p.name;
+      row.innerHTML =
+        '<div class="part-name">' + p.name + '</div>' +
+        '<div class="part-meta">' + p.chunks + '</div>' +
+        '<div class="part-meta">' + p.refresh + '</div>' +
+        '<div class="part-meta right">' + p.size + '</div>';
+      wrap.appendChild(row);
+    });
+    wrap.appendChild(el('div', 'part-divider', '▸ VAULT · isolated · orange border · never cross-queried'));
+    var v = el('div', 'part-row vault');
+    v.innerHTML =
+      '<div class="part-name">★ matter vault<span class="part-tag">ISOLATED</span><span class="part-tag lock">EMPTY IN DEMO</span></div>' +
+      '<div class="part-meta">0 documents</div>' +
+      '<div class="part-meta">no intake</div>' +
+      '<div class="part-meta right">0 B</div>';
+    wrap.appendChild(v);
+  }
+
+  function renderSpark() {
+    var wrap = $('spark-bars'), max = Math.max.apply(null, SPARK.concat([5]));
+    SPARK.forEach(function (v, i) {
+      var bar = el('div', 'bar');
+      bar.style.height = ((v / max) * 100) + '%';
+      bar.style.animationDelay = (i * 80) + 'ms';
+      wrap.appendChild(bar);
+    });
+  }
+
+  function renderPresets() {
+    var wrap = $('presets');
+    PRESETS.forEach(function (p) {
+      var b = el('button', 'rq-item');
+      b.type = 'button';
+      b.innerHTML = esc(p.q) + '<span class="kind">' + p.kind + '</span>';
+      b.addEventListener('click', function () { $('q').value = p.q; run(); });
+      wrap.appendChild(b);
+    });
+  }
+
+  // ═══ QUERY ═══════════════════════════════════════════════════════════
+  var counts = { cited: 0, abstain: 0, refuse: 0, unknown: 0 };
+  var busy = false;
+
+  function activeScope() {
+    var chips = document.querySelectorAll('.scope-chip.active');
+    var out = [];
+    chips.forEach(function (c) { out.push(c.dataset.p); });
+    return out;
+  }
+
+  function highlight(parts) {
+    document.querySelectorAll('.part-row.hit').forEach(function (r) { r.classList.remove('hit'); });
+    parts.forEach(function (p) {
+      var r = document.querySelector('.part-row[data-p="' + p + '"]');
+      if (r) r.classList.add('hit');
+    });
+  }
+
+  function logSession(q, kind) {
+    counts[kind]++;
+    $('n-ans').textContent = counts.cited;
+    $('n-abs').textContent = counts.abstain;
+    $('n-ref').textContent = counts.refuse;
+    var log = $('session-log');
+    var empty = log.querySelector('.empty'); if (empty) empty.remove();
+    var tag = { cited: 'CITED', abstain: 'ABSTAINED', refuse: 'REFUSED', unknown: 'NO MATCH' }[kind];
+    var row = el('div', 'row ' + kind, '<b style="color:inherit">' + tag + '</b> · ' + esc(q));
+    row.title = q;
+    log.insertBefore(row, log.firstChild);
+  }
+
+  async function run() {
+    if (busy) return;
+    var input = $('q'), q = input.value.trim();
+    if (!q) { input.focus(); return; }
+    busy = true; $('ask').disabled = true;
+    var key = route(q), ans = A[key], resp = $('response');
+    var scope = activeScope();
+    var scopeTxt = scope.length ? scope.join(' + ') : 'ALL public';
+
+    resp.innerHTML = '';
+    var box = el('div', 'response');
+    box.innerHTML = '<div class="resp-label">▸ THEMIS · working <span class="caret"></span></div><div class="progress" id="prog"></div>';
+    resp.appendChild(box);
+    var prog = box.querySelector('#prog');
+    var steps = ans.kind === 'refuse'
+      ? ['classify request · advice / prediction detected']
+      : ['hybrid retrieval · ' + scopeTxt, 'rerank · ' + ans.retrieved + ' candidates', 'span verification · threshold 0.65'];
+    for (var i = 0; i < steps.length; i++) {
+      var s = el('div', 'step', esc(steps[i])); prog.appendChild(s);
+      await wait(380); s.classList.add('done');
+    }
+    await wait(200);
+
+    var id = auditId();
+    var label = {
+      cited:   '▸ THEMIS RESPONSE · sample · ' + esc(ans.parts.join(' + ')),
+      abstain: '▸ THEMIS RESPONSE · abstention',
+      refuse:  '▸ THEMIS RESPONSE · refusal',
+      unknown: '▸ THEMIS RESPONSE · no supporting passage'
+    }[ans.kind];
+    var html = '<div class="resp-label">' + label + '</div>';
+    if (ans.flag) html += '<div class="flag ' + (ans.kind === 'abstain' ? '' : ans.kind) + '"><span class="led"></span>' + ans.flag + '</div>';
+    html += '<div class="resp-body">' + ans.body + '</div>';
+    (ans.sources || []).forEach(function (s) {
+      html += '<div class="src"><div class="meta"><b>[' + s.n + '] ' + esc(s.ref) + '</b><span class="part">' + esc(s.part) + '</span><span class="sc">match ' + s.score + '</span></div>' +
+              '<div class="quote">' + esc(s.quote) + '</div>' +
+              '<div class="quote" style="border-left:0;padding-left:0;margin-top:3px;color:var(--label);font-size:9px">' + esc(s.url) + '</div></div>';
+    });
+    var cited = (ans.sources || []).length;
+    var align = ans.kind === 'cited' ? '1.00' : (ans.kind === 'abstain' ? '0.41 · below 0.65' : 'n/a');
+    html += '<div class="resp-footer"><div><span class="sig">▸ AUDIT_ID</span> ' + id +
+            ' · <span class="sig">SOURCES</span> ' + ans.retrieved + ' retrieved / ' + cited + ' cited' +
+            ' · <span class="sig">SPAN ALIGNMENT</span> ' + align +
+            ' · <span class="sig">SIGNATURE</span> ed25519:' + hex(4) + '…' + hex(4) + ' (demo)</div>' +
+            '<div style="margin-top:4px;">Not legal advice · qualified review required · per Ayinde v Hackney [2025]</div></div>';
+    box.className = 'response' + (ans.kind === 'cited' ? '' : ' ' + ans.kind);
+    box.innerHTML = html;
+
+    highlight(ans.parts);
+    logSession(q, ans.kind);
+    busy = false; $('ask').disabled = false;
+  }
+
+  // ═══ INTERACTIONS ════════════════════════════════════════════════════
+  function setupTabs() {
+    var tabs = document.querySelectorAll('.tab');
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        tabs.forEach(function (x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        var which = t.dataset.tab, beh = REDUCED ? 'auto' : 'smooth';
+        if (which === 'all') { window.scrollTo({ top: 0, behavior: beh }); return; }
+        var target = document.querySelector('section.panel[data-panel="' + which + '"]');
+        if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 34, behavior: beh });
+      });
+    });
+  }
+
+  function setupScopeChips() {
+    document.querySelectorAll('.scope-chip').forEach(function (c) {
+      c.addEventListener('click', function () { c.classList.toggle('active'); });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    renderStreams();
+    renderPartitions();
+    renderSpark();
+    renderPresets();
+    setupTabs();
+    setupScopeChips();
+    $('qform').addEventListener('submit', function (e) { e.preventDefault(); run(); });
+  });
+})();
+</script>
+</body>
+</html>

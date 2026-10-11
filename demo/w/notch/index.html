@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K·A·M Notch — terminal</title>
+<meta name="description" content="K·A·M Notch: a now-playing app for the MacBook notch, shown on a mock MacBook screen. Mock data; one real public-domain recording.">
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+/* Fonts bundled with the app (Resources/*.ttf). System faces use the closest CSS stacks. */
+@font-face { font-family: "Silkscreen"; src: url(assets/fonts/silkscreen.ttf) format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Silkscreen"; src: url(assets/fonts/silkscreen_bold.ttf) format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Press Start 2P"; src: url(assets/fonts/press_start_2p.ttf) format("truetype"); font-display: block; }
+
+/* ---------- this window ---------- */
+.nb{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;flex:1;min-height:0}
+#lap{position:relative;min-height:0;min-width:0}
+#bezel{position:absolute;left:50%;top:0;transform:translateX(-50%);background:#0b0b0e;border-radius:16px 16px 4px 4px;
+  box-shadow:0 0 0 1px #2b2b33,0 0 0 2px #050507,0 18px 40px rgba(0,0,0,.6),0 0 40px color-mix(in srgb,var(--a) 10%,transparent)}
+#bezel::after{content:"";position:absolute;left:-5%;right:-5%;bottom:-12px;height:12px;border-radius:0 0 12px 12px;
+  background:linear-gradient(#3a3a42,#1b1b20 60%,#0e0e12);clip-path:polygon(0 0,100% 0,97% 100%,3% 100%)}
+#bezel::before{content:"";position:absolute;left:50%;bottom:-12px;width:16%;height:5px;transform:translateX(-50%);background:#101014;border-radius:0 0 6px 6px;z-index:1}
+#inner{position:relative;overflow:hidden;border-radius:9px 9px 2px 2px}
+.side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.feat{list-style:none}
+.feat li{padding:7px 0 7px 16px;position:relative;border-bottom:1px dashed var(--line);font-size:12.5px;line-height:1.45;color:var(--body)}
+.feat li::before{content:"›";position:absolute;left:2px;color:var(--a)}
+.feat b{color:var(--text)}
+.feat .t-btn{font-size:11.5px;margin-left:4px}
+.readout{font:700 11px/1.45 var(--mono);letter-spacing:.04em}
+.readout .trk{color:var(--text);font-size:12.5px;text-transform:none;letter-spacing:0}
+.readout .dim{color:var(--dim)}
+.readout .ln{color:var(--violet);text-transform:uppercase;margin-top:3px}
+.readout .t-tag{margin-top:6px}
+.readout .t-tag.real{color:#00ff88} .readout .t-tag.mock{color:var(--dim)}
+.readout .cred{font:500 10.5px/1.4 var(--mono);color:var(--dim);margin-top:6px;letter-spacing:0}
+.readout .cred a{color:var(--b)}
+#note{min-height:1.4em;color:var(--b);font:700 11px/1.4 var(--mono);text-transform:uppercase}
+@media (max-width:860px){ .nb{grid-template-columns:1fr} .side{overflow:visible} }
+#lap.zoom{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#lap.zoom #bezel{left:0;transform:none}
+.zoomb{display:none}
+@media (max-width:640px){ .zoomb{display:inline-block} .t-ctl{gap:8px 14px} .t-ctl .t-btn{font-size:13px} }
+
+/* ---------- the MacBook screen (logical pixels; scaled to fit) ---------- */
+#scr{
+  --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --serif: ui-serif, "New York", "Iowan Old Style", Charter, Georgia, serif;
+  --marker: "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive;
+  position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;color:#c9c6d8;font:12px/1.3 var(--sf);letter-spacing:0;text-transform:none;
+  background:
+    radial-gradient(120% 80% at 18% 110%, #2a1450 0%, transparent 60%),
+    radial-gradient(90% 70% at 92% 105%, #0d3550 0%, transparent 55%),
+    linear-gradient(180deg, #0b0a14 0%, #100c1e 55%, #140d26 100%);
+}
+#scr *{box-sizing:border-box}
+#scr button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer}
+#scr button:focus-visible{outline:1px solid rgba(255,255,255,.6);outline-offset:1px}
+#scr .menubar{position:absolute;left:0;right:0;top:0;height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+  background:rgba(10,8,18,.55);font:500 13px/1 var(--sf);color:rgba(255,255,255,.85);z-index:4}
+#scr .menubar .l,#scr .menubar .r{display:flex;gap:18px;align-items:center;white-space:nowrap}
+#scr .menubar .l b{font-weight:700}
+#scr .hwnotch{position:absolute;top:0;left:50%;width:200px;height:32px;transform:translateX(-50%);background:#000;border-radius:0 0 10px 10px;z-index:5}
+/* ticker: full width, directly under the menu bar */
+#ticker{position:absolute;left:0;right:0;top:32px;height:20px;display:flex;align-items:stretch;z-index:6;white-space:nowrap}
+#ticker[hidden]{display:none}
+#ticker .tk-live,#ticker .tk-clock{display:flex;align-items:center;gap:6px;padding:0 12px;flex:none}
+#ticker .tk-live i{width:6px;height:6px;border-radius:50%;display:block}
+#ticker .tk-win{flex:1;min-width:0;overflow:hidden;position:relative;margin-left:12px}
+#ticker .tk-run{position:absolute;left:0;top:0;display:flex;animation:tk var(--td,60s) linear infinite}
+#ticker .tk-win:hover .tk-run{animation-play-state:paused}
+#ticker .tk-row{display:flex;gap:18px;padding-right:60px}
+#ticker .tk-it{display:inline-flex;gap:6px;align-items:center}
+@keyframes tk{to{transform:translateX(calc(-1 * var(--tw,1000px)))}}
+#scr .desk{position:absolute;left:18px;top:74px;display:flex;flex-direction:column;gap:16px;z-index:1}
+#scr .desk span{display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font:500 10.5px/1.2 var(--sf);color:rgba(255,255,255,.75);text-align:center}
+#scr .desk i{width:38px;height:30px;border-radius:5px;background:linear-gradient(#5fb0ff,#2f7fe0);box-shadow:inset 0 3px 0 rgba(255,255,255,.25)}
+#scr .desk i.f{background:linear-gradient(#f0f0f5,#c9c9d2);width:30px;height:38px;border-radius:3px}
+#scr .hint{position:absolute;left:12px;bottom:9px;font:500 11px/1 var(--sf);color:rgba(255,255,255,.42);pointer-events:none}
+#scr .wm{position:absolute;right:12px;bottom:9px;font:500 10px/1 var(--mono);color:rgba(255,255,255,.32);pointer-events:none}
+
+#stage{position:absolute;top:0;left:50%;width:0;height:0;z-index:10}
+#panel{position:absolute;top:0;left:0;transform:translateX(-50%);overflow:hidden;transition:background-color .25s}
+#panel .layer{position:absolute;inset:0;pointer-events:none}
+#content{position:absolute;top:0;left:50%;transform:translateX(-50%)}
+#content.fade{animation:fadein .22s ease-out both}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* ---------- generic layout (from the replica) ---------- */
+#scr .hstack{display:flex;align-items:center}
+#scr .vstack{display:flex;flex-direction:column}
+#scr .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+#scr .nowrap{white-space:nowrap}
+#scr .wing{display:flex;align-items:center;justify-content:center;flex:none}
+#scr .fitv{flex:none}
+/* controls */
+#scr .cb{display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--c)}
+#scr .cb svg{display:block}
+#scr .cb-px:hover{background:var(--c) !important;color:var(--hc)}
+#scr .cb-ios{border-radius:50%;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+#scr .cb-ios:hover{transform:scale(1.08)}
+#scr .cb-dg{border-radius:6px;box-shadow:inset 0 0 0 1px var(--st)}
+#scr .cb-dg:hover{box-shadow:inset 0 0 0 1px var(--sth)}
+#scr .cb-dg:hover > *{filter:drop-shadow(0 0 3px var(--c))}
+#scr .cb-kc:hover{color:var(--hc);text-shadow:0 0 2px var(--c),0 0 6px var(--c)}
+#scr .cb-kc:hover svg{filter:drop-shadow(0 0 2px var(--c))}
+#scr .cb-k .g{padding:0 2px}
+#scr .cb-k:hover .g{background:var(--c);color:var(--hc)}
+#scr .cb-v{border-radius:50%;box-shadow:inset 0 0 0 .75px var(--st)}
+#scr .cb-v:hover{box-shadow:inset 0 0 0 .75px var(--sth)}
+#scr .cb-gb:hover{color:var(--hc)}
+#scr .ascii{font-family:var(--mono);font-weight:700;line-height:1}
+/* Liquid Glass, drawn (Glass.swift's pre-macOS-26 path) */
+#scr .glass{position:relative;background:rgba(255,255,255,.07)}
+#scr .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.02) 25%,transparent 50%)}
+#scr .glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;padding:1px;
+  background:linear-gradient(135deg,rgba(255,255,255,.65) 0%,rgba(255,255,255,.10) 35%,rgba(255,255,255,.02) 60%,rgba(255,255,255,.28) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+#scr .glass > *{position:relative;z-index:1}
+/* timeline */
+#scr .tl-bar{position:relative;height:12px;cursor:pointer;touch-action:none}
+#scr .tl-px{display:flex;gap:2px;position:absolute;left:0;right:0;top:3px;height:6px}
+#scr .tl-bar:hover .tl-px,#scr .tl-bar.scrub .tl-px{top:2px;height:8px}
+#scr .tl-px i,#scr .tl-gb i{flex:1;display:block}
+#scr .tl-gb{display:flex;gap:1px;position:absolute;left:0;right:0;top:3.5px;height:5px}
+#scr .tl-ios{position:absolute;left:0;right:0;top:3px;height:6px;border-radius:99px;transition:top .25s,height .25s}
+#scr .tl-bar:hover .tl-ios,#scr .tl-bar.scrub .tl-ios{top:1px;height:10px}
+#scr .tl-ios .fill{position:absolute;left:1.5px;top:1.5px;bottom:1.5px;border-radius:99px}
+#scr .tl-ios .knob{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;opacity:0;transition:opacity .2s;background:rgba(255,255,255,.25)}
+#scr .tl-bar:hover .tl-ios .knob,#scr .tl-bar.scrub .tl-ios .knob{opacity:1}
+#scr .tl-v-dot{position:absolute;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;transition:width .15s,height .15s,margin .15s}
+#scr .tl-bar:hover .tl-v-dot,#scr .tl-bar.scrub .tl-v-dot{width:9px;height:9px;margin:-4.5px 0 0 -4.5px}
+#scr .tl-clock{display:flex;justify-content:space-between;margin-top:3px}
+/* marquee */
+#scr .mq{overflow:hidden;position:relative}
+#scr .mq-in{position:absolute;left:0;top:0;white-space:nowrap;display:flex}
+#scr .mq-in.run{animation:mq var(--d) linear infinite}
+#scr .mq-in span + span{margin-left:48px}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(calc(-1 * var(--w)))}}
+/* photoreal devices */
+#scr .pstage{position:relative;border-radius:10px;overflow:hidden;box-shadow:0 5px 10px rgba(0,0,0,.5);flex:none}
+#scr .pstage > img.photo{position:absolute;inset:0;width:100%;height:100%;display:block}
+#scr .abs{position:absolute}
+#scr .hs{position:absolute;display:flex;align-items:center;justify-content:center}
+#scr .hs:hover{box-shadow:0 0 0 1.5px var(--glowa),0 0 4px var(--glow)}
+#scr .hs .latch{position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 1px 2px rgba(0,0,0,.35)}
+#scr .hub{position:absolute;border-radius:50%;background-repeat:no-repeat}
+#scr .circle{border-radius:50%}
+#scr .noshrink > *{flex-shrink:0}
+#scr canvas.eq{display:block;flex:none}
+#scr .chip{white-space:nowrap;line-height:1.2}
+#scr .sw{position:relative;width:22px;height:16px;display:flex;align-items:center;justify-content:center;gap:1px;flex:none}
+#scr .sw i{display:block;width:4px;height:10px}
+@media (prefers-reduced-motion:reduce){ #content.fade{animation:none} #panel{transition:none} #ticker .tk-run{animation:none} }
+</style>
+</head>
+<body data-self="notch" data-brand="[K·A·M]" data-icons="♪ ◖) ⌘" data-unit="K·A·M NOTCH · AUDIO TERMINAL · UNIT 05" data-status="SSH" data-status-tail="CONNECTED"
+      data-mock="mock data · one real public-domain track" style="--a:#ff66cc;--b:#00d4ff">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div>
+      <div class="t-title">K·A·M Notch</div>
+      <div class="t-sub">A now-playing app that lives in the MacBook notch</div>
+      <div class="t-sub2">ssh karam@macbook · a demo screen, used like the real one</div>
+    </div>
+    <div class="nb">
+      <div id="lap" aria-label="A MacBook screen running K·A·M Notch">
+        <div id="bezel"><div id="inner">
+          <div id="scr">
+            <div class="menubar" aria-hidden="true">
+              <div class="l"><b>Finder</b><span>File</span><span>Edit</span></div>
+              <div class="r"><span>Wi‑Fi</span><span>09:41</span></div>
+            </div>
+            <div class="hwnotch" aria-hidden="true"></div>
+            <div id="ticker" aria-label="Live ticker (mock feed)"></div>
+            <div class="desk" aria-hidden="true"><span><i></i>Projects</span><span><i class="f"></i>notes.txt</span></div>
+            <div id="stage">
+              <div id="panel" role="region" aria-label="K·A·M Notch">
+                <div class="layer" id="lyrAmbient"></div>
+                <div class="layer" id="lyrFx"></div>
+                <div class="layer" id="lyrFeather"></div>
+                <div id="content"></div>
+                <div class="layer" id="lyrEdge"></div>
+              </div>
+            </div>
+            <div class="hint">hover or click the notch to open · move away to close</div>
+            <div class="wm">demo screen</div>
+          </div>
+        </div></div>
+      </div>
+      <div class="side" data-keep>
+        <div class="t-box hot readout" aria-live="polite">
+          <div class="t-label" style="margin-bottom:4px">Now playing</div>
+          <div class="trk" id="rTrack"></div>
+          <span class="t-tag" id="rTag"></span>
+          <div class="ln" id="rLook"></div>
+          <div class="ln" id="rEq"></div>
+          <div class="cred" id="rCredit">Recording: Robin Alciatore, piano, via Musopen. Public domain, from
+            <a href="https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg" target="_blank" rel="noopener">Wikimedia Commons</a>.</div>
+        </div>
+        <div id="note" aria-live="polite"></div>
+        <div class="t-label">What it does</div>
+        <ul class="feat">
+          <li><b>Lives in the notch.</b> Closed, it shows the cover art and a level meter either side of the notch. Hover to open; move away and it closes.</li>
+          <li><b>Themes × modes.</b> Twelve colour themes and eight ways of drawing the player: pixel, iOS, digital, terminal, cassette deck, turntable, CD and Game Boy. Any theme works in any mode. <button class="t-btn" data-x="theme"><span>THEME ▸</span></button><button class="t-btn" data-x="mode"><span>MODE ▸</span></button></li>
+          <li><b>Live EQ.</b> On the Mac it listens to the sound output and splits it into four bands. Here it listens to the recording through the browser's audio API.</li>
+          <li><b>Ticker.</b> A strip under the menu bar with the day's plan, news and status; hover pauses it. <button class="t-btn" data-x="ticker" id="xTicker2"><span>TICKER</span></button></li>
+          <li><b>Task bar.</b> Stretches the notch across the free part of the menu bar: alarm and app links on the left, now playing on the right. <button class="t-btn" data-x="taskbar"><span>TRY IT</span></button></li>
+          <li><b>Lyrics.</b> Timed lines in the panel and a strip under the closed notch. <button class="t-btn" data-x="lyrics"><span>LYRICS</span></button></li>
+          <li><b>Settings.</b> The gear opens every option: theme, mode, EQ style, effects and extras. <button class="t-btn" data-x="settings"><span>OPEN</span></button></li>
+        </ul>
+      </div>
+    </div>
+  </main>
+  <div class="t-ctl" data-keep>
+    <button class="t-btn" data-x="prev" aria-label="Previous track"><span>|◂</span></button>
+    <button class="t-btn" data-x="play" id="xPlay"><span>▸ PLAY</span></button>
+    <button class="t-btn" data-x="next" aria-label="Next track"><span>▸|</span></button>
+    <button class="t-btn" data-x="open" id="xOpen"><span>OPEN NOTCH</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" data-x="ticker" id="xTicker"><span>TICKER</span></button>
+    <button class="t-btn" data-x="taskbar" id="xBar"><span>TASK BAR</span></button>
+    <button class="t-btn" data-x="lyrics" id="xLyrics"><span>LYRICS</span></button>
+    <button class="t-btn" data-x="pin" id="xPin"><span>HOLD OPEN</span></button>
+    <button class="t-btn zoomb" data-x="zoom" id="xZoom" aria-pressed="false"><span>ZOOM 1:1</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script src="assets/notch.js"></script>
+</body>
+</html>

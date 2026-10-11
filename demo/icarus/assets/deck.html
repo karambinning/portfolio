@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<!-- ICARUS flight deck — REPLICA. Derived mechanically from app/src/main/assets/flightdeck.html
+     (1670 lines, HEAD eea95c9). Changes: bundled fonts; no OSM site packs; HAND shows its pause
+     reason; a replica altitude override for targets; window.Icarus is a simulated bridge
+     (bridge.js) instead of the Java one; comments stripped. Layout, styles, render() and the
+     plan-view guard flow are the shipped code. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ICARUS</title>
+<style>@font-face{font-family:"Bebas Neue";src:url(fonts/bebas-neue.woff2) format("woff2");font-display:block}@font-face{font-family:"IBM Plex Mono";font-weight:400;src:url(fonts/plex-mono-400.woff2) format("woff2");font-display:block}@font-face{font-family:"IBM Plex Mono";font-weight:600;src:url(fonts/plex-mono-600.woff2) format("woff2");font-display:block}</style>
+<link rel="stylesheet" href="replica.css">
+<style>
+:root{
+  --barh: 30px;
+  --abh: 58px;
+  --edgeB: max(env(safe-area-inset-bottom, 0px), 8px);
+  --edge: max(env(safe-area-inset-left, 0px), 10px);
+  --edgeR: max(env(safe-area-inset-right, 0px), 10px);
+  --bg:#070e1c; --bg2:#04080f; --panel:#0b1830; --text:#eef6ff;
+  --muted:#4a6888; --dim:#33506e; --deep:#1e3a5f;
+  --border:#3a5c7a; --bdim:#1e3c58;
+  --cyan:#00d4ff; --green:#00ff88; --amber:#ffcc00; --red:#ff3355;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --disp:'Bebas Neue','Roboto Condensed',Impact,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:transparent;color:var(--text);font-family:var(--mono)}
+body{font-size:13px;user-select:none}
+button{font-family:var(--mono);border-radius:0;cursor:pointer}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes glow{0%,100%{text-shadow:0 0 24px #00d4ff55}50%{text-shadow:0 0 40px #00d4ff99}}
+@keyframes scan{0%{top:-8%}100%{top:108%}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pd{animation:pulse 1.6s ease-in-out infinite}
+#crt{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px)}
+#sweep{position:fixed;left:0;right:0;height:60px;pointer-events:none;z-index:1;
+  background:linear-gradient(180deg,transparent,#00d4ff08 45%,transparent);animation:scan 9s linear infinite}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:2}
+.screen.on{display:flex;animation:fade .22s ease}
+#startup{padding:20px 24px;overflow-y:auto;background:var(--bg2)}
+.screen#deck{background:transparent}
+.boot{margin:auto;width:100%;max-width:1180px;
+  display:grid;grid-template-columns:1.15fr 1fr;gap:26px 34px;align-items:start}
+@media (max-width:820px){ .boot{grid-template-columns:1fr;gap:18px} }
+.col-l{min-width:0} .col-r{min-width:0}
+.ident{display:flex;align-items:center;gap:20px;margin-bottom:22px}
+.glyph{width:clamp(78px,8.5vw,124px);height:auto;flex:none;
+  filter:drop-shadow(0 0 18px #00d4ff33)}
+@media (max-width:820px){ .glyph{width:64px} .ident{gap:13px} }
+.logo{border-left:3px solid var(--cyan);padding-left:18px;min-width:0}
+.logo .mark{font-family:var(--disp);font-size:clamp(40px,5.2vw,72px);color:var(--cyan);
+  letter-spacing:12px;line-height:1;animation:glow 4s ease-in-out infinite}
+.logo .exp{font-size:clamp(8px,0.72vw,11px);color:#3a6080;letter-spacing:2.8px;margin-top:9px;line-height:1.8}
+.logo .exp b{color:var(--cyan);font-weight:600}
+.logo .row{display:flex;align-items:center;gap:8px;margin-top:9px}
+.logo .row .d{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.logo .row .s{font-size:7px;letter-spacing:3px}
+.logo .row .ver{font-size:7px;color:var(--deep);letter-spacing:1px;margin-left:auto}
+.strip{display:flex;margin-bottom:22px;border-top:1px solid #0d1e35;border-bottom:1px solid #0d1e35}
+.strip .c{flex:1;padding:8px 9px;border-right:1px solid #0d1e35;min-width:0}
+.strip .c:last-child{border-right:none}
+.strip .k{font-size:6px;color:var(--deep);letter-spacing:2px}
+.strip .v{font-size:8px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sect{font-size:7px;color:#2a4060;letter-spacing:3px;margin-bottom:10px}
+.big{width:100%;background:#00d4ff12;border:1px solid var(--cyan);color:var(--cyan);
+  padding:14px;font-size:11px;letter-spacing:3px;font-weight:600;text-align:left}
+.big:active{background:#00d4ff26}
+.hint{font-size:7px;color:var(--deep);margin-top:6px;letter-spacing:1px;line-height:1.7}
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0}
+.divider .l{flex:1;height:1px;background:#0d1e35}
+.divider .t{font-size:6.5px;color:#1e3a5f;letter-spacing:2px}
+.note{border:1px solid var(--bdim);border-top:2px solid var(--amber);background:var(--panel);
+  padding:10px 12px;margin-bottom:16px}
+.note.bad{border-top-color:var(--red)} .note.ok{border-top-color:var(--green)}
+.note h4{font-family:var(--disp);font-size:12px;letter-spacing:2px;font-weight:400;color:var(--amber);margin-bottom:4px}
+.note.bad h4{color:var(--red)} .note.ok h4{color:var(--green)}
+.note p{font-size:8.5px;color:#8fb0cc;line-height:1.7;letter-spacing:.4px}
+.note .acts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.note .acts button{background:none;border:1px solid var(--bdim);color:var(--muted);
+  font-size:8px;letter-spacing:1.4px;padding:6px 10px;font-weight:600}
+.foot{font-size:6.5px;color:#1e3a5f;letter-spacing:1.6px;text-align:center;margin-top:20px;line-height:1.9}
+.sbar{padding-left:var(--edge);padding-right:var(--edgeR);display:flex;flex-wrap:wrap;
+  row-gap:3px;align-items:center;
+  border-bottom:1px solid var(--border);background:#081327;min-height:50px;flex:none}
+.home{background:none;border:none;border-right:1px solid var(--bdim);color:var(--muted);
+  padding:0 11px;font-size:15px;letter-spacing:0}
+.brand{display:flex;align-items:center;gap:7px;padding:0 8px;border-right:1px solid var(--bdim)}
+#deck .brand .m,#deck .brand .v{display:none}
+.glyph-sm{width:22px;height:22px;flex:none;opacity:.95}
+.brand .m{font-family:var(--disp);font-size:19px;letter-spacing:3px;color:var(--cyan)}
+.brand .v{font-size:6.5px;color:var(--muted);letter-spacing:.8px;line-height:1.3}
+.pill{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 8px;
+  min-width:104px;border-right:1px solid var(--bdim);
+  font-size:9.5px;font-weight:600;letter-spacing:1.3px;white-space:nowrap}
+.dot{width:7px;height:7px;flex:none;background:var(--muted)}
+.mets{display:flex;flex:0 0 auto;min-width:0;overflow:hidden}
+.met{display:flex;flex-direction:column;justify-content:center;gap:1px;padding:0 9px;
+  border-right:1px solid var(--bdim);white-space:nowrap}
+.met .k{font-size:6.5px;color:var(--muted);letter-spacing:1px}
+.met .v{font-size:11px;font-weight:600}
+.hicon{width:11px;height:11px;vertical-align:-1.5px;margin:0 1px}
+.hw{display:flex;flex-direction:column;justify-content:center;padding:0 9px;margin-left:auto;
+  font-size:7px;letter-spacing:1.1px;color:var(--amber);border-left:1px solid var(--bdim);
+  line-height:1.35;text-align:right;white-space:nowrap}
+.body{display:flex;flex:1;min-height:0}
+.rail{width:76px;flex:none;padding-left:calc(var(--edge) - 4px);border-right:1px solid var(--border);background:#081226;
+  display:flex;flex-direction:column;overflow:hidden}
+.rail .lb{font-size:6.5px;color:var(--muted);letter-spacing:1.4px;padding:6px 8px 4px}
+.mode{background:none;border:none;border-left:2px solid transparent;color:var(--muted);text-align:left;
+  padding:6px 8px;font-size:8.5px;letter-spacing:1.2px;font-weight:600;
+  display:flex;flex-direction:column;justify-content:center;gap:1px;
+  flex:1 1 0;min-height:0;border-bottom:1px solid #10203a}
+.mode small{font-size:6px;letter-spacing:.2px;color:var(--dim);font-weight:400}
+.mode.on{border-left-color:var(--cyan);color:var(--cyan);background:#00d4ff0e}
+.mode.on small{color:#3f7fa0}
+.mode:disabled{opacity:.5}
+.rhome{flex:none;background:none;border:none;width:100%;
+  color:var(--cyan);font-family:var(--mono);
+  display:flex;align-items:center;justify-content:center;
+  padding:0 0 var(--edgeB);height:calc(var(--abh) + var(--edgeB));
+  border-top:1px solid var(--border);background:#0a1526}
+.rhome .hs{width:36px;height:36px;fill:none;display:block;
+  filter:drop-shadow(0 0 5px #00d4ff70)}
+.rhome:active{color:#fff;filter:drop-shadow(0 0 6px var(--cyan))}
+.rhome:disabled{opacity:.6}
+.mode em{font-style:normal;font-size:5px;letter-spacing:.2px;color:#6a452f;white-space:nowrap;
+  border:1px solid #4a2f22;padding:0 2px;align-self:flex-start;margin-top:1px;line-height:1.5}
+.rail .mode{padding:5px 8px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.stage{flex:1;min-height:0;position:relative;background:#050d18;border-right:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.banner{position:absolute;left:0;right:0;top:0;z-index:5;background:#2a0a12ee;
+  border-bottom:1px solid var(--red);padding:7px 11px;display:flex;align-items:center;gap:10px;
+  padding-right:118px}
+.banner.hide{display:none}
+.apbanner{position:absolute;left:0;right:0;top:0;z-index:7;background:#0b1830ee;
+  border-bottom:1px solid var(--cyan);padding:0 11px;display:flex;align-items:center;gap:9px;
+  height:var(--barh);
+  padding-right:134px}   
+.apbanner.hide{display:none}
+.apbanner.warn{background:#2a1a06ee;border-bottom-color:var(--amber)}
+.apbanner.bad{background:#2a0a12ee;border-bottom-color:var(--red)}
+.apbanner .t{font-size:8px;letter-spacing:1.6px;font-weight:600;color:var(--cyan);white-space:nowrap}
+.apbanner.warn .t{color:var(--amber)} .apbanner.bad .t{color:var(--red)}
+.apbanner .m{font-size:9px;color:#c8dff0;flex:1;min-width:0}
+.banner .t{font-size:8px;letter-spacing:1.6px;color:var(--red);font-weight:600;white-space:nowrap}
+.banner .m{font-size:8px;color:#ffd9e0;line-height:1.5;flex:1;min-width:0}
+.banner button{background:none;border:1px solid var(--red);color:var(--red);font-size:7.5px;
+  letter-spacing:1.2px;padding:4px 8px;font-weight:600;white-space:nowrap}
+.ptt{position:absolute;right:12px;bottom:12px;z-index:8;background:none;border:none;
+  padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+  -webkit-touch-callout:none;touch-action:none}
+.ptt svg{width:clamp(74px,11vh,104px);height:auto;display:block;transition:transform .12s}
+.ptt:active svg{transform:scale(.94)}
+.ptt .p-lbl{font-size:6.5px;letter-spacing:1.6px;color:var(--muted);font-weight:600;white-space:nowrap}
+.ptt .p-ring{stroke:var(--cyan);opacity:.34}
+.ptt .p-ring2{stroke:var(--cyan);opacity:.14}
+.ptt .p-air{stroke:var(--cyan);opacity:.72}
+.ptt .p-rot{stroke:var(--cyan);opacity:.6}
+.ptt .p-hub{stroke:var(--cyan)}
+.ptt .p-lid{stroke:var(--cyan);opacity:.55}
+.ptt .p-pupil{fill:var(--cyan);opacity:.75}
+.ptt svg *{transition:opacity .18s,stroke .18s,fill .18s}
+@keyframes pRing{to{transform:rotate(360deg)}}
+@keyframes pPupil{0%,100%{r:4.6;opacity:.9}50%{r:7.2;opacity:1}}
+@keyframes pHalo{0%{r:13;opacity:.55}100%{r:30;opacity:0}}
+.ptt.listening .p-ring{stroke:var(--green);opacity:.95;transform-origin:60px 60px;
+  animation:pRing 2.4s linear infinite}
+.ptt.listening .p-hub{stroke:var(--green)}
+.ptt.listening .p-lid{stroke:var(--green);opacity:.8}
+.ptt.listening .p-pupil{fill:var(--green);animation:pPupil 1.05s ease-in-out infinite}
+.ptt.listening .p-air,.ptt.listening .p-rot{stroke:var(--green);opacity:.8}
+.ptt.listening .p-lbl{color:var(--green)}
+.ptt .p-halo{fill:none;stroke:var(--green);stroke-width:1.4;opacity:0}
+.ptt.listening .p-halo{animation:pHalo 1.05s ease-out infinite}
+.ptt.working .p-ring{stroke:var(--amber);opacity:.95;transform-origin:60px 60px;
+  animation:pRing .9s linear infinite}
+.ptt.working .p-hub,.ptt.working .p-lid{stroke:var(--amber)}
+.ptt.working .p-pupil{fill:var(--amber)}
+.ptt.working .p-lbl{color:var(--amber)}
+.ptt.off{opacity:.4}
+.ptt.off .p-lbl{color:var(--dim)}
+.stabs{position:absolute;right:0;top:0;z-index:9;display:flex;height:var(--barh);
+  border-left:1px solid var(--bdim);border-bottom:1px solid var(--bdim)}
+.stab{background:#081327;border:none;color:#7c9bb5;font-family:var(--mono);
+  font-size:8px;letter-spacing:1.6px;font-weight:600;padding:0;min-width:62px;
+  display:flex;align-items:center;justify-content:center;
+  border-right:1px solid var(--bdim);border-bottom:2px solid transparent}
+.stab:last-child{border-right:none}
+.stab.on{background:#00d4ff14;color:var(--cyan);border-bottom-color:var(--cyan)}
+#plan{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation;transition:none}
+#feedLayer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;background:transparent;z-index:1;pointer-events:none}
+.stage.planmode{background:#050d18}
+.stage.planmode #feedLayer{display:none}
+.stage.planmode .planhud,.stage.planmode .tgt.show{display:flex}
+.stage.planmode .tgt.show{display:block}
+.full .rail,.full .tel{display:none}
+.full .body{position:fixed;inset:0}
+.full .main{position:absolute;inset:0}
+.full .stage{position:absolute;inset:0;border-right:none}
+.full .sbar{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:14;min-height:0;
+  border-bottom:none;border-top:none;justify-content:flex-end;align-items:center;
+  background:linear-gradient(0deg,#050d18f7 0%,#050d18cc 58%,#050d1800 100%);
+  padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 10px);padding-top:30px;
+  padding-right:var(--edgeR)}
+.full .sbar > .home,.full .sbar > .brand,.full .sbar > .pill,
+.full .sbar > .mets,.full .sbar > .met,.full .sbar > .hw{display:none}
+.full .hctl{border-right:none}
+.full .abort{position:fixed;left:0;bottom:0;z-index:15;width:auto;min-height:0;
+  background:none;border:none;
+  padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 10px);padding-top:30px;
+  padding-left:var(--edge);align-items:center}
+.full .abort .aside{display:none}
+.full .abtn{flex:none;padding:11px 30px;font-size:17px;letter-spacing:5px;font-weight:600;
+  color:#fff;background:#a4132c;border:1px solid #ff6b83;
+  box-shadow:0 0 0 1px #00000080, 0 4px 18px #000c}
+.full .abtn .c{color:#ffb3bf;opacity:.9}
+.full .abtn:active{background:#d2183a}
+.full .fshud{display:flex;top:calc(env(safe-area-inset-top, 0px) + 9px)}
+.full .stabs{top:calc(env(safe-area-inset-top, 0px) + 9px);right:var(--edgeR)}
+.full .ptt{bottom:78px}
+.full .planhud{display:none}
+.full #plan{bottom:78px}
+.full .apbanner{top:calc(env(safe-area-inset-top, 0px) + 44px);left:var(--edge);right:auto;
+  width:auto;max-width:60%;border:1px solid var(--bdim);background:#050d18ee;padding:5px 10px}
+.fshud{display:none;position:absolute;left:var(--edge);top:9px;z-index:11;gap:15px;
+  background:#050d18d8;border:1px solid #ffffff1f;padding:6px 12px;
+  font-size:9.5px;letter-spacing:1px;backdrop-filter:blur(3px);box-shadow:0 2px 10px #0009}
+.fshud b{color:var(--cyan);font-weight:600}
+.fshud .warn{color:var(--amber)}
+.stage.feedmode{background:transparent}
+.stage.feedmode .stabs{background:#050d18e8;backdrop-filter:blur(2px)}
+.stage.feedmode .stab{background:#050d18cc}
+.stage.feedmode .stab.on{background:#00d4ff2e}
+.stage.feedmode .ptt{filter:drop-shadow(0 0 3px #000) drop-shadow(0 0 9px #000a)}
+.stage.feedmode .ptt .p-lbl{color:#cfe6f5;text-shadow:0 0 4px #000,0 0 8px #000}
+.stage.feedmode #plan{border:1px solid var(--bdim);background:#050d18e8}
+.stage.feedmode #plan{inset:auto;left:8px;bottom:8px;width:118px;height:118px;
+  border:1px solid var(--bdim);background:#050d18e6;z-index:6}
+.stage.feedmode .planhud{display:none}
+.stage.feedmode .tgt{left:8px;top:26px;max-width:46%}
+.planhud{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;justify-content:space-between;
+  align-items:flex-end;padding:6px 9px;pointer-events:none;
+  background:linear-gradient(0deg,#050d18ee,transparent)}
+.planhud .k{font-size:6px;color:var(--muted);letter-spacing:1.4px}
+.planhud .v{font-size:9px;letter-spacing:1px;color:var(--cyan);font-weight:600}
+.planhud .ph-c{text-align:center;flex:1}
+.planhud .ph-r{text-align:right;margin-right:calc(clamp(74px,11vh,104px) + 18px)}
+.planhud .ph-r .v{color:var(--dim)}
+.tgt{position:absolute;left:9px;top:38px;z-index:6;border:1px solid var(--bdim);
+  border-top:2px solid var(--cyan);background:#0b1830ee;padding:6px 9px;max-width:62%;display:none}
+.tgt.show{display:block}
+.tgt.bad{border-top-color:var(--red)}
+.tgt .t{font-size:7.5px;letter-spacing:1.6px;font-weight:600;color:var(--cyan);margin-bottom:2px}
+.tgt.bad .t{color:var(--red)}
+.tgt .m{font-size:9px;color:#c8dff0;line-height:1.55}
+.xbtn{display:block;width:100%;margin-top:5px;background:#2a0a1244;
+  border:1px solid #6a2a35;color:#ff8fa0;font-family:var(--mono);font-size:8px;
+  letter-spacing:1.4px;font-weight:600;padding:6px 0}
+.xbtn:active{background:#4a0f1f}
+.gobtn{margin-top:6px;background:#00d4ff18;border:1px solid var(--cyan);color:var(--cyan);
+  font-family:var(--mono);font-size:9px;letter-spacing:1.4px;font-weight:600;padding:7px 12px}
+.gobtn:active{background:#00d4ff35}
+.ghosted{position:absolute;left:0;right:0;top:34%;text-align:center;padding:12px;
+  pointer-events:none;z-index:3}
+.ghosted .t{font-family:var(--disp);font-size:18px;letter-spacing:3px;color:#25405c}
+.ghosted .s{font-size:8px;letter-spacing:1.4px;color:#1e3550;margin-top:5px;line-height:1.8}
+.tel{width:190px;flex:none;padding-right:calc(var(--edgeR) - 4px);background:#081226;display:flex;flex-direction:column;overflow:hidden}
+.tel .pnl:last-child{border-bottom:none}
+.pnl{border-bottom:1px solid var(--bdim);padding:5px 10px;flex:none}
+.pnl.cy{border-top:2px solid var(--cyan)} .pnl.gr{border-top:2px solid var(--green)}
+.pnl.am{border-top:2px solid var(--amber)}
+.ph{font-family:var(--disp);font-size:11.5px;letter-spacing:2px;font-weight:400;margin-bottom:4px;
+  display:flex;justify-content:space-between;align-items:center}
+.tag{font-family:var(--mono);font-size:6px;letter-spacing:1px;padding:2px 5px;font-weight:600}
+.kv{display:flex;justify-content:space-between;font-size:9px;padding:1px 0;gap:8px}
+.kv .k{color:var(--muted);letter-spacing:.6px}
+.kv .v{font-weight:600;text-align:right}
+.stale{color:var(--dim)!important}
+.hctl{display:flex;align-items:stretch;gap:2px;padding:7px 6px;flex:1;
+  min-width:0;border-right:none}
+.hsep{width:1px;background:var(--bdim);margin:2px 5px;flex:none}
+.hlbl{font-size:7px;color:var(--muted);letter-spacing:1px;margin-right:2px;
+  display:flex;align-items:center;flex:none}
+.cbtn{background:#00d4ff10;border:1px solid var(--bdim);color:var(--muted);font-family:var(--mono);
+  font-size:8px;letter-spacing:.4px;font-weight:600;padding:0 2px;
+  flex:1 1 0;min-width:36px;max-width:50px;
+  display:flex;align-items:center;justify-content:center}
+.cbtn:active{background:#00d4ff30}
+.cbtn:disabled{opacity:.3}
+.cbtn.cam{border-color:#2a5a6a;color:#7fd4e8}
+.cbtn.rec{border-color:#6a2a35;color:#ff8fa0}
+.cbtn.dry{border-color:#6a5a20;color:#d8c46f}
+.cbtn.dry.on{background:#ffcc0026;border-color:var(--amber);color:var(--amber)}
+.drybar{position:absolute;left:0;right:0;top:0;z-index:12;display:none;
+  background:#3a2a06ee;border-bottom:1px solid var(--amber);color:var(--amber);
+  font-size:9px;letter-spacing:1.6px;font-weight:600;padding:5px 10px;text-align:center}
+.drybar.show{display:block}
+.cbtn.vis{border-color:#2a6a5a;color:#6fd8bd}
+.cbtn.vis.on{background:#00ff8822;border-color:var(--green);color:var(--green)}
+#vbox{position:fixed;z-index:8;pointer-events:none}
+#vbox rect{fill:none;stroke:var(--green);stroke-width:1.4;vector-effect:non-scaling-stroke}
+#vbox rect.det{stroke:var(--cyan);stroke-width:1.8}
+#vbox rect.palm{fill:none;stroke:var(--cyan);stroke-width:2;vector-effect:non-scaling-stroke}
+#vbox .lbl{fill:var(--green);font-family:var(--mono);font-size:2.4px;letter-spacing:.2px}
+.vstat{position:absolute;left:var(--edge);bottom:8px;z-index:9;font-size:7.5px;letter-spacing:1px;
+  color:var(--muted);background:#050d18cc;padding:3px 8px;border:1px solid var(--bdim);display:none}
+.vstat.show{display:block}
+.vstat b{color:var(--green)}
+.vstat .warn{color:var(--amber)}
+.cbtn.nite{border-color:#3a4a6a;color:#9fb4dc}
+.cbtn.nite.on{background:#00d4ff26;border-color:var(--cyan);color:var(--cyan)}
+.cbtn.rec.on{background:#ff335528;border-color:var(--red);color:#fff;
+  animation:recpulse 1.4s ease-in-out infinite}
+@keyframes recpulse{0%,100%{opacity:1}50%{opacity:.62}}
+.cbtn.arm{border-color:#2a6a4a;color:var(--green)}
+.cbtn.run{border-color:#6a5a20;color:var(--amber)}
+.cbtn.dis{border-color:#4a2530;color:var(--red)}
+.cbtn.fly{border-color:#00d4ff;color:var(--cyan);background:#00d4ff18}
+.cbtn.lnd{border-color:#3a5c7a;color:#8fb0cc}
+.cbtn.clb{border-color:#2a6a4a;color:var(--green)}
+.met.hax .v{font-size:9px}
+.apbtns{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+.apbtns button{flex:1;min-width:32px;background:#00d4ff10;border:1px solid var(--bdim);color:var(--muted);
+  font-family:var(--mono);font-size:7px;letter-spacing:.9px;font-weight:600;padding:4px 2px}
+.apbtns button:active{background:#00d4ff28}
+#ap-arm{border-color:#2a6a4a;color:var(--green)}
+#ap-run{border-color:#6a5a20;color:var(--amber)}
+#ap-dis{border-color:#4a2530;color:var(--red)}
+.abort{flex:none;padding-right:var(--edgeR);
+  border-top:1px solid var(--border);display:flex;overflow:hidden;
+  height:calc(var(--abh) + var(--edgeB));background:#0a1526}
+.abtn{flex:1 1 auto;padding-bottom:var(--edgeB);
+  background:#2a0a12;border:none;border-right:1px solid #4a1522;color:var(--red);
+  font-family:var(--disp);font-size:30px;letter-spacing:11px;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  text-indent:11px}   
+.abtn:active{background:#4a0f1f}
+.abtn .c{letter-spacing:0;opacity:.55;font-size:19px}
+.aside{display:flex;flex-direction:column;justify-content:center;padding:0 10px 0 12px;
+  flex:0 1 auto;max-width:52%;gap:1px}
+.aside .k{font-size:6px;color:var(--muted);letter-spacing:1.1px}
+.aside .v{font-size:8.5px;color:var(--amber);letter-spacing:.7px;font-weight:600;line-height:1.35}
+</style>
+</head>
+<body>
+<div id="crt"></div><div id="sweep"></div>
+<div class="screen on" id="startup">
+  <div class="boot">
+    <div class="col-l">
+      <div class="ident">
+        <svg class="glyph" viewBox="0 0 120 120" aria-hidden="true">
+          <defs><g id="w">
+            <path d="M0 0 L26 -4" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M1 2 L24 1"  stroke-width="1.9" stroke-linecap="round" opacity=".78"/>
+            <path d="M2 4 L20 6"  stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+          </g></defs>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#00d4ff" stroke-width="1.3" stroke-dasharray="4 5.5" opacity=".42"/>
+          <circle cx="60" cy="60" r="43.5" fill="none" stroke="#00d4ff" stroke-width=".9" opacity=".16"/>
+          <g stroke="#00d4ff" fill="none">
+            <g transform="translate(60 60) rotate(-45)"><use href="#w"/></g>
+            <g transform="translate(60 60) rotate(45)"><use href="#w"/></g>
+            <g transform="translate(60 60) rotate(135)"><use href="#w"/></g>
+            <g transform="translate(60 60) rotate(-135)"><use href="#w"/></g>
+          </g>
+          <g fill="none" stroke="#00d4ff" stroke-width="1.7" opacity=".92">
+            <circle cx="80.5" cy="39.5" r="8.6"/><circle cx="80.5" cy="80.5" r="8.6"/>
+            <circle cx="39.5" cy="80.5" r="8.6"/><circle cx="39.5" cy="39.5" r="8.6"/>
+          </g>
+          <g fill="#00d4ff" opacity=".34">
+            <circle cx="80.5" cy="39.5" r="2"/><circle cx="80.5" cy="80.5" r="2"/>
+            <circle cx="39.5" cy="80.5" r="2"/><circle cx="39.5" cy="39.5" r="2"/>
+          </g>
+          <circle cx="60" cy="60" r="12.4" fill="#070e1c" stroke="#00d4ff" stroke-width="2"/>
+          <g stroke="#00d4ff" stroke-width="1.15" opacity=".62" fill="none">
+            <path d="M60 49.4 A10.6 10.6 0 0 1 70.6 60"/>
+            <path d="M60 70.6 A10.6 10.6 0 0 1 49.4 60"/>
+          </g>
+          <circle cx="60" cy="60" r="4.4" fill="#00d4ff"/>
+          <circle cx="60" cy="60" r="1.5" fill="#070e1c" opacity=".85"/>
+        </svg>
+        <div class="logo">
+        <div class="mark">I·C·A·R·U·S</div>
+        <div class="exp">
+          <b>I</b>NTEGRATED &nbsp;<b>C</b>ONTROLLER &nbsp;FOR &nbsp;<b>A</b>UTONOMOUS<br>
+          <b>R</b>ECONNAISSANCE &nbsp;&amp; &nbsp;<b>U</b>AV &nbsp;<b>S</b>UPERVISION
+        </div>
+        <div class="row">
+          <div class="d" id="b-dot"></div>
+          <span class="s" id="b-state" style="color:#2a5040">SYSTEM BOOTING</span>
+          <span class="ver">v0.1 · MSDK 4.16.4</span>
+        </div>
+        </div>
+      </div>
+      <div class="strip">
+        <div class="c"><div class="k">SDK</div><div class="v" id="b-sdk" style="color:var(--amber)">…</div></div>
+        <div class="c"><div class="k">AIRCRAFT</div><div class="v" id="b-ac" style="color:var(--muted)">—</div></div>
+        <div class="c"><div class="k">HOST</div><div class="v" id="b-host" style="color:var(--cyan)">—</div></div>
+        <div class="c"><div class="k">GUARD</div><div class="v" id="b-guard" style="color:var(--muted)">…</div></div>
+      </div>
+      <div class="foot" style="text-align:left;margin-top:14px">
+        PERSONAL RECONNAISSANCE SYSTEM · VLOS ONLY · NO BVLOS<br>
+        THE CONTROLLER ALWAYS OVERRIDES ICARUS — FLICK THE MODE SWITCH TO TAKE BACK CONTROL
+      </div>
+    </div>
+    <div class="col-r">
+      <div class="note" id="b-note">
+        <h4 id="b-nh">SDK REGISTRATION</h4>
+        <p id="b-np">Contacting DJI…</p>
+        <div class="acts">
+          <button onclick="retry()">RE-REGISTER</button>
+          <button onclick="say('ping from startup')">PING LOG</button>
+        </div>
+      </div>
+      <div class="sect">FLIGHT OPERATIONS</div>
+      <button class="big" onclick="go('deck')">ENTER FLIGHT DECK &nbsp;→</button>
+      <div class="hint">The deck opens with or without a registered SDK. Instruments show live data
+        only when an aircraft is linked — never simulated values.</div>
+      <div class="divider"><div class="l"></div><div class="t">SAFETY</div><div class="l"></div></div>
+      <div class="note ok" id="g-note" style="margin-bottom:16px">
+        <h4 id="g-nh">ENVELOPE GUARD</h4>
+        <p id="g-np">…</p>
+        <div class="acts"><button onclick="guardTest()">RE-RUN SELF-TEST</button>
+          <button onclick="benchPerception()">BENCH PERCEPTION</button>
+          <button class="sbtn" onclick="benchSurvey()">SURVEY BENCH</button>
+          <button class="sbtn" onclick="benchLabels()">LABEL BENCH</button>
+          <button class="sbtn" onclick="autoLabel()">AUTO-LABEL</button></div>
+        <div class="kv" style="margin-top:6px"><span class="k">PERCEPTION</span>
+          <span class="v" id="p-bench" style="color:var(--cyan)">not measured</span></div>
+      </div>
+      <div class="divider"><div class="l"></div><div class="t">AIRFRAME</div><div class="l"></div></div>
+      <div class="strip" style="margin-bottom:0">
+        <div class="c"><div class="k">EXPECTED</div><div class="v" style="color:var(--text)">DJI MINI 2</div></div>
+        <div class="c"><div class="k">CATEGORY</div><div class="v" style="color:var(--green)">A1 &lt;249g</div></div>
+        <div class="c"><div class="k">SENSORS</div><div class="v" style="color:var(--amber)">DOWN VPS</div></div>
+        <div class="c"><div class="k">CEILING</div><div class="v" style="color:var(--text)">120 m</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="screen" id="deck">
+  <div class="sbar">
+    <button class="home" onclick="go('startup')">‹</button>
+    <div class="brand">
+      <svg class="glyph-sm" viewBox="0 0 120 120" aria-hidden="true">
+        <g stroke="#00d4ff" fill="none" stroke-width="4" stroke-linecap="round">
+          <path d="M60 60 L82 38 M60 60 L82 82 M60 60 L38 82 M60 60 L38 38"/>
+        </g>
+        <g fill="none" stroke="#00d4ff" stroke-width="3.4" opacity=".9">
+          <circle cx="86" cy="34" r="11"/><circle cx="86" cy="86" r="11"/>
+          <circle cx="34" cy="86" r="11"/><circle cx="34" cy="34" r="11"/>
+        </g>
+        <circle cx="60" cy="60" r="15" fill="#081327" stroke="#00d4ff" stroke-width="3.4"/>
+        <circle cx="60" cy="60" r="5.4" fill="#00d4ff"/>
+      </svg>
+      <div class="m">I·C·A·R·U·S</div><div class="v">v0.1<br>DECK</div></div>
+    <div class="pill" id="pill"><span class="dot pd" id="dot"></span><span id="ptxt">BOOT</span></div>
+    <div class="mets">
+      <span id="m-ac" style="display:none"></span>
+    </div>
+    <div class="hctl">
+      <button class="cbtn fly" id="ap-fly" onclick="takeOff()">LAUNCH</button>
+      <button class="cbtn clb" id="ap-clb" onclick="climb()">CLIMB</button>
+      <button class="cbtn lnd" id="ap-lnd" onclick="land()">LAND</button>
+      <span class="hsep"></span>
+      <button class="cbtn cam" id="c-photo" onclick="snap()">SNAP</button>
+      <button class="cbtn rec" id="c-rec" onclick="toggleRecord()">REC</button>
+      <button class="cbtn nite" id="c-night" onclick="toggleNight()">NIGHT</button>
+      <button class="cbtn vis" id="c-recon" onclick="setVision('RECON')">RECON</button>
+      <button class="cbtn vis paused" id="c-hand" onclick="handPaused()" title="paused — 5.8 m optical ceiling">HAND</button>
+      <button class="cbtn" id="c-wing" onclick="toggleWing()">WINGMAN</button>
+      <span class="hsep"></span>
+<button class="cbtn arm" id="ap-arm" onclick="apArm()">1·ARM</button>
+      <button class="cbtn run" id="ap-run" onclick="apStart()">3·RUN</button>
+      <button class="cbtn dis" id="ap-dis" onclick="apDisarm()">DISARM</button>
+      <button class="cbtn" onclick="apG('yes')">YES</button>
+      <button class="cbtn" onclick="apG('no')">NO</button>
+      <button class="cbtn" onclick="apG('pirouette')">360°</button>
+      <span class="hsep"></span><span class="hlbl">2</span>
+    </div>
+    <span id="ap-tag" style="display:none"></span>
+    <span id="ap-stick" style="display:none"></span>
+    <span id="ap-test" style="display:none"></span>
+    <span id="ap-prim" style="display:none"></span>
+  </div>
+  <div class="body" id="deckBody">
+    <div class="rail">
+      <div class="lb">MODE</div>
+      <button class="mode on">MANUAL<small>sticks only</small></button>
+      <button class="mode nb" disabled>ASSIST<small>hold + guard</small><em>NOT BUILT</em></button>
+      <button class="mode nb" disabled>MISSION<small>sortie plan</small><em>NOT BUILT</em></button>
+      <button class="mode nb" disabled>FPV<small>head track</small><em>NOT BUILT</em></button>
+      <button class="mode nb" disabled>RECON<small>detect + log</small><em>NOT BUILT</em></button>
+      <button class="rhome" id="btnHome" onclick="goHome()" title="Return to home and land" disabled>
+        <svg class="hs" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11.6 12 3.4 21 11.6" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.4 12.4 V20.6 H18.6 V12.4" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="main">
+      <div class="stage planmode" id="stage">
+        <div class="stabs">
+          <button class="stab" id="fsbtn" onclick="toggleFull()">⛶ FULL</button>
+          <button class="stab" data-v="feed">FEED</button>
+          <button class="stab on" data-v="plan">PLAN</button>
+        </div>
+        <div class="nofeed" id="feedLayer">
+          <div class="t">NO VIDEO FEED</div>
+          <div class="s" id="feedNote">waiting for the aircraft's camera feed</div>
+        </div>
+        <div class="drybar" id="drybar">DRY RUN — GESTURES COMMAND NOTHING</div>
+        <svg id="vbox" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+        <div class="vstat" id="vstat"></div>
+        <div class="fshud" id="fsHud">
+          <span>BATT <b id="f-bat">—</b></span>
+          <span>ALT <b id="f-alt">—</b></span>
+          <span>HDG <b id="f-hdg">—</b></span>
+          <span>GNSS <b id="f-sat">—</b></span>
+          <span class="warn" id="f-note"></span>
+        </div>
+        <div class="apbanner hide" id="apBanner">
+          <span class="t" id="apBannerT">AUTOPILOT</span>
+          <span class="m" id="ap-note">—</span>
+        </div>
+        <div class="banner hide" id="banner">
+          <span class="t">◤ SDK NOT REGISTERED</span>
+          <span class="m" id="bantxt">—</span>
+          <button onclick="retry()">RETRY</button>
+        </div>
+        <button id="ptt" class="ptt" aria-label="Push to talk">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <defs><g id="pw">
+              <path d="M0 0 L26 -4" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M1 2 L24 1"  stroke-width="1.9" stroke-linecap="round" opacity=".78"/>
+              <path d="M2 4 L20 6"  stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+            </g></defs>
+            <circle class="p-ring" cx="60" cy="60" r="52" fill="none" stroke-width="1.6"
+                    stroke-dasharray="4 5.5"/>
+            <circle class="p-ring2" cx="60" cy="60" r="43.5" fill="none" stroke-width=".9"/>
+            <g class="p-air" fill="none">
+              <g transform="translate(60 60) rotate(-45)"><use href="#pw"/></g>
+              <g transform="translate(60 60) rotate(45)"><use href="#pw"/></g>
+              <g transform="translate(60 60) rotate(135)"><use href="#pw"/></g>
+              <g transform="translate(60 60) rotate(-135)"><use href="#pw"/></g>
+            </g>
+            <g class="p-rot" fill="none" stroke-width="1.8">
+              <circle cx="80.5" cy="39.5" r="8.8"/><circle cx="80.5" cy="80.5" r="8.8"/>
+              <circle cx="39.5" cy="80.5" r="8.8"/><circle cx="39.5" cy="39.5" r="8.8"/>
+            </g>
+            <circle class="p-halo" cx="60" cy="60" r="13"/>
+            <circle class="p-hub" cx="60" cy="60" r="13" fill="#070e1c" stroke-width="2.1"/>
+            <g class="p-lid" stroke-width="1.2" fill="none">
+              <path d="M60 48.9 A11.1 11.1 0 0 1 71.1 60"/>
+              <path d="M60 71.1 A11.1 11.1 0 0 1 48.9 60"/>
+            </g>
+            <circle class="p-pupil" cx="60" cy="60" r="4.6"/>
+          </svg>
+          <span class="p-lbl" id="pttLbl">HOLD TO TALK</span>
+        </button>
+        <svg id="plan" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="planhud">
+          <div class="ph-l">
+            <div class="k">PLAN VIEW · N UP</div>
+            <div class="v" id="pv-scale">RANGE 100 m</div>
+          </div>
+          <div class="ph-c">
+            <div class="k">HOME</div>
+            <div class="v" id="pv-home" style="color:var(--red)">NO FIX</div>
+          </div>
+          <div class="ph-c">
+            <div class="k">AIRCRAFT</div>
+            <div class="v" id="pv-ac" style="color:var(--muted)">NOT LINKED</div>
+          </div>
+          <div class="ph-r">
+            <div class="k">BASEMAP</div>
+            <div class="v" id="pv-base">NONE</div>
+          </div>
+        </div>
+        <div class="tgt" id="tgt">
+          <div class="t" id="tgt-t">TARGET</div>
+          <div class="m" id="tgt-m">—</div>
+        </div>
+      </div>
+      <div class="abort">
+        <button class="abtn" onclick="abort()"><span class="c">◀◀</span> ABORT <span class="c">▶▶</span></button>
+        <div class="aside">
+          <div class="k">IF ANYTHING GOES WRONG — GRAB THE CONTROLLER</div>
+          <div class="v">① MODE SWITCH → STICKS ARE YOURS<br>② HOME: TAP=BRAKE · HOLD=FLY HOME · TAP=CANCEL</div>
+        </div>
+      </div>
+    </div>
+    <div class="tel">
+      <div class="pnl cy">
+        <div class="ph">FLIGHT</div>
+        <div class="kv"><span class="k">BATTERY</span><span class="v" id="m-bat">—</span></div>
+        <div class="kv"><span class="k">ALT AGL</span><span class="v" id="m-alt">—</span></div>
+        <div class="kv"><span class="k">HDG</span><span class="v" id="m-hdg">—</span></div>
+        <div class="kv"><span class="k">GNSS</span><span class="v" id="m-sat">—</span></div>
+      </div>
+      <div class="pnl cy">
+        <div class="ph">LINK <span class="tag" id="t-tag" style="color:var(--muted);background:#4a688815">NO DATA</span></div>
+        <div class="kv"><span class="k">PRODUCT</span><span class="v stale" id="t-prod">—</span></div>
+        <div class="kv"><span class="k">FC MODE</span><span class="v stale" id="t-fc">—</span></div>
+        <div class="kv"><span class="k">FLYING</span><span class="v stale" id="t-fly">—</span></div>
+        <div class="kv"><span class="k">SDK</span><span class="v" id="t-sdk">—</span></div>
+      </div>
+      <div class="pnl gr">
+        <div class="ph">AIRFRAME <span class="tag" style="color:var(--green);background:#00ff8815">A1 &lt;249g</span></div>
+        <div class="kv"><span class="k">EXPECTED</span><span class="v">DJI MINI 2</span></div>
+        <div class="kv"><span class="k">SENSORS</span><span class="v" style="color:var(--amber)">DOWN VPS</span></div>
+      </div>
+      <div class="pnl am" id="envPnl">
+        <div class="ph">ENVELOPE <span class="tag" id="g-tag" style="color:var(--muted);background:#4a688815">…</span></div>
+        <div class="kv"><span class="k">CEILING</span><span class="v" id="g-ceil">—</span></div>
+        <div class="kv"><span class="k">VLOS</span><span class="v" id="g-rad">—</span></div>
+        <div class="kv"><span class="k">STANDOFF</span><span class="v" id="e-stand">—</span></div>
+        <div class="kv"><span class="k">WATCHDOG</span><span class="v">5–25 Hz · ZERO</span></div>
+        <div class="kv"><span class="k">AXIS</span><span class="v" id="ap-axis">UNVERIFIED</span></div>
+        <div class="kv"><span class="k">SELF-TEST</span><span class="v" id="g-test">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="icarus-core.js"></script>
+<script src="selftests.js"></script>
+<script src="bridge.js"></script>
+<script>
+function say(m){ try { Icarus.log(m); } catch(err) { say('LOG FAILED: ' + err); } }
+function snap(){
+  let ok=false; try { ok = Icarus.snap(); } catch(err) { say('SNAP FAILED: ' + err); }
+  say('SNAP ' + (ok ? 'saved to phone' : 'failed — no frame'));
+}
+let nightOn = false;
+const HAND_BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],
+                    [9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+let visMode = '';
+function toggleDry(){
+  dryOn = !dryOn;
+  try { Icarus.dryRun(dryOn); } catch(err) { say('DRYRUN FAILED: ' + err); }
+  const b = document.getElementById('c-dry');
+  if (b) b.classList.toggle('on', dryOn);
+  document.getElementById('drybar').classList.toggle('show', dryOn);
+  say('dry run ' + (dryOn ? 'ON' : 'OFF'));
+}
+let wingOn = false;
+function apG(w){
+  try { Icarus.apGesture(w); say('AP queue ' + w); }
+  catch(e) { say('gesture FAILED to reach the aircraft: ' + e); }
+}
+function toggleWing(){
+  wingOn = !wingOn;
+  document.getElementById('c-wing').classList.toggle('on', wingOn);
+  try {
+    Icarus.wingman(wingOn);
+    say(wingOn ? 'WINGMAN requested…' : 'WINGMAN off');
+  } catch(e) {
+    wingOn = false;
+    document.getElementById('c-wing').classList.remove('on');
+    say('WINGMAN FAILED to reach the aircraft: ' + e);
+  }
+}
+function setVision(m){
+  visMode = (visMode === m) ? '' : m;       // pressing the active one turns it off
+  try { Icarus.visionMode(visMode); } catch(err) { say('VISIONMODE FAILED: ' + err); }
+  document.getElementById('c-recon').classList.toggle('on', visMode === 'RECON');
+  document.getElementById('c-hand').classList.toggle('on', visMode === 'HAND');
+  const st = document.getElementById('vstat');
+  if (st) st.classList.toggle('show', !!visMode);
+  if (!visMode) document.getElementById('vbox').innerHTML = '';
+  say('vision mode ' + (visMode || 'off'));
+}
+function calibration(){
+  return '';
+  const c = '#ff00aa', w = 2.5, m = 2;
+  let g = '';
+  for (const [x, y, dx, dy] of [[m,m,1,1],[100-m,m,-1,1],[m,100-m,1,-1],[100-m,100-m,-1,-1]]){
+    g += `<path d="M ${x} ${y+8*dy} L ${x} ${y} L ${x+8*dx} ${y}" fill="none" stroke="${c}" `
+       + `stroke-width="${w}" vector-effect="non-scaling-stroke"/>`;
+  }
+  g += `<line x1="50" y1="${m}" x2="50" y2="${100-m}" stroke="${c}" stroke-width="1" `
+     + `stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/>`
+     + `<line x1="${m}" y1="50" x2="${100-m}" y2="50" stroke="${c}" stroke-width="1" `
+     + `stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/>`;
+  for (const q of [25, 75]){
+    g += `<line x1="${q}" y1="${m}" x2="${q}" y2="${m+5}" stroke="${c}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`
+       + `<text x="${q+1}" y="${m+9}" fill="${c}" font-family="monospace" font-size="4">${q}</text>`;
+  }
+  return g;
+}
+function drawVision(v, s){
+  const svg = document.getElementById('vbox');
+  const st  = document.getElementById('vstat');
+  if (!svg || !st) return;
+  const mode = s.visMode || '';
+  if (mode === 'RECON') {
+    const d = s.det || [];
+    svg.innerHTML = calibration() + d.map(b =>
+      `<rect class="det" x="${(b.x*100).toFixed(2)}" y="${(b.y*100).toFixed(2)}" `
+    + `width="${(b.w*100).toFixed(2)}" height="${(b.h*100).toFixed(2)}"/>`
+    + `<text class="lbl" x="${(b.x*100+0.6).toFixed(2)}" y="${(b.y*100-0.8).toFixed(2)}">`
+    + `${b.l} ${(b.s*100).toFixed(0)}%</text>`).join('');
+    st.innerHTML = d.length
+      ? 'RECON · ' + d.map(b => `<b>${b.l}</b>`).join(' · ')
+      : 'RECON · nothing recognised';
+    return;
+  }
+  if (mode === 'HAND') {
+    const h = s.hand || {};
+    const lm = h.lm || [];
+    let g = '';
+    if (lm.length >= 21) {
+      const col = h.open ? '#00ff88' : '#ffcc00';
+      for (const [a,b] of HAND_BONES) {
+        g += `<line x1="${(lm[a][0]*100).toFixed(2)}" y1="${(lm[a][1]*100).toFixed(2)}" `
+           + `x2="${(lm[b][0]*100).toFixed(2)}" y2="${(lm[b][1]*100).toFixed(2)}" `
+           + `stroke="${col}" stroke-width="3" vector-effect="non-scaling-stroke" `
+           + `stroke-linecap="round"/>`;
+      }
+      for (const p of lm) {
+        g += `<rect x="${(p[0]*100-0.35).toFixed(2)}" y="${(p[1]*100-0.7).toFixed(2)}" `
+           + `width="0.7" height="1.4" fill="${col}"/>`;
+      }
+    }
+    svg.innerHTML = calibration() + (h.seen
+      ? `<rect class="palm" x="${(h.x*100 - h.size*50).toFixed(1)}" `
+      + `y="${(h.y*100 - h.size*50*1.78).toFixed(1)}" `
+      + `width="${(h.size*100).toFixed(1)}" height="${(h.size*100*1.78).toFixed(1)}"/>` : '') + g;
+    const lum = (h.lum === undefined) ? -1 : h.lum;
+    const bad = lum >= 0 && (lum > 225 || lum < 18);
+    if (h.seen) {
+      st.innerHTML = `${h.open ? '<b>OPEN</b>' : '<span class="warn">FIST</span>'}`
+        + ` · score <b>${(h.score||0).toFixed(2)}</b> · ${h.note}`;
+      return;
+    }
+    st.innerHTML = !h.seen
+      ? (bad ? '<span class="warn">FRAME ' + (lum > 225 ? 'BLOWN OUT' : 'TOO DARK')
+               + ' (' + lum + ') — camera cannot see</span>'
+             : '<span class="warn">no hand seen</span> · frame ' + lum)
+      : (h.engaged
+          ? `<b>ENGAGED</b> ${h.hold ? '<span class="warn">HOLDING</span> ' : ''}`
+            + `E${h.e} N${h.n} U${h.u}`
+          : `hand ${h.open ? 'OPEN' : 'FIST'} — ${h.note}`);
+    return;
+  }
+  if (!v || !v.boxes) { svg.innerHTML = ''; return; }
+  svg.innerHTML = v.boxes.map(b =>
+    `<rect x="${(b.x*100).toFixed(2)}" y="${(b.y*100).toFixed(2)}" `
+  + `width="${(b.w*100).toFixed(2)}" height="${(b.h*100).toFixed(2)}"/>`).join('');
+  st.innerHTML = v.ego
+      ? '<span class="warn">AIRCRAFT MOVING — perception paused</span>'
+      : v.settling
+        ? '<span class="warn">settling…</span>'
+        : `MOTION <b>${v.boxes.length}</b> · changed ${(v.changed*100).toFixed(1)}% · ${v.ms} ms/frame`;
+}
+function toggleNight(){
+  nightOn = !nightOn;
+  try { Icarus.night(nightOn); } catch(err) { say('NIGHT FAILED: ' + err); }
+  const b = document.getElementById('c-night');
+  if (b) b.classList.toggle('on', nightOn);
+  say('night mode ' + (nightOn ? 'on' : 'off'));
+}
+function shootPhoto(){
+  let ok=false; try { ok = Icarus.shootPhoto(); } catch(err) { say('SHOOTPHOTO FAILED: ' + err); }
+  say('PHOTO ' + (ok ? 'requested' : 'refused — no camera'));
+}
+function toggleRecord(){
+  let ok=false; try { ok = Icarus.toggleRecord(); } catch(err) { say('TOGGLERECORD FAILED: ' + err); }
+  say('RECORD toggle ' + (ok ? 'requested' : 'refused — no camera'));
+}
+function goHome(){
+  let ok = false;
+  try { ok = Icarus.goHome(); } catch(err) { say('GOHOME FAILED: ' + err); }
+  say('GO HOME ' + (ok ? 'requested' : 'refused — no aircraft linked'));
+}
+function feedAudit(){
+  const st = document.getElementById('stage'); if (!st) return;
+  const r = st.getBoundingClientRect();
+  const bad = [];
+  document.querySelectorAll('*').forEach(el => {
+    if (el === st || st.contains(el) === false && !el.contains(st)) {  }
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+    const bg = cs.backgroundColor || '';
+    const m = /rgba?\(([^)]+)\)/.exec(bg); if (!m) return;
+    const p = m[1].split(',').map(Number);
+    const alpha = p.length > 3 ? p[3] : 1;
+    if (alpha < 0.9) return;                       // translucent tints are fine
+    const b2 = el.getBoundingClientRect();
+    const overlap = !(b2.right < r.left + 2 || b2.left > r.right - 2 ||
+                      b2.bottom < r.top + 2 || b2.top > r.bottom - 2);
+    if (!overlap) return;
+    if (el.contains(st) || el === st || st.contains(el))
+      bad.push((el.id ? '#' + el.id : '.' + (el.className || el.tagName)) +
+               ' bg=' + bg + ' z=' + cs.zIndex + ' ' +
+               Math.round(b2.width) + 'x' + Math.round(b2.height));
+  });
+  say('FEED AUDIT — opaque over stage: ' + (bad.length ? bad.join(' | ') : 'NONE'));
+}
+function abort(){ try { Icarus.abort(); } catch(err) { say('ABORT FAILED: ' + err); } }
+function retry(){ try { Icarus.retryRegister(); } catch(err) { say('RETRYREGISTER FAILED: ' + err); } say('re-register requested'); }
+function takeOff(){ let ok=false; try { ok = Icarus.takeOff(); } catch(err) { say('TAKEOFF FAILED: ' + err); }
+  say('LAUNCH ' + (ok ? 'sent' : 'refused')); }
+function climb(){ try { Icarus.climb(); } catch(err) { say('CLIMB FAILED: ' + err); } say('CLIMB sent'); }
+function land(){ try { Icarus.land(); } catch(err) { say('LAND FAILED: ' + err); } say('LAND sent'); }
+function apArm(){    try { Icarus.apArm(); } catch(err) { say('APARM FAILED: ' + err); }    say('AP arm'); }
+function apDisarm(){ try { Icarus.apDisarm(); } catch(err) { say('APDISARM FAILED: ' + err); } say('AP disarm'); }
+function apStart(){  try { Icarus.apStart(); } catch(err) { say('APSTART FAILED: ' + err); }  say('AP start'); }
+function toggleFull(){
+  const on = document.getElementById('deck').classList.toggle('full');
+  const b = document.getElementById('fsbtn');
+  if (b) { b.classList.toggle('on', on); b.textContent = on ? '⤡ EXIT' : '⛶ FULL'; }
+  setTimeout(reportStageRect, 60);
+  say('fullscreen ' + (on ? 'on' : 'off'));
+}
+function clearTarget(){
+  PLAN.tgt = null;
+  try { Icarus.apDisarm(); } catch(err) {}
+  const box = document.getElementById('tgt');
+  if (box) box.classList.remove('show');
+  drawPlan();
+  say('target cleared');
+}
+function apGoto(e,n,a){
+  let ok=false; try{ ok = Icarus.apGoto(e,n,a); }catch(err){}
+  const box = document.getElementById('tgt-m');
+  if (box) box.innerHTML = ok
+    ? 'GOTO queued → now press <b>1·ARM</b> then <b>3·RUN</b>'
+    : '<span style="color:#ff3355">GOTO refused by the envelope guard</span>';
+  say('AP goto ' + (ok ? 'queued' : 'refused'));
+}
+function autoLabel(){ try { Icarus.autoLabel(); say('auto-labelling - watch the log'); } catch(err) { say('AUTOLABEL FAILED: ' + err); } }
+function benchLabels(){ try { Icarus.benchLabels(); say('label bench running - watch the log'); } catch(err) { say('LABEL BENCH FAILED: ' + err); } }
+function benchSurvey(){ try { Icarus.benchSurvey(); say('survey bench running - watch the log'); } catch(err) { say('SURVEY BENCH FAILED: ' + err); } }
+function benchPerception(){
+  const el = document.getElementById('p-bench');
+  if (el) el.textContent = 'loading models…';
+  try { Icarus.benchPerception(); } catch(err) { say('BENCHPERCEPTION FAILED: ' + err); }
+  say('perception bench requested');
+}
+function guardTest(){ try { Icarus.runGuardTest(); } catch(err) { say('RUNGUARDTEST FAILED: ' + err); } say('guard self-test requested'); }
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  say('screen -> '+id);
+}
+const SDK = {
+  BOOT:        {c:'#4a6888', label:'BOOT',        state:'SYSTEM BOOTING',    sc:'#2a5040',
+                nh:'SDK REGISTRATION', np:'Starting up…', cls:''},
+  REGISTERING: {c:'#ffcc00', label:'REGISTERING', state:'REGISTERING SDK',   sc:'#6a5a20',
+                nh:'SDK REGISTRATION', np:'Contacting DJI…', cls:''},
+  REGISTERED:  {c:'#00ff88', label:'REGISTERED',  state:'SYSTEM ONLINE',     sc:'#2a5040',
+                nh:'SDK REGISTERED', np:'Ready. Connect the RC-N1 and power on the aircraft.', cls:'ok'},
+  FAILED:      {c:'#ff3355', label:'REG FAILED',  state:'SDK UNREGISTERED',  sc:'#6a2030',
+                nh:'REGISTRATION FAILED', np:'—', cls:'bad'}
+};
+window.icarusUpdate = function(s){
+  try { render(s); } catch(e) { say('render error: ' + e); }
+};
+function render(s){
+  const cfg = SDK[s.sdk] || SDK.BOOT;
+  const live = !!s.connected;
+  document.getElementById('b-dot').style.background = live ? '#00ff88' : cfg.c;
+  document.getElementById('b-dot').style.boxShadow  = '0 0 8px ' + (live ? '#00ff88' : cfg.c);
+  const bs = document.getElementById('b-state');
+  bs.textContent = live ? 'AIRCRAFT LINKED' : cfg.state;
+  bs.style.color = cfg.sc;
+  txt('b-sdk', cfg.label, cfg.c);
+  txt('b-ac',  live ? (s.product||'LINKED') : '—', live ? '#00ff88' : '#4a6888');
+  txt('b-host',(s.host||'—') + ' · A' + (s.android||'?'), '#00d4ff');
+  const note = document.getElementById('b-note');
+  note.className = 'note ' + cfg.cls;
+  document.getElementById('b-nh').textContent = cfg.nh;
+  document.getElementById('b-np').textContent =
+      s.sdk === 'FAILED' ? (s.sdkDetail || 'unknown error')
+    : (s.init && s.sdk !== 'REGISTERED' ? s.init : cfg.np);
+  document.getElementById('ptxt').textContent = live ? 'LINKED · ' + (s.product||'AIRCRAFT') : cfg.label;
+  document.getElementById('dot').style.background = live ? '#00ff88' : cfg.c;
+  const pill = document.getElementById('pill');
+  pill.style.color = live ? '#00ff88' : cfg.c;
+  pill.style.background = (live ? '#00ff88' : cfg.c) + '22';
+  set('m-ac',  live ? (s.product||'YES') : '—', live);
+  set('m-sat', live ? (s.sats + ' SAT')  : '—', s.sats>0);
+  set('m-alt', live ? s.alt.toFixed(1)+' m' : '—', live);
+  set('m-hdg', live ? Math.round(s.hdg)+'°' : '—', live);
+  const ban = document.getElementById('banner');
+  if (s.sdk === 'FAILED') {
+    ban.classList.remove('hide');
+    document.getElementById('bantxt').textContent = s.sdkDetail || 'registration failed';
+  } else ban.classList.add('hide');
+  const tag = document.getElementById('t-tag');
+  tag.textContent = live ? 'LIVE' : 'NO DATA';
+  tag.style.color = live ? '#00ff88' : '#4a6888';
+  tag.style.background = (live ? '#00ff88' : '#4a6888') + '15';
+  set('t-prod', s.product || '—', live);
+  set('t-fc',   s.fcMode  || '—', live);
+  set('t-fly',  live ? (s.flying ? 'AIRBORNE' : 'ON GROUND') : '—', live);
+  txt('t-sdk', cfg.label, cfg.c);
+  const APC = { DISARMED:'#4a6888', ARMED:'#ffcc00', RUNNING:'#ff3355', ABORTING:'#ff3355' };
+  const apc = APC[s.apState] || '#4a6888';
+  const apTag = document.getElementById('ap-tag');
+  if (apTag) { apTag.textContent = s.apState || 'DISARMED';
+               apTag.style.color = apc; apTag.style.background = apc + '18'; }
+  const hc = document.querySelector('.hctl');
+  if (hc) hc.style.background = (s.apState === 'RUNNING') ? '#ff335522'
+                              : (s.apState === 'ARMED') ? '#ffcc0018' : 'transparent';
+  txt('ap-test', s.apTest || '—', s.apOk ? '#00ff88' : '#ff3355');
+  txt('ap-prim', s.apPrim || '—', s.apPrim ? '#00d4ff' : '#4a6888');
+  const apb = document.getElementById('apBanner');
+  let nt = live ? (s.takeoff && !/ABORT/i.test(s.apNote||'') ? s.takeoff : (s.apNote || '')) : 'NO AIRCRAFT LINKED — controls locked until the RC-N1 connects';
+  if (apb) {
+    const bad  = /refus|cannot|ABORT|fail/i.test(nt);
+    const warn = /press ARM|press RUN|queued|nothing queued/i.test(nt);
+    apb.classList.toggle('hide', !nt || nt === 'disarmed');
+    if (!live) { apb.classList.remove('bad'); apb.classList.add('warn'); }
+    apb.classList.toggle('bad', bad);
+    apb.classList.toggle('warn', !bad && warn);
+    const t = document.getElementById('apBannerT');
+    if (t) t.textContent = bad ? '◤ AUTOPILOT' : 'AUTOPILOT';
+  }
+  if (/ABORT/i.test(nt)) { window.__apSticky = nt; window.__apStickyAt = Date.now(); }
+  if (window.__apSticky && Date.now() - window.__apStickyAt < 30000
+      && !/RUNNING|queued/i.test(nt)) {
+    nt = window.__apSticky;
+    if (apb) { apb.classList.remove('hide','warn'); apb.classList.add('bad'); }
+  }
+  txt('ap-note', nt || '—', '#c8dff0');
+  const ax = s.axis || 'UNVERIFIED';
+  txt('ap-axis', ax, ax === 'OK' ? '#00ff88' : ax.startsWith('FAULT') ? '#ff3355' : '#ffcc00');
+  txt('ap-stick', s.stickErr ? 'REFUSED' : (s.sendErrs > 0 ? s.sendErrs + ' ERR' : (live ? 'READY' : '—')),
+      s.stickErr || s.sendErrs > 0 ? '#ff3355' : (live ? '#00ff88' : '#4a6888'));
+  document.querySelectorAll('.hctl .cbtn').forEach(b => { if (b.id !== 'c-rec') b.disabled = !live; });
+  const bh = document.getElementById('btnHome'); if (bh) bh.disabled = !live;
+  txt('f-bat', live && (s.batt||0) > 0 ? Math.round(s.batt) + '%' : '—');
+  txt('f-alt', live ? (s.alt||0).toFixed(1) + ' m' : '—');
+  txt('f-hdg', live ? Math.round(s.hdg||0) + '°' : '—');
+  txt('f-sat', live ? String(s.sats||0) : '—');
+  txt('f-note', s.rec ? '● REC' : '');
+  if (s.visMode) drawVision(s.vision, s);
+  if (s.visMode !== undefined) {
+    document.getElementById('c-recon').classList.toggle('on', s.visMode === 'RECON');
+    document.getElementById('c-hand').classList.toggle('on', s.visMode === 'HAND');
+  }
+  const db = document.getElementById('drybar');
+  if (db) db.classList.toggle('show', !!s.dry);
+  const rb = document.getElementById('c-rec');
+  if (rb) { rb.classList.toggle('on', !!s.rec); rb.textContent = s.rec ? '■ STOP' : 'REC'; }
+  const bp = s.batt || 0;
+  txt('m-bat', live && bp > 0 ? Math.round(bp) + '%' : '—',
+      !live || bp <= 0 ? '#4a6888' : bp < 25 ? '#ff3355' : bp < 45 ? '#ffcc00' : '#00ff88');
+  const hctl = document.querySelector('.hctl');
+  if (hctl) hctl.title = live ? '' : 'no aircraft linked';
+  document.getElementById('deck').style.boxShadow =
+      (s.apState === 'RUNNING') ? 'inset 0 0 0 3px #ff3355' : 'none';
+  const gc = s.guardOk ? '#00ff88' : '#ff3355';
+  txt('b-guard', s.guardOk ? 'ARMED' : 'FAIL', gc);
+  { const el = document.getElementById('e-stand');
+    if (el && s.standoff) { el.textContent = s.standoff;
+      el.style.color = /ADVISORY/.test(s.standoff) ? 'var(--am)' : 'var(--mu)'; } }
+  const tSum = [s.guardTest, s.axTest, s.apTest, s.vidTest].reduce((a, t) => {
+    const m = /^(\d+)\/(\d+)/.exec(t || ''); return m ? [a[0] + +m[1], a[1] + +m[2]] : a;
+  }, [0, 0]);
+  const allOk = s.guardOk && s.axOk && s.apOk && s.vidOk;
+  if (s.percept) txt('p-bench', s.percept, '#00d4ff');
+  txt('g-test', tSum[1] ? (tSum[0] + '/' + tSum[1] + (allOk ? ' PASS' : ' — CHECK LOG'))
+                        : (s.guardTest || '—'), gc);
+  txt('g-ceil',  (s.ceiling||0) + ' m', '#eef6ff');
+  txt('g-rad',   (s.radius||0) + ' m' + (s.radiusMeasured ? '' : ' *'),
+                 s.radiusMeasured ? '#00ff88' : '#ffcc00');
+  const gtag = document.getElementById('g-tag');
+  gtag.textContent = s.guardOk ? 'ACTIVE' : 'FAULT';
+  gtag.style.color = gc; gtag.style.background = gc + '15';
+  const gn = document.getElementById('g-note');
+  gn.className = 'note ' + (s.guardOk ? 'ok' : 'bad');
+  document.getElementById('g-nh').textContent = s.guardOk ? 'ENVELOPE GUARD ARMED' : 'ENVELOPE GUARD FAULT';
+  document.getElementById('g-np').textContent =
+      (s.guardSummary || '') + '  ·  bench self-test ' + (s.guardTest || '—')
+      + (s.radiusMeasured ? '' : '  ·  * VLOS unmeasured, using conservative fallback');
+  PLAN.acAlt    = s.alt || 0;
+  PLAN.radius   = s.radius || 100;
+  PLAN.measured = !!s.radiusMeasured;
+  if (PLAN.site && typeof s.homeLat === 'number' && s.homeLat !== null) {
+    const o = PLAN.site.origin;
+    const mlat = 111320, mlon = 111320 * Math.cos(s.homeLat * Math.PI / 180);
+    const dE = (s.homeLon - o.lon) * mlon, dN = (s.homeLat - o.lat) * mlat;
+    PLAN.siteOff = [dE, dN];
+    const away = Math.hypot(dE, dN), reach = (PLAN.site.half_km || 1) * 1000;
+    PLAN.siteOut = away > reach;
+    txt('pv-base', PLAN.siteOut
+          ? 'OUT OF AREA ' + (away/1000).toFixed(1) + ' km'
+          : (PLAN.site.name || '').toUpperCase(),
+        PLAN.siteOut ? '#ff3355' : '#3f7fa0');
+  }
+  const hasHome = typeof s.homeLat === 'number' && s.homeLat !== null;
+  if (hasHome && (!PLAN.lastPick || Math.hypot(s.homeLat - PLAN.lastPick[0],
+                                               s.homeLon - PLAN.lastPick[1]) > 0.002)) {
+    PLAN.lastPick = [s.homeLat, s.homeLon];
+    pickSite(s.homeLat, s.homeLon);
+  }
+  txt('pv-home', hasHome ? 'GPS ±' + Math.round(s.homeAcc) + ' m' : 'NO FIX',
+      hasHome ? (s.homeAcc <= 15 ? '#00ff88' : '#ffcc00') : '#ff3355');
+  if (live && s.acFix && typeof s.acEast === 'number') {
+    PLAN.ac = { e: s.acEast, n: s.acNorth, hdg: s.hdg || 0 };
+    const last = PLAN.trail[PLAN.trail.length - 1];
+    if (!last || Math.hypot(last.e - s.acEast, last.n - s.acNorth) > 1) {
+      PLAN.trail.push({ e: s.acEast, n: s.acNorth });
+      if (PLAN.trail.length > 600) PLAN.trail.shift();
+    }
+  } else { PLAN.ac = null; }
+  txt('pv-ac', live ? (s.product || 'LINKED') : 'NOT LINKED', live ? '#00ff88' : '#4a6888');
+  const fl = document.getElementById('feedLayer');
+  const inFeed = document.getElementById('stage').classList.contains('feedmode');
+  const lit = s.videoDrawn > 0 && (s.videoLum < 0 || s.videoLum >= 8);
+  if (fl) fl.style.display = (inFeed && !lit) ? 'flex' : 'none';
+  if (s.camNote) txt('feedNote', s.camNote, '#00ff88'); else
+  txt('feedNote', s.videoOn
+        ? (s.videoFrames > 0
+             ? (s.videoDrawn > 0
+                  ? 'RENDERING — ' + s.videoDrawn + ' frames drawn; if black, something covers it'
+                  : 'DECODER DEAD — ' + s.videoFrames + ' packets in, 0 frames out')
+             : 'feed attached — NO packets from the aircraft')
+        : (live ? 'camera not ready yet' : "waiting for the aircraft's camera feed"),
+      '#1e3550');
+  drawPlan();
+  document.querySelectorAll('#deck .mode.nb').forEach(m => { m.disabled = true; });
+};
+function set(id,val,liveFlag){
+  const el=document.getElementById(id); if(!el) return;
+  el.textContent=val; el.classList.toggle('stale', !liveFlag);
+}
+function txt(id,val,col){
+  const el=document.getElementById(id); if(!el) return;
+  el.textContent=val; if(col) el.style.color=col;
+}
+(function(){
+  const btn = document.getElementById('ptt');
+  const lbl = document.getElementById('pttLbl');
+  let held = false;
+  function down(e){
+    e.preventDefault();
+    if (btn.classList.contains('off')) return;
+    held = true;
+    btn.classList.add('listening'); btn.classList.remove('working');
+    lbl.textContent = 'LISTENING';
+    try { Icarus.pttDown(); }
+    catch(err) { lbl.textContent = 'MIC FAILED'; say('push to talk failed: ' + err); }
+  }
+  function up(e){
+    if(e) e.preventDefault();
+    if (!held) return;
+    held = false;
+    btn.classList.remove('listening');
+    btn.classList.add('working'); lbl.textContent = 'THINKING';
+    try { Icarus.pttUp(); }
+    catch(err) { lbl.textContent = 'MIC FAILED'; say('push to talk failed: ' + err); }
+    setTimeout(()=>{ btn.classList.remove('working'); lbl.textContent='HOLD TO TALK'; }, 2500);
+  }
+  btn.addEventListener('touchstart', down, {passive:false});
+  btn.addEventListener('touchend',   up,   {passive:false});
+  btn.addEventListener('touchcancel',up,   {passive:false});
+  btn.addEventListener('mousedown',  down);
+  btn.addEventListener('mouseup',    up);
+  btn.addEventListener('mouseleave', up);
+  window.addEventListener('blur', up);
+})();
+const PLAN = { range: 100, ac: null, trail: [], target: null, radius: 100, measured: false,
+               site: null, siteOff: [0,0], siteOut: false, acAlt: 0, lastPick: null };   // siteOff = pack origin -> home, in metres
+const SITE_STYLE = {
+  wood:     {stroke:'#0d3a24', width:0.8, fill:'#0b2418', op:.55},
+  water:    {stroke:'#123a52', width:0.9, fill:'#0c2233', op:.7},
+  building: {stroke:'#16273d', width:0.5, fill:'#101d2e', op:.7},
+  rail:     {stroke:'#2a3f56', width:0.8, dash:'5 3', op:.8},
+  field:    {stroke:'#2f7a52', width:1.0, op:.8},
+  path:     {stroke:'#1c3346', width:0.6, dash:'2 3', op:.75},
+  minor:    {stroke:'#22405c', width:0.9, op:.85},
+  major:    {stroke:'#2f5f80', width:1.6, op:.95},
+};
+const SITE_ORDER = ['field','wood','water','building','rail','path','minor','major'];
+function loadSite(name){
+  let raw = '';
+  try { raw = Icarus.sitePack(name); } catch(e) {}
+  if (!raw) { txt('pv-base','NONE','#33506e'); say('no site pack: ' + name); return false; }
+  try {
+    const j = JSON.parse(raw);
+    PLAN.site = j;
+    txt('pv-base', (j.name || name).toUpperCase(), '#3f7fa0');
+    say('site pack ' + j.name + ' — ' +
+        Object.entries(j.layers).map(([k,v]) => k + ':' + v.length).join(' '));
+    drawPlan();
+    return true;
+  } catch(e) { txt('pv-base','BAD PACK','#ff3355'); say('site pack parse failed: ' + e); return false; }
+}
+function siteSvg(){
+  if (!PLAN.site || PLAN.siteOut) return '';
+  const [ox, oy] = PLAN.siteOff;
+  const lim = PLAN.range * 1.6;              // cheap cull: skip anything well off-view
+  let g = '';
+  for (const key of SITE_ORDER){
+    const paths = PLAN.site.layers[key];
+    if (!paths) continue;
+    const st = SITE_STYLE[key];
+    let d = '';
+    for (const way of paths){
+      let started = false, any = false;
+      for (const [e, n] of way){
+        const ee = e - ox, nn = n - oy;
+        if (Math.abs(ee) > lim || Math.abs(nn) > lim) { started = false; continue; }
+        const [x, y] = planPx(ee, nn);
+        d += (started ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+        started = true; any = true;
+      }
+    }
+    if (d) g += `<path d="${d}" fill="${st.fill || 'none'}" stroke="${st.stroke}" `
+              + `stroke-width="${st.width}" opacity="${st.op}" `
+              + `${st.dash ? `stroke-dasharray="${st.dash}"` : ''} stroke-linejoin="round"/>`;
+  }
+  return `<g class="site">${g}</g>`;
+}
+function planPx(e, n){                 // metres -> svg px (200,200 = home)
+  const k = 170 / PLAN.range;          // 170 px = full range
+  return [200 + e * k, 200 - n * k];
+}
+function planM(px, py){                // svg px -> metres
+  const k = 170 / PLAN.range;
+  return [(px - 200) / k, (200 - py) / k];
+}
+function drawPlan(){
+  const rings = [0.25, 0.5, 0.75, 1].map(f => f * PLAN.range);
+  let g = siteSvg();          // basemap first, instruments on top
+  rings.forEach(r => {
+    const [x, y] = planPx(r, 0);
+    const rad = x - 200;
+    const isVlos = Math.abs(r - PLAN.radius) < 0.5;
+    g += `<circle cx="200" cy="200" r="${rad.toFixed(1)}" fill="none" stroke="${isVlos ? '#00ff88' : '#1e3c58'}" `
+       + `stroke-width="${isVlos ? 1.4 : 0.8}" ${isVlos ? '' : 'stroke-dasharray="3 5"'} opacity="${isVlos ? .9 : .55}"/>`;
+  });
+  if (PLAN.radius > PLAN.range) {
+    g += `<text x="200" y="16" fill="#ffcc00" font-size="8" text-anchor="middle" font-family="monospace"`
+       + ` opacity=".8">VLOS ${PLAN.radius.toFixed(0)}m BEYOND VIEW</text>`;
+  } else {
+    const [vx] = planPx(PLAN.radius, 0);
+    g += `<text x="${(vx + 3).toFixed(0)}" y="196" fill="#00ff88" font-size="7.5" font-family="monospace"`
+       + ` opacity=".85">VLOS ${PLAN.radius.toFixed(0)}m${PLAN.measured ? '' : ' *'}</text>`;
+  }
+  g += `<line x1="200" y1="24" x2="200" y2="376" stroke="#12253d" stroke-width="0.8"/>`
+     + `<line x1="24" y1="200" x2="376" y2="200" stroke="#12253d" stroke-width="0.8"/>`
+     + `<text x="200" y="20" fill="#4a6888" font-size="8" text-anchor="middle" font-family="monospace">N</text>`;
+  if (PLAN.trail.length > 1) {
+    const pts = PLAN.trail.map(t => planPx(t.e, t.n).map(v => v.toFixed(1)).join(',')).join(' ');
+    g += `<polyline points="${pts}" fill="none" stroke="#00ff88" stroke-width="1.1" opacity=".65"/>`;
+  }
+  if (PLAN.target) {
+    const [tx, ty] = planPx(PLAN.target.e, PLAN.target.n);
+    const col = PLAN.target.allowed ? '#00d4ff' : '#ff3355';
+    g += `<line x1="200" y1="200" x2="${tx.toFixed(1)}" y2="${ty.toFixed(1)}" stroke="${col}" `
+       + `stroke-width="1" stroke-dasharray="4 3" opacity=".7"/>`
+       + `<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)})">`
+       + `<circle r="7" fill="none" stroke="${col}" stroke-width="1.4"/>`
+       + `<line x1="-11" y1="0" x2="-3" y2="0" stroke="${col}" stroke-width="1.4"/>`
+       + `<line x1="3" y1="0" x2="11" y2="0" stroke="${col}" stroke-width="1.4"/>`
+       + `<line x1="0" y1="-11" x2="0" y2="-3" stroke="${col}" stroke-width="1.4"/>`
+       + `<line x1="0" y1="3" x2="0" y2="11" stroke="${col}" stroke-width="1.4"/></g>`;
+  }
+  g += `<g transform="translate(200 200)"><rect x="-4" y="-4" width="8" height="8" fill="none" `
+     + `stroke="#00d4ff" stroke-width="1.4"/><circle r="1.6" fill="#00d4ff"/></g>`;
+  if (PLAN.ac) {
+    const [ax, ay] = planPx(PLAN.ac.e, PLAN.ac.n);
+    g += `<g transform="translate(${ax.toFixed(1)} ${ay.toFixed(1)}) rotate(${PLAN.ac.hdg.toFixed(0)})">`
+       + `<polygon points="0,-7 5,6 0,3 -5,6" fill="#00ff88"/></g>`
+       + `<circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="11" fill="none" stroke="#00ff88" opacity=".22"/>`;
+  }
+  document.getElementById('plan').innerHTML = g;
+  document.getElementById('pv-scale').textContent = 'RANGE ' + PLAN.range + ' m';
+}
+document.getElementById('plan').addEventListener('click', function(ev){
+  const r = this.getBoundingClientRect();
+  const vb = 400, side = Math.min(r.width, r.height);
+  const ox = r.left + (r.width - side) / 2, oy = r.top + (r.height - side) / 2;
+  const px = (ev.clientX - ox) / side * vb, py = (ev.clientY - oy) / side * vb;
+  const [e, n] = planM(px, py);
+  const tgtAlt = (typeof window.REPLICA_ALT === 'number') ? window.REPLICA_ALT : ((PLAN.acAlt && PLAN.acAlt > 2) ? PLAN.acAlt : 40);
+  let v = { allowed:false, rule:'NO_BRIDGE', message:'guard unavailable', dist:Math.hypot(e,n), bearing:0 };
+  try { v = JSON.parse(Icarus.checkTarget(e, n, tgtAlt)); } catch(err) {}
+  PLAN.target = { e, n, allowed: v.allowed };
+  drawPlan();
+  const box = document.getElementById('tgt');
+  box.classList.add('show');
+  box.classList.toggle('bad', !v.allowed);
+  document.getElementById('tgt-t').textContent =
+      v.allowed ? '◤ TARGET SET' : '◤ REFUSED · ' + v.rule;
+  document.getElementById('tgt-m').innerHTML = v.allowed
+      ? `bearing <b>${String(Math.round(v.bearing)).padStart(3,'0')}°</b> · `
+        + `range <b>${v.dist.toFixed(0)} m</b> · alt <b>${tgtAlt.toFixed(0)} m</b>`
+        + `${(typeof window.REPLICA_ALT === 'number') ? ' (set)' : PLAN.acAlt > 2 ? ' (current)' : ' (default — not airborne)'}<br>`
+        + `<button class="gobtn" onclick="apGoto(${e.toFixed(1)},${n.toFixed(1)},${tgtAlt.toFixed(1)})">QUEUE GOTO →</button>`
+        + `<button class="xbtn" onclick="clearTarget()">✕ CANCEL</button>`
+      : v.message;
+  say('target ' + (v.allowed ? 'set' : 'refused: ' + v.rule));
+});
+document.getElementById('pv-scale').parentElement.style.pointerEvents = 'auto';
+document.getElementById('pv-scale').addEventListener('click', function(ev){
+  ev.stopPropagation();
+  PLAN.range = PLAN.range === 100 ? 250 : PLAN.range === 250 ? 500 : 100;
+  drawPlan();
+});
+let SITE_INDEX = [];
+try { SITE_INDEX = JSON.parse(Icarus.siteIndex() || '[]'); } catch(e) { SITE_INDEX = []; }
+let SITE_CHOSEN = '';
+function pickSite(lat, lon){
+  if (!SITE_INDEX.length) return false;
+  const dist = p => {
+    const dLat = (lat - p.lat) * 111.32;
+    const dLon = (lon - p.lon) * 111.32 * Math.cos(lat * Math.PI / 180);
+    return Math.hypot(dLat, dLon);
+  };
+  let best = null, bestKm = 1e9;
+  for (const p of SITE_INDEX){
+    const km = dist(p);
+    if (km > (p.half_km || 1)) continue;                       // does not cover him
+    if (!best || (p.half_km || 1) < (best.half_km || 1)) { best = p; bestKm = km; }
+  }
+  if (!best) {
+    let near = null, nearKm = 1e9;
+    for (const p of SITE_INDEX){ const km = dist(p); if (km < nearKm) { nearKm = km; near = p; } }
+    if (near) say('no map here — nearest is "' + near.id + '", ' + nearKm.toFixed(1) + ' km away');
+    return false;
+  }
+  if (best.id === SITE_CHOSEN) return true;
+  SITE_CHOSEN = best.id;
+  say('map: ' + best.id + ' (' + bestKm.toFixed(2) + ' km from its centre)');
+  return loadSite(best.id);
+}
+drawPlan();
+function reportStageRect(){
+  const st = document.getElementById('stage');
+  if (!st) return;
+  const r = st.getBoundingClientRect();
+  const ov = document.getElementById('vbox');
+  if (ov) {
+    ov.style.position = 'fixed';
+    ov.style.left = r.left + 'px';  ov.style.top    = r.top + 'px';
+    ov.style.width = r.width + 'px'; ov.style.height = r.height + 'px';
+    ov.style.right = 'auto';         ov.style.bottom = 'auto';
+  }
+  try { Icarus.setVideoRect(r.left, r.top, r.width, r.height); }
+  catch(e) { if (!reportStageRect.warned) { reportStageRect.warned = 1;
+    try { Icarus.log('setVideoRect FAILED: ' + e); } catch(_) {} } }
+}
+window.addEventListener('resize', reportStageRect);
+setTimeout(reportStageRect, 200);
+setInterval(reportStageRect, 2000);
+if (window.ResizeObserver) {
+  try { new ResizeObserver(reportStageRect).observe(document.getElementById('stage')); }
+  catch (e) { }
+}
+document.querySelectorAll('.stab').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const v = b.dataset.v;
+  document.querySelectorAll('.stab').forEach(x => x.classList.toggle('on', x === b));
+  const st = document.getElementById('stage');
+  st.classList.toggle('planmode', v === 'plan');
+  st.classList.toggle('feedmode', v === 'feed');
+  reportStageRect();
+  say('stage -> ' + v);
+  if (v === 'feed') setTimeout(feedAudit, 300);
+}));
+say('startup screen loaded');
+</script>
+<script src="replica.js"></script>
+</body>
+</html>

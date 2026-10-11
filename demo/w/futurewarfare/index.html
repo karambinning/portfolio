@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Future Warfare — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  body{transition:none}
+  body[data-mode="blue"] .term{transition:background .4s}
+  .fw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:22px;flex:1;min-height:0}
+  .left{display:flex;flex-direction:column;gap:10px;min-height:0}
+  .right{display:flex;flex-direction:column;min-height:0}
+  .t-sub2{margin-bottom:2px}
+  .panes{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .pane{display:none} .pane.on{display:block}
+  .tl{list-style:none;position:relative;padding-left:16px}
+  .tl::before{content:"";position:absolute;left:4px;top:6px;bottom:6px;width:1px;background:var(--line)}
+  .tl li{position:relative;padding:0 0 6px;color:var(--body);font-size:12.5px;line-height:1.45}
+  .tl li::before{content:"";position:absolute;left:-15px;top:6px;width:7px;height:7px;background:var(--a)}
+  .tl li.now::before{background:transparent;border:1px solid var(--a)}
+  .tl li b{color:var(--text)}
+  .tl .k{display:block;font:700 10px/1.2 var(--mono);letter-spacing:.14em;color:var(--a)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+  .srow{display:grid;grid-template-columns:150px 1fr 26px;gap:10px;align-items:center;font:700 10.5px/1 var(--mono);letter-spacing:.08em;color:var(--dim);margin-top:7px}
+  .srow b{color:var(--text);text-align:right}
+  .srow .t-bar{font-size:12px} .srow .t-bar .fill{height:10px}
+  /* the fifteen domains */
+  .doms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .dom{all:unset;cursor:pointer;box-sizing:border-box;display:flex;align-items:center;gap:6px;min-width:0;padding:4px 6px;font:700 10px/1.15 var(--mono);letter-spacing:.04em;color:var(--c);
+    border:1px solid color-mix(in srgb,var(--c) 35%,transparent);border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 5%,var(--screen))}
+  .dom span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dom i{flex:none;width:7px;height:7px;background:var(--c)}
+  .dom.sim i{background:linear-gradient(90deg,var(--c) 50%,transparent 50%);border:1px solid var(--c)}
+  .dom.scaf i{background:transparent;border:1px solid var(--c)}
+  .dom:hover,.dom:focus-visible,.dom[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 20%,var(--screen));box-shadow:0 0 12px color-mix(in srgb,var(--c) 40%,transparent)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:700 9.5px/1 var(--mono);color:var(--dim);letter-spacing:.08em;margin-top:6px}
+  .legend i{display:inline-block;width:7px;height:7px;background:var(--dim);margin-right:5px}
+  .legend i.h{background:linear-gradient(90deg,var(--dim) 50%,transparent 50%);border:1px solid var(--dim)} .legend i.o{background:transparent;border:1px solid var(--dim)}
+  .dz .k{font:700 11px/1.2 var(--mono);letter-spacing:.12em;color:var(--c)}
+  .dz ol{list-style:none;margin-top:6px}
+  .dz li{font-size:12.5px;color:var(--body);padding:3px 0;border-bottom:1px dashed var(--line)}
+  .dz li em{font-style:normal;color:var(--c);font-weight:700;display:inline-block;min-width:36px}
+  .dz .dr{margin-top:8px;font:700 11px/1.3 var(--mono);color:var(--text);letter-spacing:.06em}
+
+  /* ---------- the drill console ---------- */
+  .con{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid color-mix(in srgb,var(--a) 50%,transparent);
+    background:color-mix(in srgb,var(--panel) 70%,transparent);box-shadow:inset 0 0 30px color-mix(in srgb,var(--a) 8%,transparent)}
+  .con-h{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .con-h .nm{font:800 13px/1.2 var(--mono);letter-spacing:.1em;color:var(--a)}
+  .con-h .sub{font:700 9.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--dim)}
+  .con-h .sc{margin-left:auto;text-align:right;font:700 9px/1 var(--mono);color:var(--dim);letter-spacing:.14em}
+  .con-h .sc b{display:block;font:400 26px/1 var(--display);color:var(--b);letter-spacing:.04em;margin-top:2px}
+  .con-b{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .con-b>*{flex-shrink:0}
+  .warn{font:700 9.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--b);border:1px dashed color-mix(in srgb,var(--b) 50%,transparent);padding:5px 8px}
+  .go{all:unset;cursor:pointer;align-self:flex-start;font:800 15px/1 var(--mono);color:var(--violet);padding:4px 0}
+  .go::before{content:"[ "} .go::after{content:" ]"} .go span{color:var(--a)}
+  .go:hover span,.go:focus-visible span{color:var(--b);text-shadow:0 0 10px currentColor}
+  /* mock network */
+  .net{position:relative;height:170px;flex:none;border:1px solid var(--line);
+    background:repeating-linear-gradient(0deg,transparent 0 19px,color-mix(in srgb,var(--a) 7%,transparent) 19px 20px),repeating-linear-gradient(90deg,transparent 0 19px,color-mix(in srgb,var(--a) 7%,transparent) 19px 20px)}
+  .net svg{position:absolute;inset:0;width:100%;height:100%}
+  .net line{stroke:var(--lineh);stroke-width:1;vector-effect:non-scaling-stroke}
+  .net line.hot{stroke:var(--a);stroke-dasharray:4 3}
+  .node{all:unset;cursor:pointer;position:absolute;transform:translate(-50%,-50%);box-sizing:border-box;min-width:86px;padding:4px 6px;text-align:center;
+    font:700 10px/1.2 var(--mono);letter-spacing:.06em;color:var(--text);background:var(--screen);border:1px solid var(--lineh)}
+  .node small{display:block;font-size:8.5px;color:var(--dim);letter-spacing:.1em;margin-top:2px}
+  .node.alert{border-color:var(--b);color:var(--b);box-shadow:0 0 14px color-mix(in srgb,var(--b) 50%,transparent)}
+  .node.alert small{color:var(--b)}
+  .node.alert:not(.sel){animation:n-pulse 1s steps(2) infinite}
+  @keyframes n-pulse{50%{box-shadow:0 0 2px transparent}}
+  .node.sel{background:color-mix(in srgb,var(--b) 18%,var(--screen))}
+  .node.ok{border-color:#00ff88} .node.ok small{color:#00ff88}
+  .node.bad{border-color:#ff3355} .node.bad small{color:#ff3355}
+  .node.done-r{border-color:var(--a);color:var(--a)}
+  .node[disabled]{cursor:default}
+  .ev{min-height:58px;border-left:3px solid var(--b);padding:5px 9px;background:color-mix(in srgb,var(--b) 6%,transparent)}
+  .ev .k{font:700 10px/1.2 var(--mono);letter-spacing:.12em;color:var(--b)}
+  .ev p{font-size:12.5px;color:var(--text);margin-top:3px;line-height:1.45}
+  .ev .fuse{margin-top:4px}
+  .acts{display:flex;flex-wrap:wrap;gap:6px}
+  .act{all:unset;cursor:pointer;box-sizing:border-box;font:700 10.5px/1 var(--mono);letter-spacing:.06em;color:var(--a);padding:7px 9px;border:1px solid color-mix(in srgb,var(--a) 50%,transparent)}
+  .act:hover,.act:focus-visible{background:color-mix(in srgb,var(--a) 16%,transparent);color:var(--text)}
+  .act[disabled]{opacity:.35;cursor:not-allowed;background:none}
+  .opts{display:grid;gap:6px}
+  .opt{all:unset;cursor:pointer;box-sizing:border-box;display:block;padding:7px 10px;font:600 12.5px/1.4 var(--mono);color:var(--text);
+    border:1px solid color-mix(in srgb,var(--a) 35%,transparent);border-left:3px solid var(--a)}
+  .opt:hover,.opt:focus-visible{background:color-mix(in srgb,var(--a) 14%,transparent)}
+  .opt b{color:var(--a);margin-right:6px}
+  .opt[disabled]{cursor:default;opacity:.55}
+  .q{font:700 11px/1.35 var(--mono);letter-spacing:.1em;color:var(--a)}
+  .ctx{font-size:12.5px;color:var(--body);line-height:1.45}
+  .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gauges .t-label{margin-bottom:3px}
+  .gauges .t-bar{font-size:12px} .gauges .t-bar .fill{height:10px}
+  .gauges .det .t-bar .fill i{background:var(--b)}
+  .log{flex:none;max-height:86px;overflow:auto;border-top:1px dashed var(--line);padding-top:6px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .log div{font-size:11.5px;color:var(--body);line-height:1.45;padding:1px 0}
+  .log .g{color:#00ff88} .log .p{color:#ffcc00} .log .r{color:#ff3355}
+  .end{display:flex;flex-direction:column;gap:8px}
+  .grade{display:flex;align-items:flex-end;gap:16px}
+  .grade strong{font:400 64px/.85 var(--display);color:var(--b);text-shadow:0 0 18px color-mix(in srgb,var(--b) 50%,transparent)}
+  .grade .t-label{margin:0}
+  .grade p{font-size:13px;color:var(--text)}
+  .mode-btn[aria-pressed="true"] span{color:var(--b)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+  @media (max-width:760px){
+    .fw{grid-template-columns:1fr;flex:none} .panes{flex:none;overflow:visible} .con{min-height:520px}
+    .stats{grid-template-columns:repeat(2,1fr)} .doms{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .srow{grid-template-columns:110px 1fr 22px}
+    .node{min-width:64px;font-size:9px;padding:3px 4px} .net{height:190px}
+  }
+  @media (prefers-reduced-motion:reduce){ .node.alert:not(.sel){animation:none} }
+  .notsim{border:1px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);padding:7px 10px;font:600 11.5px/1.45 var(--mono);color:var(--text);margin-bottom:8px}
+  .notsim b{color:var(--a);display:block;letter-spacing:.04em;margin-bottom:2px}
+</style>
+</head>
+<body data-self="futurewarfare" data-brand="[F·W]" data-unit="FUTURE WARFARE · TRAINING TERMINAL · UNIT 08" data-status="CURRICULUM" data-status-tail="RED TEAM"
+      data-mock="simulation · not the software" data-mode="red" style="--a:#ff4444;--b:#ffaa00">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div class="fw">
+      <div class="left">
+        <div>
+          <div class="t-title">Future Warfare</div>
+          <div class="t-sub">A curriculum on modern conflict</div>
+          <div class="t-sub2">For civilians and students · taught through drills</div>
+        </div>
+        <div class="panes">
+          <div class="notsim"><b>THE DRILLS ON THE RIGHT ARE A SIMULATION MADE FOR THIS PAGE.</b> They are not the drills I ran and not the software itself. The real module is described under [ THE SOFTWARE ].</div>
+          <div class="pane" id="p-software">
+            <div class="t-label">What the software actually is</div>
+            <ul class="t-list">
+              <li><b>A learning game in my Command dashboard's academy.</b> Fifteen domains of modern conflict, each with five zones.</li>
+              <li><b>Two lenses on every domain:</b> offence and defence (for Civilian Survival, react and prepare), so each topic is studied from both sides.</li>
+              <li><b>An AI tutor:</b> choosing a zone sends it to my AI learning workstation, which teaches it and narrates the consequences of decisions.</li>
+              <li><b>Gamified drills:</b> Network Defender (apply firewall, sign-in or patch defences as an attack advances), Scenario Engine (three-step branching decisions judged against civil-emergency guidance) and Deepfake Court (judge clips real or synthetic and give a forensic reason).</li>
+              <li><b>Progress that counts:</b> XP, zones and drills feed my skills and career log, which exports as CV lines.</li>
+              <li><b>Planned:</b> drone and pilot simulators with a phone as the controller.</li>
+            </ul>
+          </div>
+          <div class="pane on" id="p-origin">
+            <div class="t-label">Where it came from</div>
+            <ol class="tl">
+              <li><span class="k">APRIL 2026</span>A <b>suspected security incident</b> on my own machines. It turned out to be a <b>false alarm</b>.</li>
+              <li><span class="k">THE LESSON</span>Checking it properly showed me how little I knew about defending my own setup.</li>
+              <li><span class="k">THE RESPONSE</span>I wrote a <b>cybersecurity curriculum</b> and practised it against my own machines.</li>
+              <li class="now"><span class="k">NOW</span>That grew into <b>Future Warfare</b>: a curriculum on modern conflict for civilians and students, taught through drills: a learning game in my Command dashboard’s academy.</li>
+            </ol>
+          </div>
+          <div class="pane" id="p-status">
+            <div class="t-label">Honest status</div>
+            <div class="stats">
+              <div class="t-stat"><strong>15</strong><span>domains</span></div>
+              <div class="t-stat"><strong>75</strong><span>zones</span></div>
+              <div class="t-stat"><strong>2</strong><span>live</span></div>
+              <div class="t-stat"><strong>11</strong><span>scaffolded</span></div>
+            </div>
+            <p class="t-p">Each domain has five zones and its own drill. <b>Civilian Survival</b> and <b>Cyber Security</b> are live. <b>Drone</b> and <b>Pilot</b> wait on simulators. The other eleven are laid out with zones and drills named, but not yet written.</p>
+            <div id="statusRows"></div>
+          </div>
+          <div class="pane dz" id="p-domain"></div>
+        </div>
+        <div>
+          <div class="t-label">The fifteen domains · select one</div>
+          <div class="doms" id="doms" role="group" aria-label="The fifteen domains"></div>
+          <div class="legend"><span><i></i>LIVE</span><span><i class="h"></i>AWAITING SIMULATOR</span><span><i class="o"></i>SCAFFOLDED</span></div>
+        </div>
+      </div>
+
+      <div class="right">
+        <section class="con" id="con" aria-label="Drill console">
+          <div class="con-h">
+            <div><div class="nm" id="dName">RED TEAM · SCOPE REVIEW</div><div class="sub" id="dSub">CYBER SECURITY · ZONE C2 · TABLETOP</div></div>
+            <div class="sc" id="dScoreWrap">SCORE<b id="dScore">—</b></div>
+          </div>
+          <div class="con-b" id="dBody" aria-live="polite"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" data-pane="origin" aria-pressed="true"><span>ORIGIN</span></button>
+    <button class="t-btn" data-pane="software"><span>THE SOFTWARE</span></button>
+    <button class="t-btn" data-pane="status"><span>STATUS</span></button>
+    <span class="sp"></span>
+    <button class="t-btn mode-btn" data-mode="red" aria-pressed="true"><span>RED TEAM</span></button>
+    <button class="t-btn mode-btn" data-mode="blue" aria-pressed="false"><span>BLUE TEAM</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  /* ---------- the fifteen domains (from the curriculum's module table) ---------- */
+  const DOMAINS = [
+    ['CIVILIAN SURVIVAL','#ffaa00','live',['S1 Threat Assessment','S2 Shelter & Resources','S3 Navigation & Evasion','S4 Medical & First Aid','S5 Comms & Rescue'],'SCENARIO ENGINE'],
+    ['MODERN WARFARE','#c84444','scaf',['MW1 Combined Arms','MW2 Logistics','MW3 Ukraine Live Case','MW4 Air Power & C2','MW5 Doctrine Shifts'],'COMMAND POST'],
+    ['HYBRID & GREY ZONE','#9966cc','scaf',['HG1 Hybrid War Doctrine','HG2 Proxy Warfare','HG3 Economic Coercion','HG4 Lawfare','HG5 Deniability & Attribution'],'ATTRIBUTION ANALYST'],
+    ['CYBER SECURITY','#ff4444','live',['C1 Threat Landscape','C2 Offence (Red Team)','C3 Defence (Blue Team)','C4 AI in Cyber','C5 Geopolitics & Law'],'NETWORK DEFENDER'],
+    ['INFO & COGNITIVE','#f59e0b','scaf',['IW1 Disinfo Architecture','IW2 Deepfake Detection','IW3 Narrative Kill Chain','IW4 Psyops History','IW5 Cognitive Resilience'],'DEEPFAKE COURT'],
+    ['ELECTRONIC WARFARE','#22d3ee','scaf',['EW1 The EM Spectrum','EW2 GPS Denial & Spoofing','EW3 Jamming & Attack','EW4 Directed Energy','EW5 EW in Ukraine'],'SPECTRUM ANALYST'],
+    ['DRONE WARFARE','#ff9500','sim',['D1 UAS Doctrine','D2 Swarm Tactics','D3 Counter-Drone','D4 Civilian Infra Targeting','D5 Legal & Ethical'],'SWARM COMMANDER'],
+    ['PILOT & AVIATION','#7c3aed','sim',['P1 Flight Fundamentals','P2 Military Aviation','P3 RAF Pathway','P4 Cockpit Systems','P5 Space Transition'],'INTERCEPT'],
+    ['AI & AUTONOMOUS','#ef4444','scaf',['AI1 LAWS & IHL','AI2 Kill-Chain Accountability','AI3 AI Targeting Systems','AI4 Human-in-Loop','AI5 AI Arms Control'],'TARGETING COMMITTEE'],
+    ['SPACE WARFARE','#aa66ff','scaf',['SP1 The Orbital Domain','SP2 ASAT Weapons','SP3 Satellite Internet as Military Infra','SP4 Outer Space Treaty Gaps','SP5 UK & NATO Posture'],'ORBITAL CHESS'],
+    ['BIOSECURITY & CBRN','#10b981','scaf',['B1 BWC','B2 Dual-Use Research','B3 Pandemic as Weapon','B4 Synthetic Biology','B5 CBRN Response'],'OUTBREAK ANALYST'],
+    ['SPEC OPS & IRREGULAR','#a3a3a3','scaf',['SO1 SOF Doctrine','SO2 Insurgency Theory','SO3 Counterinsurgency','SO4 Proxy Forces','SO5 Irregular Future'],'COIN COMMANDER'],
+    ['MARITIME & NAVAL','#0ea5e9','scaf',['MN1 Undersea Cables','MN2 Carrier Group Doctrine','MN3 South China Sea','MN4 Mine Warfare','MN5 Naval IHL'],'SEA LANES'],
+    ['ECONOMIC & FINANCIAL','#84cc16','scaf',['EF1 Sanctions Architecture','EF2 Supply Chain as Weapon','EF3 Dollar Weaponisation','EF4 Energy as Leverage','EF5 Financial Intelligence'],'TREASURY ANALYST'],
+    ['STRATEGIC STUDIES','#e879f9','scaf',['SS1 Classical Theory to Now','SS2 Deterrence Theory','SS3 Just War Theory','SS4 AI Ethics in Conflict','SS5 The Capstone Thread'],'WAR CABINET'],
+  ];
+  const STATUS = { live:'LIVE', sim:'AWAITING SIMULATOR', scaf:'SCAFFOLDED' };
+  const doms = $('doms');
+  DOMAINS.forEach(([name, c, st, zones, drill], i) => {
+    const b = document.createElement('button');
+    b.className = 'dom' + (st === 'live' ? '' : ' ' + st); b.style.setProperty('--c', c);
+    b.innerHTML = `<i></i><span>${esc(name)}</span>`; b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', `${name}, ${STATUS[st].toLowerCase()}`);
+    b.addEventListener('click', () => {
+      doms.querySelectorAll('.dom').forEach(x => x.setAttribute('aria-pressed', x === b));
+      const p = $('p-domain'); p.style.setProperty('--c', c);
+      p.innerHTML = `<div class="k">${String(i + 1).padStart(2, '0')} · ${esc(name)} · ${STATUS[st]}</div>
+        <ol>${zones.map(z => { const s = z.indexOf(' '); return `<li><em>${esc(z.slice(0, s))}</em>${esc(z.slice(s + 1))}</li>`; }).join('')}</ol>
+        <div class="dr">DRILL ▸ <span style="color:${c}">${esc(drill)}</span></div>`;
+      showPane('domain'); KB.twitch(p); KB.beep(760, 35);
+    });
+    doms.appendChild(b);
+  });
+  const cnt = k => DOMAINS.filter(d => d[2] === k).length;
+  $('statusRows').innerHTML = [['LIVE', cnt('live')], ['AWAITING SIMULATOR', cnt('sim')], ['SCAFFOLDED', cnt('scaf')]]
+    .map(([k, n]) => `<div class="srow"><span>${k}</span>${KB.bar(n / 15)}<b>${n}</b></div>`).join('');
+
+  function showPane(id){
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + id));
+    document.querySelectorAll('[data-pane]').forEach(x => x.setAttribute('aria-pressed', x.dataset.pane === id));
+    if (id !== 'domain') doms.querySelectorAll('.dom').forEach(x => x.setAttribute('aria-pressed', 'false'));
+  }
+  document.querySelectorAll('[data-pane]').forEach(btn => btn.addEventListener('click', () => {
+    showPane(btn.dataset.pane); KB.twitch($('p-' + btn.dataset.pane)); KB.beep(520, 40);
+  }));
+
+  /* ---------- shared drill plumbing ---------- */
+  const body = $('dBody'), score = $('dScore');
+  let timers = [];
+  const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  const every = (fn, ms) => { const t = setInterval(fn, ms); timers.push(t); return t; };
+  const stopAll = () => { timers.forEach(t => { clearTimeout(t); clearInterval(t); }); timers = []; };
+  const log = (html, cls = '') => { const l = body.querySelector('.log'); if (!l) return; const d = document.createElement('div'); d.className = cls; d.innerHTML = html; l.prepend(d); };
+  const setBar = (el, p) => el.querySelector('.fill').style.setProperty('--p', Math.max(0, Math.min(100, Math.round(p))) + '%');
+  const gradeOf = pct => pct >= 85 ? ['A', 'Expert call-making'] : pct >= 70 ? ['B', 'Solid'] : pct >= 50 ? ['C', 'Developing'] : ['D', 'Review the zone and try again'];
+  function finish(pct, title, lines){
+    stopAll();
+    const [g, word] = gradeOf(pct);
+    score.textContent = pct + '%';
+    body.innerHTML = `<div class="end" data-drill-end="${g}">
+      <div class="t-label">${esc(title)}</div>
+      <div class="grade"><strong>${g}</strong><div><div class="t-label">GRADE · ${pct}%</div><p>${esc(word)}</p></div></div>
+      ${KB.bar(pct / 100)}
+      <ul class="t-list">${lines.map(l => `<li>${l}</li>`).join('')}</ul>
+      <button class="go" data-act="restart"><span>▸ RUN AGAIN</span></button></div>`;
+    body.querySelector('[data-act="restart"]').addEventListener('click', () => intro());
+    KB.twitch(body); KB.beep(pct >= 70 ? 990 : 330, 140);
+  }
+
+  /* =====================================================================
+     BLUE TEAM · NETWORK DEFENDER
+     A small mock home lab. Alerts arrive on its devices; for each one,
+     read the evidence and choose a response. One of them is a false alarm.
+     ===================================================================== */
+  const NODES = [
+    { id:'router',  name:'LAB ROUTER', x:50, y:18 },
+    { id:'laptop',  name:'LAPTOP',     x:14, y:55 },
+    { id:'desktop', name:'DESKTOP',    x:38, y:82 },
+    { id:'nas',     name:'STORAGE',    x:62, y:82 },
+    { id:'printer', name:'PRINTER',    x:86, y:55 },
+  ];
+  const ACTIONS = [
+    ['isolate', 'ISOLATE DEVICE'], ['block', 'BLOCK AT ROUTER'], ['lock', 'LOCK ACCOUNT'],
+    ['update', 'APPLY UPDATE'], ['dismiss', 'MARK FALSE ALARM'],
+  ];
+  const ALERTS = [
+    { node:'laptop',  title:'SIGN-IN ALERT', ev:'Forty failed sign-ins in two minutes on the laptop account, then one that worked.',
+      best:'lock', ok:['isolate'], why:'Someone may now hold the password. Lock the account and reset it; isolating helps, but the account is the real problem.' },
+    { node:'router',  title:'NEW DEVICE', ev:'An unknown device joined the guest Wi-Fi and is checking which other devices answer.',
+      best:'block', ok:['isolate'], why:'An unrecognised device mapping the network is blocked at the router, which controls who is on the network at all.' },
+    { node:'desktop', title:'LARGE UPLOAD', ev:'The desktop uploaded 4 GB overnight. The destination is the backup service it is set to use every night at 02:00.',
+      best:'dismiss', ok:[], why:'It matches the scheduled backup. Checking before acting is the job: cutting it off would have broken the backups for nothing.' },
+    { node:'nas',     title:'OUT OF DATE', ev:'The storage box runs software with a publicly known flaw. Nothing unusual has happened yet.',
+      best:'update', ok:[], why:'No intrusion yet, just a weakness. The fix is the update, before anyone uses it.' },
+    { node:'printer', title:'ODD TRAFFIC', ev:'At 03:00 the printer started sending data to an address nothing else on the network talks to.',
+      best:'isolate', ok:['block'], why:'A printer has no reason to talk to strangers at night. Take it off the network first, then investigate.' },
+  ];
+  const FUSE = 20; // seconds before an untouched alert counts as missed
+
+  function blueIntro(){
+    $('dName').textContent = 'BLUE TEAM · NETWORK DEFENDER'; $('dSub').textContent = 'CYBER SECURITY · ZONE C3 · DEFENCE';
+    score.textContent = '—';
+    body.innerHTML = `<div class="warn">TRAINING EXERCISE · A FICTIONAL HOME LAB · NO REAL DEVICES</div>
+      <p class="ctx">You are watching a small lab network. Over about a minute, <b style="color:var(--text)">five alerts</b> will appear on its devices. Select the flashing device, read the evidence, and choose a response.</p>
+      <ul class="t-list">
+        <li>Right response: <b>2 points</b>. A reasonable second choice: <b>1</b>. Wrong or too slow: <b>0</b>.</li>
+        <li>Each alert has a ${FUSE}-second fuse. Faster calls earn a small bonus.</li>
+        <li>Not every alert is an attack. That is the point.</li>
+      </ul>
+      <button class="go" data-act="start"><span>▸ START DRILL</span></button>`;
+    body.querySelector('[data-act="start"]').addEventListener('click', blueRun);
+  }
+
+  function blueRun(){
+    stopAll(); KB.beep(660, 60);
+    let pts = 0, bonus = 0, handled = 0, sel = null, next = 0, lastRelease = 0;
+    const live = new Map(); // node id -> { a, left }
+    const results = [];
+    score.textContent = '0';
+    body.innerHTML = `<div class="net" id="net"><svg aria-hidden="true">${NODES.slice(1).map(n => `<line data-l="${n.id}" x1="50%" y1="18%" x2="${n.x}%" y2="${n.y}%"/>`).join('')}</svg>
+        ${NODES.map(n => `<button class="node" data-node="${n.id}" style="left:${n.x}%;top:${n.y}%">${n.name}<small>QUIET</small></button>`).join('')}</div>
+      <div class="ev" id="ev"><div class="k">STANDING BY</div><p>Watching the lab network. Alerts will appear on the devices above.</p></div>
+      <div class="acts" id="acts">${ACTIONS.map(([k, l]) => `<button class="act" data-a="${k}" disabled>${l}</button>`).join('')}</div>
+      <div class="log" aria-label="Drill log"></div>`;
+    const nodeEl = id => body.querySelector(`[data-node="${id}"]`);
+    const ev = $('ev'), acts = body.querySelectorAll('.act');
+    const setNode = (id, cls, txt) => { const n = nodeEl(id); n.classList.remove('alert', 'sel', 'ok', 'bad'); cls && n.classList.add(cls); n.querySelector('small').textContent = txt;
+      const l = body.querySelector(`[data-l="${id}"]`); l && l.classList.toggle('hot', cls === 'alert'); };
+    const showWaiting = () => {
+      sel = null; acts.forEach(b => b.disabled = true);
+      const waiting = [...live.keys()];
+      ev.innerHTML = waiting.length ? `<div class="k">${waiting.length} ALERT${waiting.length > 1 ? 'S' : ''} OPEN</div><p>Select the flashing device to read the evidence.</p>`
+        : `<div class="k">STANDING BY</div><p>${handled < ALERTS.length ? 'Watching the lab network for the next alert.' : 'All alerts handled.'}</p>`;
+    };
+    const select = id => {
+      if (!live.has(id)) return;
+      sel = id; const { a } = live.get(id);
+      body.querySelectorAll('.node').forEach(n => n.classList.toggle('sel', n.dataset.node === id));
+      ev.innerHTML = `<div class="k">${a.title} · ${NODES.find(n => n.id === id).name}</div><p>${esc(a.ev)}</p><div class="fuse">${KB.bar(1)}</div>`;
+      acts.forEach(b => b.disabled = false); KB.beep(880, 30);
+      paintFuse();
+    };
+    const paintFuse = () => { if (!sel || !live.has(sel)) return; const f = ev.querySelector('.fuse'); f && setBar(f, live.get(sel).left / FUSE * 100); };
+    const release = () => {
+      if (next >= ALERTS.length) return;
+      const a = ALERTS[next++]; lastRelease = Date.now();
+      live.set(a.node, { a, left: FUSE });
+      setNode(a.node, 'alert', a.title); log(`<b>▲ ${a.title}</b> on ${NODES.find(n => n.id === a.node).name}`, 'p');
+      KB.beep(440, 90);
+      if (!sel) showWaiting();
+    };
+    const resolve = (id, choice) => {
+      const { a, left } = live.get(id); live.delete(id); handled++;
+      let p = 0, cls = 'r', verdict = 'MISSED';
+      if (choice === a.best){ p = 2; cls = 'g'; verdict = 'RIGHT CALL'; }
+      else if (choice && a.ok.includes(choice)){ p = 1; cls = 'p'; verdict = 'PARTLY RIGHT'; }
+      else if (choice){ verdict = 'WRONG CALL'; }
+      const quick = choice && p > 0 && left > FUSE - 8 ? 1 : 0;
+      pts += p; bonus += quick; score.textContent = pts + bonus;
+      results.push({ a, p, choice });
+      setNode(id, p === 2 ? 'ok' : p === 1 ? '' : 'bad', p === 2 ? 'CONTAINED' : p === 1 ? 'PARTLY' : choice ? 'WRONG CALL' : 'MISSED');
+      const label = choice ? ACTIONS.find(x => x[0] === choice)[1] : 'no response';
+      log(`<b>${verdict}</b> · ${a.title}: ${label}${quick ? ' · quick +1' : ''}<br>${esc(a.why)}`, cls);
+      KB.beep(p === 2 ? 990 : p === 1 ? 700 : 260, 80);
+      showWaiting();
+      if (handled === ALERTS.length) later(() => blueEnd(), 900);
+      else if (!live.size) later(release, 1200);
+    };
+    body.querySelectorAll('.node').forEach(n => n.addEventListener('click', () => select(n.dataset.node)));
+    acts.forEach(b => b.addEventListener('click', () => { if (sel && live.has(sel)) resolve(sel, b.dataset.a); }));
+    every(() => {
+      live.forEach((v, id) => { v.left -= .25; if (v.left <= 0) resolve(id, null); });
+      paintFuse();
+      if (next < ALERTS.length && Date.now() - lastRelease > 9000) release();
+    }, 250);
+    later(release, 700);
+
+    function blueEnd(){
+      const max = ALERTS.length * 2 + ALERTS.length;
+      const pct = Math.round((pts + bonus) / max * 100);
+      const fa = results.find(r => r.a.best === 'dismiss');
+      finish(pct, 'BLUE TEAM · DRILL COMPLETE', [
+        `<b>${results.filter(r => r.p === 2).length} of ${ALERTS.length}</b> alerts handled with the right response`,
+        `<b>${results.filter(r => !r.choice).length}</b> missed on the fuse · quick-call bonus <b>+${bonus}</b>`,
+        fa && fa.p === 2 ? '<b>False alarm spotted.</b> You checked before acting.' : '<b>The overnight upload was the scheduled backup.</b> Checking first is the lesson this curriculum started from.',
+      ]);
+    }
+  }
+
+  /* =====================================================================
+     RED TEAM · SCOPE REVIEW (tabletop)
+     An authorised review of your own home lab, played as decisions about
+     judgement: staying in scope, ranking what matters, reporting clearly.
+     No methods are taught or described.
+     ===================================================================== */
+  const SCOPE = [
+    ['YOU MAY REVIEW', 'the lab laptop, the lab storage box and the lab router’s settings'],
+    ['OFF-LIMITS', 'the family tablet, anything outside the house, anyone’s personal files'],
+    ['STOP AND TELL THE OWNER', 'if you find something serious, or are unsure whether something is in scope'],
+    ['WINDOW', 'this evening only'],
+  ];
+  const FINDINGS = {
+    A: 'The storage box no longer gets security updates, and it holds the family’s only copy of their photos.',
+    B: 'The router’s settings page still uses its factory password, but it can only be reached from inside the house.',
+    C: 'Backups run every night, but nobody has ever tried restoring one to check it works.',
+  };
+  const RANK_BEST = ['A', 'C', 'B'];
+  const ROUNDS = [
+    { cat:'scope', q:'ROUND 1 · SOMETHING OUTSIDE THE SCOPE', ctx:'While listing what is on the lab network, you notice the family tablet is connected too.',
+      opts:[
+        ['Leave it alone and mention it in the report.', 2, 'Right. It is off-limits, so you note it and move on.'],
+        ['Ask the owner before touching it.', 2, 'Right. When in doubt, ask. The owner decides what is in scope.'],
+        ['Take a quick look. It is only a tablet.', 0, 'Out of scope. Permission covers what is written down, nothing more.'],
+        ['Include it, since it is on the same network.', 0, 'Being on the same network does not put it in scope.'],
+      ] },
+    { cat:'priority', rank:true, q:'ROUND 2 · WHAT MATTERS MOST TO THE OWNER', ctx:'You have three findings. Select them in order, from the one to fix first to the one to fix last.' },
+    { cat:'report', q:'ROUND 3 · SOMETHING SERIOUS', ctx:'Halfway through, you find the lab laptop’s account has no password at all.',
+      opts:[
+        ['Stop and tell the owner straight away.', 2, 'Right. The scope says serious findings are reported at once, not saved for later.'],
+        ['Note it and put it in tomorrow’s report.', 1, 'It gets reported, but the owner is exposed overnight without knowing.'],
+        ['Keep going to see how far it leads.', 0, 'The review is to find problems, not to make use of them.'],
+        ['Quietly fix it yourself.', 0, 'Changing the owner’s system without telling them is outside your permission, and they never learn about it.'],
+      ] },
+    { cat:'scope', q:'ROUND 4 · OUT OF TIME', ctx:'The evening window is ending and you have not looked at the router yet.',
+      opts:[
+        ['Stop on time. List the router as not yet reviewed.', 2, 'Right. The window is part of the permission, and an honest gap is better than a guess.'],
+        ['Ask the owner for another session.', 2, 'Right. More time comes from the owner, not from you.'],
+        ['Carry on past the window. You are nearly done.', 0, 'Past the window you are no longer authorised.'],
+        ['Write that the router is fine.', 0, 'You have not checked it. A report must only say what you know.'],
+      ] },
+    { cat:'report', q:'ROUND 5 · WRITE IT FOR THE OWNER', ctx:'The owner is not technical. Which summary do you send?',
+      opts:[
+        ['“Three things, in order: keep a second copy of the photos and replace the storage box; test restoring a backup this week; change the router password. The laptop password was fixed with you on the night.”', 2, 'Right. Plain words, ranked by impact, each with a clear next step.'],
+        ['“Several high-severity weaknesses were identified across the environment. Remediation is recommended in line with best practice.”', 0, 'Accurate-sounding but useless. The owner cannot act on it.'],
+        ['A full list of every setting checked, in the order you checked them.', 1, 'Complete, but the owner has to work out what matters. Rank it for them.'],
+        ['“All fine really, just a few small things.”', 0, 'Not true, and it leaves the photos at risk.'],
+      ] },
+  ];
+
+  function redIntro(){
+    $('dName').textContent = 'RED TEAM · SCOPE REVIEW'; $('dSub').textContent = 'CYBER SECURITY · ZONE C2 · TABLETOP';
+    score.textContent = '—';
+    body.innerHTML = `<div class="warn">TABLETOP EXERCISE · AUTHORISED REVIEW OF YOUR OWN HOME LAB · FICTIONAL</div>
+      <p class="ctx">Red-team work is judgement before it is anything else. You have the owner’s written permission to review their home lab. Five rounds of decisions; you are scored on <b style="color:var(--text)">staying in scope</b>, <b style="color:var(--text)">ranking by real impact</b> and <b style="color:var(--text)">reporting clearly</b>.</p>
+      <div class="t-box"><div class="t-label">Written scope · signed by the owner</div>
+        <ul class="t-list">${SCOPE.map(([k, v]) => `<li><b>${k}:</b> ${v}</li>`).join('')}</ul></div>
+      <button class="go" data-act="start"><span>▸ I HAVE READ THE SCOPE · BEGIN</span></button>`;
+    body.querySelector('[data-act="start"]').addEventListener('click', redRun);
+  }
+
+  function redRun(){
+    stopAll(); KB.beep(660, 60);
+    let r = 0; const got = { scope:0, priority:0, report:0 }, max = { scope:0, priority:0, report:0 };
+    ROUNDS.forEach(x => max[x.cat] += x.rank ? 3 : 2);
+    const total = () => got.scope + got.priority + got.report;
+    score.textContent = '0';
+    const frame = inner => {
+      body.innerHTML = `<div class="gauges">
+          <div><div class="t-label">IN SCOPE</div><div class="g-scope">${KB.bar(0)}</div></div>
+          <div class="det"><div class="t-label">ROUND ${Math.min(r + 1, ROUNDS.length)} OF ${ROUNDS.length}</div><div class="g-round">${KB.bar(r / ROUNDS.length)}</div></div></div>
+        ${inner}<div class="log" aria-label="Drill log"></div>`;
+      setBar(body.querySelector('.g-scope'), max.scope ? 100 - ((roundsSeen('scope') * 2 - got.scope) / max.scope * 100) : 100);
+      logs.forEach(([h, c]) => log(h, c));
+    };
+    const logs = [];
+    const roundsSeen = cat => ROUNDS.slice(0, r).filter(x => x.cat === cat).length;
+    const addLog = (h, c) => { logs.push([h, c]); log(h, c); };
+    const afterChoice = (verdictHtml) => {
+      const ev = body.querySelector('#rv');
+      ev.innerHTML = verdictHtml + `<button class="go" data-act="next" style="margin-top:6px"><span>${r + 1 < ROUNDS.length ? '▸ NEXT ROUND' : '▸ SEE THE GRADE'}</span></button>`;
+      body.querySelectorAll('.opt').forEach(o => o.disabled = true);
+      score.textContent = total();
+      ev.querySelector('[data-act="next"]').addEventListener('click', () => { r++; r < ROUNDS.length ? show() : end(); });
+      ev.querySelector('[data-act="next"]').focus({ preventScroll:true });
+    };
+    const show = () => {
+      const R = ROUNDS[r];
+      if (R.rank){
+        const order = [];
+        frame(`<div class="q">${R.q}</div><p class="ctx">${R.ctx}</p>
+          <div class="opts">${Object.entries(FINDINGS).map(([k, t]) => `<button class="opt" data-f="${k}"><b class="n">·</b>${esc(t)}</button>`).join('')}</div>
+          <div class="ev" id="rv" style="min-height:0"></div>`);
+        body.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => {
+          if (order.includes(o.dataset.f)) return;
+          order.push(o.dataset.f); o.querySelector('.n').textContent = order.length; o.disabled = true; KB.beep(600 + order.length * 120, 40);
+          if (order.length === 3){
+            const ok = order.filter((k, i) => k === RANK_BEST[i]).length; got.priority += ok;
+            const c = ok === 3 ? 'g' : ok ? 'p' : 'r';
+            const why = 'Fix first what would hurt most and cannot be undone: losing the only copy of the photos. Then make sure recovery actually works. The router password matters least because it can only be reached from inside.';
+            addLog(`<b>RANKED ${ok}/3</b> · ${why}`, c);
+            afterChoice(`<div class="k">${ok}/3 IN THE RIGHT PLACE · BEST ORDER: ${RANK_BEST.join(' → ')}</div><p>${why}</p>`);
+          }
+        }));
+      } else {
+        frame(`<div class="q">${R.q}</div><p class="ctx">${R.ctx}</p>
+          <div class="opts">${R.opts.map(([t], i) => `<button class="opt" data-o="${i}"><b>${'ABCD'[i]}</b>${esc(t)}</button>`).join('')}</div>
+          <div class="ev" id="rv" style="min-height:0"></div>`);
+        body.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => {
+          const [t, p, why] = R.opts[+o.dataset.o]; got[R.cat] += p;
+          const c = p === 2 ? 'g' : p === 1 ? 'p' : 'r', v = p === 2 ? 'GOOD JUDGEMENT' : p === 1 ? 'PARTLY' : 'RECONSIDER';
+          addLog(`<b>${v}</b> · round ${r + 1}: ${esc(why)}`, c); KB.beep(p === 2 ? 990 : p ? 700 : 260, 70);
+          afterChoice(`<div class="k">${v}</div><p>${esc(why)}</p>`);
+        }));
+      }
+      KB.twitch(body.querySelector(".q"));
+    };
+    const end = () => {
+      const all = max.scope + max.priority + max.report, pct = Math.round(total() / all * 100);
+      const stamp = (ok, yes, no) => `<span class="t-tag" style="color:${ok ? '#00ff88' : '#ff3355'};margin-right:6px">${ok ? '✓ ' + yes : '✗ ' + no}</span>`;
+      finish(pct, 'RED TEAM · REVIEW COMPLETE', [
+        stamp(true, 'AUTHORISED', '') + stamp(got.scope === max.scope, 'IN SCOPE', 'LEFT SCOPE') + stamp(got.report >= max.report - 1, 'REPORTED', 'REPORT WEAK'),
+        `<b>Scope</b> ${got.scope}/${max.scope} · <b>Prioritising</b> ${got.priority}/${max.priority} · <b>Reporting</b> ${got.report}/${max.report}`,
+        'The aim of a review is a safer owner: stay inside the permission, rank by real impact, and write it so they can act.',
+      ]);
+    };
+    show();
+  }
+
+  /* ---------- red ↔ blue ---------- */
+  const PALETTE = { red: ['#ff4444', '#ffaa00'], blue: ['#3d9bff', '#00f0ff'] };
+  let mode = 'red';
+  function intro(){ stopAll(); mode === 'red' ? redIntro() : blueIntro(); }
+  function setMode(m){
+    mode = m; const [a, b] = PALETTE[m];
+    document.body.dataset.mode = m; document.body.style.setProperty('--a', a); document.body.style.setProperty('--b', b);
+    document.querySelectorAll('.mode-btn').forEach(x => x.setAttribute('aria-pressed', x.dataset.mode === m));
+    const live = document.querySelector('.t-unit .live');
+    if (live) live.innerHTML = `CURRICULUM <i></i> ${m === 'red' ? 'RED TEAM' : 'BLUE TEAM'}`;
+    intro(); KB.twitch(document.querySelector('.right')); KB.beep(m === 'red' ? 330 : 520, 60);
+  }
+  document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => { if (b.dataset.mode !== mode) setMode(b.dataset.mode); }));
+  intro();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K·A·M RIDE — terminal</title>
+<link rel="stylesheet" href="../../_frame/frame.css">
+<style>
+  /* The app's own pixel fonts (SIL OFL 1.1, licences in assets/fonts) */
+  @font-face{font-family:"PS2P";src:url("assets/fonts/press_start_2p.ttf") format("truetype");font-display:block}
+  @font-face{font-family:"Silk";src:url("assets/fonts/silkscreen.ttf") format("truetype");font-display:block}
+
+  .ride{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;flex:1;min-height:0}
+  .console{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .shell{position:relative;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:#000;padding:8px 10px 10px;
+    box-shadow:0 0 28px color-mix(in srgb,var(--a) 10%,transparent),inset 0 0 0 3px #0b0b0b}
+  .shell-top{display:flex;justify-content:space-between;align-items:center;font:400 8px/1 "PS2P",var(--mono);color:var(--a);letter-spacing:.06em;padding:2px 2px 8px}
+  .shell-top .dim{color:#6b6b55}
+  .led{display:inline-block;width:7px;height:7px;margin-left:6px;background:#332d00;vertical-align:-1px}
+  .led.on{background:var(--a);box-shadow:0 0 8px var(--a)}
+  #scr{display:block;width:100%;height:auto;max-height:calc(100vh - 250px);aspect-ratio:16/9;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;
+    background:#000;cursor:pointer;touch-action:manipulation;outline:none}
+  #scr:focus-visible{outline:1px dashed var(--a);outline-offset:3px}
+  .keys{font:400 8px/1.6 "PS2P",var(--mono);color:#8a8668;letter-spacing:.04em;display:flex;flex-wrap:wrap;gap:4px 16px}
+  .keys b{color:var(--a);font-weight:400}
+
+  /* touch pad: phones and coarse pointers only */
+  .pad{display:none;align-items:center;justify-content:space-between;gap:10px;user-select:none;-webkit-user-select:none}
+  .pad .dpad{display:flex;gap:10px}
+  .pk{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:58px;height:50px;border:2px solid var(--a);color:var(--a);
+    font:400 16px/1 "PS2P",var(--mono);background:#000;touch-action:none;cursor:pointer}
+  .pk.a{width:66px;height:66px;border-radius:50%;font-size:20px;background:color-mix(in srgb,var(--a) 14%,#000)}
+  .pk.down{background:var(--a);color:#000}
+  .padhint{font:400 7px/1.6 "PS2P",var(--mono);color:#8a8668;text-align:center;flex:1}
+  @media (pointer:coarse),(max-width:760px){ .pad{display:flex} .keys{display:none} }
+
+  .info{display:flex;flex-direction:column;gap:10px;font-size:13px;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:4px}
+  .pane{display:none;flex-direction:column;gap:9px} .pane.on{display:flex}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tags .t-tag{color:var(--a)}
+  .note{font-size:11.5px;color:var(--dim)}
+  .ms{display:flex;flex-direction:column;gap:9px}
+  .ms .row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font:700 12px/1.2 var(--mono);color:var(--text)}
+  .ms .row .v{color:var(--a)}
+  .ms .row .t-bar{grid-column:1/-1}
+  .ms .row.done{color:var(--a)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .t-stat strong{font-size:30px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  @media (max-width:760px){
+    .ride{grid-template-columns:1fr;flex:none;min-height:auto}
+    .info{overflow:visible}
+    .t-ctl{gap:8px 12px} .t-ctl .t-btn{font-size:12.5px}
+    #scr{max-height:none}
+  }
+  .notapp{border:1px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);padding:9px 11px;font:600 12.5px/1.5 var(--mono);color:var(--text);margin:10px 0 4px}
+  .notapp b{color:var(--a);display:block;letter-spacing:.06em;margin-bottom:2px}
+</style>
+</head>
+<body data-self="ride" data-brand="[K·A·M RIDE]" data-icons="◎ ▲ ♪" data-unit="K·A·M RIDE · 8-BIT RIDE CONSOLE · UNIT 07"
+      data-status="CARTRIDGE" data-status-tail="LOADED" data-mock="arcade demo · not the app" style="--a:#ffe400;--b:#ffffff">
+<div class="term on">
+  <header data-frame></header>
+  <main class="t-body">
+    <div class="ride">
+      <section class="console" aria-label="Playable demo">
+        <div class="shell">
+          <div class="shell-top"><span>K·A·M RIDE <span class="dim">· 8-BIT</span></span><span class="dim">POWER<i class="led" id="led"></i></span></div>
+          <canvas id="scr" tabindex="0" role="img" aria-label="K·A·M RIDE demo console. Press any key or tap to power on, then Space or tap to start."></canvas>
+        </div>
+        <div class="keys" aria-hidden="true"><span><b>SPACE</b> START · JUMP · PEDAL</span><span><b>← →</b> SPEED · STEER</span></div>
+        <div class="pad" aria-label="Touch controls">
+          <div class="dpad"><button class="pk" data-k="L" aria-label="Left: slow down, or steer left">◀</button><button class="pk" data-k="R" aria-label="Right: speed up, or steer right">▶</button></div>
+          <span class="padhint">◀ ▶ SPEED · STEER<br>A START · JUMP · PEDAL</span>
+          <button class="pk a" data-k="A" aria-label="A: start, jump, pedal">A</button>
+        </div>
+        <div class="sr" id="sr" aria-live="polite"></div>
+      </section>
+
+      <section class="info">
+        <div>
+          <div class="t-title">K·A·M RIDE</div>
+          <div class="t-sub">A retro bike computer for Android</div>
+          <div class="t-sub2">Offline · built for my own rides</div>
+        </div>
+
+        <div class="notapp"><b>THE GAME ON THE LEFT IS NOT THE APP.</b> It is a small arcade game I made for this page from the app's sprites and rules. The real app is a bike computer, described below.</div>
+        <div class="pane on" id="p-app">
+          <div class="t-label">What the app actually is</div>
+          <p class="t-p">K·A·M RIDE is the bike computer I ride with. It is an <b>Android app</b>, written in <b>Kotlin with Jetpack Compose</b>, that records rides from the phone's GPS and exports them as <b>GPX and TCX</b> files, so a ride opens in any training app.</p>
+          <p class="t-p">On the handlebars, the screen shows <b>speed, time moving, distance, average speed and gradient</b> in large pixel digits that stay readable in sunlight, with an elevation profile, a map page and big glove-sized buttons. It works <b>with no signal</b>: maps of the UK are stored on the phone, and routes are planned on the device.</p>
+          <p class="t-p">On top of the numbers sits a small <b>game layer</b>, driven by the real ride, not by buttons. A buddy character rides along. A long climb brings out a boss, and you beat it by climbing. A fast stretch on the flat sets off TURBO. Coins earned by riding buy gear for the buddy in a shop. Pop-ups are spoken aloud, and the games are played by riding, never by touching the screen while moving.</p>
+          <div class="tags"><span class="t-tag">Kotlin</span><span class="t-tag">Jetpack Compose</span><span class="t-tag">GPS recording</span><span class="t-tag">GPX · TCX</span><span class="t-tag">Offline maps</span><span class="t-tag">Routing</span></div>
+          <p class="note">The arcade game here uses keys in place of real hills and speed. No real ride data.</p>
+        </div>
+
+        <div class="pane" id="p-play">
+          <div class="t-label">How to play</div>
+          <ul class="t-list">
+            <li><b>Power on:</b> any key, or tap the screen.</li>
+            <li><b>Start:</b> Space, Enter, or tap (the A button on a phone).</li>
+            <li><b>Ride:</b> Space or ↑ to jump the cones and rocks; ← → to slow down or speed up. Coins are worth 10.</li>
+            <li><b>Climb boss:</b> pedal by tapping Space (or holding →). Climbing charges your shots, and the boss's health is the metres left to climb, as in the app. Stop pedalling and it gets away.</li>
+            <li><b>Turbo:</b> hold → to ride 20% above your usual pace. On the turbo road, ← → steer and Space pedals harder.</li>
+            <li><b>Sound:</b> M, or the SOUND button.</li>
+          </ul>
+        </div>
+
+        <div class="pane" id="p-missions">
+          <div class="t-label">Today's missions · +15 coins each</div>
+          <div class="ms" id="ms"></div>
+          <div class="stats">
+            <div class="t-stat"><strong id="sScore">0</strong><span>score</span></div>
+            <div class="t-stat"><strong id="sHi">0</strong><span>hi-score</span></div>
+            <div class="t-stat"><strong id="sLv">1</strong><span>level</span></div>
+            <div class="t-stat"><strong id="sCoins">0</strong><span>coins</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <div class="t-ctl">
+    <button class="t-btn" data-pane="app" aria-pressed="true"><span>THE APP</span></button>
+    <button class="t-btn" data-pane="play"><span>HOW TO PLAY</span></button>
+    <button class="t-btn" data-pane="missions"><span>MISSIONS</span></button>
+    <span class="sp"></span>
+    <button class="t-btn" id="bSound" hidden><span>♪ ON</span></button>
+    <button class="t-btn" id="bTheme"><span>THEME RIDE</span></button>
+    <button class="t-btn" id="bBuddy"><span>BUDDY BIT</span></button>
+    <button class="t-btn" id="bPower"><span>⏻ REBOOT</span></button>
+  </div>
+  <nav data-hub></nav>
+</div>
+<script src="../../_frame/frame.js"></script>
+<script src="assets/ride.js"></script>
+</body>
+</html>

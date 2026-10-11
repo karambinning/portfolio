@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K·A·M RIDE replica</title>
+<meta name="description" content="Interactive web replica of the K·A·M RIDE Android bike computer, ported from its Kotlin/Compose source. Synthetic demo data only.">
+<style>
+/* Fonts shipped with the app (SIL OFL 1.1, licences alongside in fonts/). */
+@font-face { font-family: "PS2P"; src: url("fonts/press_start_2p.ttf") format("truetype"); font-display: block; }
+@font-face { font-family: "Silk"; src: url("fonts/silkscreen.ttf") format("truetype"); font-display: block; }
+@font-face { font-family: "SilkB"; src: url("fonts/silkscreen_bold.ttf") format("truetype"); font-display: block; }
+
+:root { --page: #0c0e13; --chrome: #1b1e26; --chip: #262a35; --chipInk: #c9cfdc; --dim: #7d8597; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--page); color: var(--chipInk); overflow: hidden; }
+body { font-family: "Silk", ui-monospace, monospace; -webkit-font-smoothing: none; }
+
+#wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 22px 8px 8px; }
+#phone { position: relative; background: #050608; border-radius: 22px; box-shadow: 0 0 0 1px #2c303b, 0 10px 30px rgba(0,0,0,.55); flex: none; }
+#phone::after { /* front camera dot, on the landscape left edge */
+  content: ""; position: absolute; left: calc(var(--bz) * .45); top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: #1d2230; }
+#viewport { position: absolute; overflow: hidden; border-radius: 6px; }
+#stage { position: absolute; left: 0; top: 0; width: 2992px; height: 1344px; transform-origin: 0 0; overflow: hidden; }
+
+#bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: center; font-size: 11px; line-height: 1; max-width: 100%; flex: none; }
+#bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+#bar .lbl { color: var(--dim); margin-right: 2px; letter-spacing: .04em; }
+#bar button { font: inherit; font-family: "Silk", monospace; font-size: 11px; color: var(--chipInk); background: var(--chip); border: 1px solid #353a48; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+#bar button[aria-pressed="true"] { border-color: var(--sel, #00d4ff); color: #fff; background: #10141c; }
+#bar .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+#bar button:focus-visible, #stage button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+#corner { position: fixed; right: 8px; top: 6px; font-family: "Silk", monospace; font-size: 10px; color: var(--dim); letter-spacing: .04em; pointer-events: none; z-index: 5; }
+
+/* ---- inside the device: every number below is a physical-pixel value from the Kotlin source ---- */
+.t { white-space: pre; display: block; flex: none; }
+.ps { font-family: "PS2P", monospace; }
+.sk { font-family: "Silk", monospace; }
+.sb { font-family: "SilkB", monospace; }
+.col { display: flex; flex-direction: column; }
+.row { display: flex; flex-direction: row; }
+.ctr { align-items: center; }
+.sp { flex: 1 1 0; min-height: 0; min-width: 0; }
+img.art { display: block; image-rendering: crisp-edges; image-rendering: pixelated; flex: none; }
+#stage button.btn { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.buddy { cursor: pointer; flex: none; display: flex; align-items: flex-end; }
+.scan::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 9;
+  background: repeating-linear-gradient(to bottom, var(--scan) 0 3px, transparent 3px 8px); }
+.layer { position: absolute; inset: 8px; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="corner">replica · demo data</div>
+<div id="wrap">
+  <div id="phone"><div id="viewport"><div id="stage" aria-live="off"></div></div></div>
+  <div id="bar" role="toolbar" aria-label="Replica controls">
+    <div class="grp" id="gTheme"><span class="lbl">THEME</span></div>
+    <div class="grp" id="gBuddy"><span class="lbl">BUDDY</span></div>
+    <div class="grp" id="gMore"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================================
+ * K·A·M RIDE — web replica. Ported from the app's Kotlin source:
+ *   Themes.kt (THEMES), Pixel.kt (Px, BIKE, PixelProfile, Scanlines, hms, BURN_IN_OFFSETS),
+ *   GameUi.kt (Companion, CoinCounter, BattlePanel, RoadScene, bossArt, COIN/COIN_SPIN, RIDER,
+ *   PopupHost cards), game/Buddy.kt (SPECIES, BUDDY_COLOURS, frames), game/Game.kt (Rules, boss
+ *   spawn/HP/escape, NAMES), game/FastRun.kt (turbo threshold), Screens.kt (TitleScreen, FLAME,
+ *   petFrames, SayBubble, MissionStrip, NextMissions), RideActivity.kt (RideScreen, Field, Button,
+ *   Summary). Ride data is synthetic: a looping made-up course, no GPS, no maps, no places.
+ * ===================================================================================== */
+
+const W = 2992, H = 1344;            // landscape phone, physical px
+const SIM = 6;                       // demo time compression (the app's showcase runs x25)
+
+// ---- Themes.kt -----------------------------------------------------------------------
+const THEMES = [
+  { id: "kam",  name: "K·A·M TERMINAL", bezel: "#0B1830", bezelInk: "#00D4FF", screen: "#04080F", ink: "#00D4FF", ink2: "#00FF88", label: "#4A6888", accent: "#AA66FF" },
+  { id: "ride", name: "RIDE",           bezel: "#000000", bezelInk: "#FFFF00", screen: "#000000", ink: "#FFFFFF", ink2: "#FFFF00", label: "#FFFF00", accent: "#FFFF00" },
+  { id: "nes",  name: "NES",            bezel: "#7C7C7C", bezelInk: "#000000", screen: "#000000", ink: "#FCFCFC", ink2: "#BCBCBC", label: "#F83800", accent: "#FCA044" },
+  { id: "vboy", name: "VIRTUAL BOY",    bezel: "#1A0000", bezelInk: "#E00000", screen: "#000000", ink: "#FF1A1A", ink2: "#B00000", label: "#800000", accent: "#FF5050" },
+];
+const DIGIT_SCALES = [32, 40, 48];
+
+// ---- game/Buddy.kt -------------------------------------------------------------------
+const SPECIES = [
+  { id: "bit", root: "BIT", frame: ["....XXXX....", "..XXXXXXXX..", ".XXXXXXXXXX.", ".XX..XX..XX.", ".XX..XX..XX.", ".XXXXXXXXXX.", ".XXXX..XXXX.", "..XXXXXXXX..", "...XXXXXX...", "..X......X..", ".X........X."], legs2: "...X....X..." },
+  { id: "bot", root: "BOT", frame: [".....X......", "..XXXXXXXX..", "..XXXXXXXX..", "..X..XX..X..", "..X..XX..X..", "..XXXXXXXX..", "..XX.X.X.XX.", "XXXXXXXXXXXX", "..XXXXXXXX..", "..XX....XX..", "..XX....XX.."], legs2: "...XX..XX..." },
+  { id: "pip", root: "PIP", frame: ["....XXXX....", "...XXXXXX...", "..XXXXXXXX..", "..XX.XX.XXX.", "..XXXXXXXXXX", "..XXXXXXXXX.", ".XXXXXXXXX..", "XXXXXXXXXX..", "..XXXXXXX...", "...X...X....", "..XX..XX...."], legs2: "...XX..XX..." },
+  { id: "kit", root: "KIT", frame: [".X........X.", ".XX......XX.", ".XXXXXXXXXX.", ".XX.XXXX.XX.", ".XXXXXXXXXX.", "..XXX..XXX..", "...XXXXXX...", "..XXXXXXXX.X", "..XXXXXXXXX.", "..X.X..X.X..", "..X......X.."], legs2: "...X....X..." },
+  { id: "goo", root: "GOO", frame: ["............", "....XXXX....", "..XXXXXXXX..", ".XXX.XX.XXX.", ".XXX.XX.XXX.", "XXXXXXXXXXXX", "XXXX....XXXX", "XXXXXXXXXXXX", "XXXXXXXXXXXX", "X.XX.XX.XX.X", "X..X.XX.X..X"], legs2: ".X.XX..XX.X." },
+];
+const BUDDY_COLOURS = [["THEME", 0], ["MINT", 0x00FF88], ["SKY", 0x44AAFF], ["VIOLET", 0xAA66FF], ["ROSE", 0xFF66CC], ["SUN", 0xFFCC00], ["FLAME", 0xFF7700], ["LIME", 0xB0FF40], ["SNOW", 0xF0F0F0]];
+
+/** Screens.kt petFrames() for a BABY with no gear: frame 0, and frame 1 bobbed down a row. */
+function petFrames(id) {
+  const s = SPECIES.find(x => x.id === id) || SPECIES[0];
+  const frames = [s.frame, ["............", ...s.frame.slice(0, 9), s.legs2]];
+  return frames.map(f => {
+    const bob = /^\.*$/.test(f[0]);
+    const rows = bob ? f.slice(1) : f.slice();
+    const w = Math.max(...rows.map(r => r.length));
+    const dressed = rows.map(r => r.padEnd(w, "."));
+    return bob ? [".".repeat(w), ...dressed] : [...dressed, ".".repeat(w)];
+  });
+}
+
+// ---- GameUi.kt sprites ---------------------------------------------------------------
+const COIN = ["..XXXX..", ".X....X.", "X..XX..X", "X..XX..X", "X..XX..X", "X..XX..X", ".X....X.", "..XXXX.."];
+const COIN_SPIN = [COIN,
+  ["...XX...", "..X..X..", "..X.XX..", "..X.XX..", "..X.XX..", "..X.XX..", "..X..X..", "...XX..."],
+  ["...XX...", "...XX...", "...XX...", "...XX...", "...XX...", "...XX...", "...XX...", "...XX..."],
+  ["...XX...", "..X..X..", "..XX.X..", "..XX.X..", "..XX.X..", "..XX.X..", "..X..X..", "...XX..."]];
+const FLAME = ["...X....", "..XX..X.", ".XXX.XX.", ".XXXXXX.", "XXXXXXXX", "XXX..XXX", ".XX..XX.", "..XXXX.."];
+const SHOT = [".XX.", "XXXX", "XXXX", ".XX."];
+const RIDER = ["....XXXX....", "...XXXXXX...", "....XXXX....", "..XXXXXXXX..", ".XX.XXXX.XX.", "XX..XXXX..XX", "....XXXX....", "....X..X....", "...XX..XX...", "...X....X...", "..XXX..XXX..", "..XXX..XXX.."];
+const GOLEM = ["...XXXXXXXX...", "..XX..XX..XX..", "..XXXXXXXXXX..", "XXXX.XXXX.XXXX", "XX.XXXXXXXX.XX", "XX.XX....XX.XX", "...XXXXXXXX...", "...XXX..XXX...", "..XXXX..XXXX..", "..XXX....XXX.."];
+const DRAKE = ["X...........XX", "XX.......XXXX.", ".XXX...XXX.XX.", "..XXXXXXXXXXXX", "...XXXXXXXX...", "..XXXXXXXXXX..", ".XX.XXXXXX.XX.", "XX..XX..XX..XX", "....XX..XX....", "...XXX..XXX..."];
+const KING = ["X..X..XX..X..X", "XXXXXXXXXXXXXX", ".XXXXXXXXXXXX.", ".XX..XXXX..XX.", ".XX..XXXX..XX.", ".XXXXXXXXXXXX.", ".XXX......XXX.", "..XXXXXXXXXX..", ".XX.XXXXXX.XX.", "XX..XX..XX..XX"];
+const SLIME = ["....XXXXXX....", "..XXXXXXXXXX..", ".XXXXXXXXXXXX.", ".XX..XXXX..XX.", "XXX..XXXX..XXX", "XXXXXXXXXXXXXX", "XXXX.XXXX.XXXX", "XXXXX....XXXXX", ".XXXXXXXXXXXX.", "X.X.X.X.X.X.X."];
+const bossArt = n => n.includes("GOLEM") ? GOLEM : n.includes("DRAKE") ? DRAKE : n.includes("KING") ? KING : SLIME;
+const BUDDY_TAP_LINES = ["LET'S RIDE!", "WHEEEE!", "DIG DEEP!", "TOO EASY!", "LOVELY ROLLING", "HOLD ON TIGHT!"];
+const NAMES = ["HILL SLIME", "RIDGE GOLEM", "SLOPE DRAKE", "SUMMIT KING"];   // game/Game.kt
+
+// ---- Rules (game/Game.kt) ------------------------------------------------------------
+const xpFor = l => 50 * l * (l - 1);
+const levelFor = xp => Math.min(99, Math.max(1, Math.floor((1 + Math.sqrt(1 + 8 * xp / 100)) / 2)));
+const SPAWN_GRADE = 2.5, SPAWN_RUN_M = 100, GPS_ONLY_SPAWN = 5, ESCAPE_GRADE = 1, ESCAPE_RUN_M = 250, QUIET_M = 300, FREE_RIDE_MAX_HP = 14, BOSS_COINS = 5;
+// FastRun.kt
+const FR_MIN = 18, FR_FACTOR = 1.2, FR_ENTER = 5000, FR_EXIT = 5000, FR_MAX_GRADE = 2;
+
+// ---- Demo profile (synthetic) --------------------------------------------------------
+const PROFILE = { xp: 220, coins: 38, streak: 3, baselineKmh: 25 };
+const MISSIONS = [{ kind: "KM", title: "RIDE 7 KM", target: 7, reward: 15 }, { kind: "TURBO", title: "TURBO FOR 60S", target: 60, reward: 10 }, { kind: "CLIMB", title: "CLIMB 40 M", target: 40, reward: 15 }];
+const DAILY = [["COIN FRENZY", "ROUTE COINS x2"], ["BOSS RUSH", "BOSS COINS x2"], ["MISSION DAY", "MISSION COINS x2"], ["XP BOOST", "XP x1.25"], ["LUCKY EGGS", "UP TO 3 EGGS HATCH"], ["BONUS DAY", "GAMES, CHESTS + QUESTS PAY x2"], ["STREAK SUNDAY", "DAILY BONUS x3"]];
+
+// ---- helpers -------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const hex2 = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const rgba = (h, a) => { const [r, g, b] = hex2(h); return `rgba(${r},${g},${b},${a})`; };
+function lerpColor(a, b, f) { const A = hex2(a), B = hex2(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * f)).join(",")})`; }
+const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
+const pad = (s, n) => String(s).padStart(n, " ");
+function hms(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; }
+function formatGrade(g) { if (g == null) return "--"; if (Math.abs(g) < 0.5) return "0%"; return g > 0 ? `+${Math.max(1, Math.trunc(g))}%` : `${Math.min(-1, Math.trunc(g))}%`; }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/** Px(): pixel-font text sized in physical pixels, lineHeight = size. */
+function Px(text, size, color, fam = "ps", extra = "") {
+  return `<div class="t ${fam}" style="font-size:${size}px;line-height:${size}px;color:${color};${extra}">${esc(text)}</div>`;
+}
+const gapV = n => `<div style="height:${n}px;flex:none"></div>`;
+const gapH = n => `<div style="width:${n}px;flex:none"></div>`;
+
+/** PixelArt(): one canvas pixel per sprite cell, scaled up with nearest-neighbour. */
+const artCache = new Map();
+function artURL(rows, color) {
+  const key = color + "|" + rows.join("/");
+  let u = artCache.get(key);
+  if (!u) {
+    const w = Math.max(...rows.map(r => r.length)), h = rows.length;
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d"); g.fillStyle = color;
+    rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === "X") g.fillRect(x, y, 1, 1); });
+    u = c.toDataURL(); artCache.set(key, u);
+  }
+  return u;
+}
+function Art(rows, color, p, attrs = "") {
+  const w = Math.max(...rows.map(r => r.length)), h = rows.length;
+  return `<img class="art" alt="" ${attrs} src="${artURL(rows, color)}" style="width:${w * p}px;height:${h * p}px">`;
+}
+function setArt(img, rows, color, p) {
+  const w = Math.max(...rows.map(r => r.length)), h = rows.length;
+  img.src = artURL(rows, color); img.style.width = w * p + "px"; img.style.height = h * p + "px";
+}
+
+// ---- reduced motion ------------------------------------------------------------------
+const mq = matchMedia("(prefers-reduced-motion: reduce)");
+let RM = mq.matches;
+mq.addEventListener ? mq.addEventListener("change", e => { RM = e.matches; }) : mq.addListener(e => { RM = e.matches; });
+
+// ---- state ---------------------------------------------------------------------------
+const UI = { screen: "title", theme: 0, species: "bit", tint: 0, sizeIx: 1, voice: true, crt: false, scale: 1 };
+let R;   // ride stats + game hud
+function freshRide() {
+  return {
+    state: "IDLE", speed: null, dist: 0, moving: 0, elapsed: 0, alt: 92, ascent: 0, grade: null, maxKmh: 0,
+    profile: [], nextProfileAt: 0, simT: 0,
+    // game
+    coins: 0, bonus: 0, boss: null, beaten: 0, climbRun: 0, flatRun: 0, spawnAscent: 0, quietUntil: 0,
+    // fast run
+    fast: false, aboveSince: null, belowSince: null, turboSec: 0, turnRate: 0,
+  };
+}
+R = freshRide();
+const T = () => THEMES[UI.theme];
+const sp = () => SPECIES.find(s => s.id === UI.species) || SPECIES[0];
+const body = () => UI.tint ? "#" + UI.tint.toString(16).padStart(6, "0").toUpperCase() : T().accent;
+const live = () => R.state !== "IDLE";
+
+// ---- Companion (GameUi.kt) -----------------------------------------------------------
+let buddyFrame = 0, say = null, sayTimer = 0;
+function Companion(p) { return `<div class="buddy" role="button" tabindex="0" aria-label="Tap your buddy" data-p="${p}"><img class="art" alt=""></div>`; }
+function drawBuddies() {
+  const frames = petFrames(UI.species), f = frames[(RM ? 0 : buddyFrame) % frames.length], c = body();
+  document.querySelectorAll("#stage .buddy").forEach(el => setArt(el.firstChild, f, c, +el.dataset.p));
+}
+(function buddyLoop() {
+  const v = UI.screen === "ride" && (R.state === "RECORDING") ? (R.speed || 0) : 0;
+  const d = v < 2 ? 700 : clamp(Math.round(1400 / v), 90, 450);
+  setTimeout(() => { buddyFrame = 1 - buddyFrame; if (!RM) drawBuddies(); buddyLoop(); }, d);
+})();
+function tapBuddy(el) {
+  const p = +el.dataset.p;
+  if (!RM) { el.style.transform = `translateY(${-p * 5}px)`; setTimeout(() => { el.style.transform = ""; }, 350); }
+  say = BUDDY_TAP_LINES[Math.floor(Math.random() * BUDDY_TAP_LINES.length)];
+  clearTimeout(sayTimer); sayTimer = setTimeout(() => { say = null; renderSay(); }, 3350);
+  renderSay();
+}
+function SayBubble(text) {
+  const t = T();
+  return `<div class="row ctr" style="align-self:flex-start;background:${t.screen};box-shadow:inset 0 0 0 5px ${t.ink2};padding:12px 22px">${Px(sp().root + ": ", 30, t.label, "sb")}${Px(text, 34, t.ink2, "sb")}</div>`;
+}
+function renderSay() { const el = $("say"); if (el) el.innerHTML = say ? SayBubble(say) + gapV(12) : ""; }
+
+// ---- Button (RideActivity.kt) --------------------------------------------------------
+function Btn(text, act, size, ink) {
+  const t = T();
+  const sz = size === "w" ? "flex:1 1 0;min-height:0" : `height:${size}px;flex:none`;
+  return `<button class="btn" data-act="${act}" style="${sz};width:100%;background:${t.screen};box-shadow:inset 0 0 0 8px ${t.label}">${text.split("\n").map(l => Px(l, 48, ink || t.ink, "sb")).join("")}</button>`;
+}
+
+// ---- Title screen (Screens.kt TitleScreen) -------------------------------------------
+let titleBlink = true, titleBob = 0;
+function renderTitle() {
+  const t = T(), lvl = levelFor(PROFILE.xp), from = xpFor(lvl), to = xpFor(lvl + 1);
+  const f = clamp((PROFILE.xp - from) / (to - from), 0, 1);
+  const now = new Date(), day = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+  const today = DAILY[(((day + 3) % 7) + 7) % 7];
+  $("stage").innerHTML = `
+  <div style="position:absolute;inset:0;background:${t.bezel};padding:32px;display:flex;gap:32px">
+    <div id="tbox" class="${UI.crt ? "scan" : ""}" style="--scan:${rgba(t.screen, .35)};position:relative;flex:1 1 0;background:${t.screen};box-shadow:inset 0 0 0 8px ${rgba(t.bezelInk, .35)};display:flex;align-items:center;justify-content:center">
+      <div class="col ctr">
+        ${Px("K·A·M", 192, t.ink)}
+        ${gapV(24)}
+        ${Px("R I D E", 96, t.accent)}
+        ${gapV(48)}
+        <div id="tbob" style="height:${12 * 16}px;display:flex;align-items:flex-end">${Companion(16)}</div>
+        ${gapV(16)}
+        ${Px(`${sp().root} · BABY`, 32, t.label, "sb")}
+        ${gapV(40)}
+        <div id="pressStart">${Px("PRESS START", 64, t.ink2)}</div>
+        ${gapV(24)}
+        <button class="btn" data-act="showcase" style="box-shadow:inset 0 0 0 6px ${t.accent};padding:18px 36px">${Px("▶ SHOWCASE RIDE", 40, t.accent)}</button>
+        ${gapV(20)}
+        ${Px(`TODAY: ${today[0]} · ${today[1]}`, 32, t.accent, "sb")}
+        ${gapV(48)}
+        <div class="row ctr">
+          ${Px(`LV ${lvl}`, 40, t.label, "sb")}${gapH(24)}
+          <div style="width:420px;height:32px;box-shadow:inset 0 0 0 4px ${t.label};padding:8px;flex:none"><div style="height:100%;width:${Math.trunc((420 - 16) * f)}px;background:${t.ink2}"></div></div>
+          ${gapH(32)}${Art(COIN, t.accent, 5)}${gapH(12)}${Px(`${PROFILE.coins}`, 40, t.label, "sb")}
+          ${gapH(32)}${Art(FLAME, PROFILE.streak > 0 ? t.accent : t.label, 5)}${gapH(12)}${Px(`STREAK ${PROFILE.streak}`, 40, t.label, "sb")}
+        </div>
+      </div>
+      <div id="hint" class="layer"></div>
+    </div>
+    <div class="col" style="width:380px;flex:none;gap:28px">
+      ${Btn("START", "start", "w")}
+      ${Btn(sp().root, "buddy", 106)}
+      ${Btn("SHOP", "na:SHOP", 106)}
+      ${Btn("DEX", "na:DEX", 106)}
+      ${Btn("WORLD", "na:WORLD", 106)}
+      ${Btn("BADGES", "na:BADGES", 106)}
+      ${Btn("CODEX", "na:CODEX", 106)}
+      ${Btn(UI.voice ? "VOICE: ON" : "VOICE: OFF", "voice", 100)}
+    </div>
+  </div>`;
+  drawBuddies(); titleTick();
+}
+function titleTick() {
+  const ps = $("pressStart"); if (ps) ps.style.visibility = titleBlink ? "visible" : "hidden";
+  const b = document.querySelector("#tbob .buddy"); if (b) b.style.marginBottom = (!RM && titleBob === 1) ? "12px" : "0";
+}
+setInterval(() => { titleBlink = !titleBlink; titleBob = (titleBob + 1) % 2; if (UI.screen === "title") titleTick(); }, 500);
+
+// ---- Ride screen (RideActivity.kt RideScreen) ----------------------------------------
+let lowerKind = null, rideBlink = true, burnMinute = 0;
+const BURN = [[0, 0], [4, 0], [4, 4], [0, 4], [-4, 4], [-4, 0], [-4, -4], [0, -4]];
+function Field(label, id) { const t = T(); return `<div class="col">${Px(label, 32, t.label, "sk")}${gapV(16)}<div id="${id}">${Px("--", 80, t.ink)}</div></div>`; }
+function renderRide() {
+  const t = T();
+  $("stage").innerHTML = `
+  <div style="position:absolute;inset:0;background:${t.bezel}">
+   <div id="burn" class="col" style="position:absolute;inset:0">
+    <div class="row" style="height:136px;flex:none;padding:40px 56px;align-items:flex-end;justify-content:space-between">
+      ${Px("K·A·M RIDE", 48, t.bezelInk, "sb")}
+      <div id="hStatus"></div><div id="hGps"></div><div id="hClock"></div>
+    </div>
+    <div class="row sp" style="padding:0 32px 32px 32px;gap:32px">
+      <div id="panel" class="${UI.crt ? "scan" : ""}" style="--scan:${rgba(t.screen, .35)};position:relative;flex:1 1 0;min-width:0;background:${t.screen};box-shadow:inset 0 0 0 8px ${rgba(t.bezelInk, .35)};padding:8px">
+        <div id="data" style="height:100%"></div>
+        <canvas id="sparks" style="position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);pointer-events:none"></canvas>
+        <div id="popup" class="layer"></div>
+        <div id="hint" class="layer"></div>
+      </div>
+      <div id="controls" class="col" style="width:380px;flex:none;gap:32px"></div>
+    </div>
+   </div>
+  </div>`;
+  renderData(); renderControls(); rideTick(true);
+}
+function renderData() {
+  const t = T();
+  lowerKind = null;
+  if (R.state === "FINISHED") {
+    // Summary(): the app's plain end-of-ride card.
+    const s = R;
+    $("data").innerHTML = `<div class="col" style="height:100%;padding:40px;justify-content:space-between">
+      ${Px("DEMO · NOT SAVED", 64, t.ink2, "sb")}
+      <div class="row">
+        <div class="col sp" style="gap:40px">${FieldV("DISTANCE KM", f2(s.dist / 1000))}${FieldV("MOVING", hms(s.moving))}${FieldV("ELAPSED", hms(s.elapsed))}</div>
+        <div class="col sp" style="gap:40px">${FieldV("AVG KM/H", s.moving > 0 ? f1(s.dist / (s.moving / 1000) * 3.6) : "--")}${FieldV("MAX KM/H", f1(s.maxKmh))}${FieldV("ASCENT M", Math.round(s.ascent))}</div>
+      </div>
+      <div></div>
+    </div>`;
+    return;
+  }
+  $("data").innerHTML = `<div class="row" style="height:100%;padding:40px">
+    <div class="col sp" style="min-width:0">
+      ${Px("SPEED  KM/H", 40, t.label, "sk")}
+      ${gapV(32)}
+      <div class="row"><button class="btn" data-act="size" aria-label="Change digit size" id="speed" style="align-items:flex-start"></button></div>
+      <div class="sp"></div>
+      <div id="lower" style="flex:none"></div>
+      ${gapV(32)}
+      <div id="footer" style="flex:none"></div>
+    </div>
+    ${gapH(64)}
+    <div class="col" style="width:600px;flex:none;justify-content:space-between">
+      ${Field("MOVING", "fMov")}${Field("DIST KM", "fDist")}${Field("AVG KM/H", "fAvg")}${Field("GRADE", "fGrade")}
+    </div>
+  </div>`;
+}
+function FieldV(label, v) { const t = T(); return `<div class="col">${Px(label, 32, t.label, "sk")}${gapV(16)}${Px(v, 80, t.ink)}</div>`; }
+function renderControls() {
+  const t = T(), k = rgb => t.id === "kam" ? rgb : null;
+  let h = "";
+  if (R.state === "IDLE") h = Btn("START", "go", "w", k("#00FF88")) + Btn("PLAN", "na:PLAN", 160, k("#00D4FF")) + Btn("GAMES", "na:GAMES", 160, k("#FF7700")) + Btn("MENU", "menu", 160, k("#FF66CC"));
+  else if (R.state === "RECORDING") h = Btn("PAUSE", "pause", "w", k("#FFCC00")) + Btn("HOLD\nSTOP", "stop", "w", k("#FF3355")) + Btn("GAMES", "na:GAMES", 160, k("#FF7700"));
+  else if (R.state === "PAUSED") h = Btn("RESUME", "resume", "w", k("#00FF88")) + Btn("HOLD\nSTOP", "stop", "w", k("#FF3355")) + Btn("GAMES", "na:GAMES", 160, k("#FF7700"));
+  else h = Btn("NEW RIDE", "newride", "w", k("#00FF88"));
+  h += Btn("MAP", "na:MAP", 160, k("#44AAFF")) + Btn("THEME", "theme", 160, k("#AA66FF"));
+  $("controls").innerHTML = h;
+}
+
+// Lower panel: companion + profile, or BattlePanel on a climb, or RoadScene on a fast stretch.
+function wantLower() { return live() && R.boss ? "battle" : live() && R.fast ? "road" : "idle"; }
+function renderLower(kind) {
+  const t = T(), el = $("lower"); if (!el) return;
+  lowerKind = kind; shot = { frame: -1, last: null };
+  if (kind === "battle") {
+    el.innerHTML = `<div style="height:400px;background:${t.screen};box-shadow:inset 0 0 0 6px ${t.accent};padding:20px;display:flex;align-items:center">
+      <div class="col ctr">${Companion(14)}${gapV(16)}
+        <div class="row" id="pips" style="gap:8px">${"<i></i>".repeat(5)}</div>${gapV(8)}${Px("CHARGE", 24, t.label, "sb")}</div>
+      <div id="lane" class="sp" style="height:120px;position:relative">${Art(SHOT, t.ink, 12, 'id="shot" style="display:none"')}</div>
+      <div class="col ctr"><div id="bossBox">${Art(SLIME, t.accent, 14, 'id="bossImg"')}</div>${gapV(12)}<div id="bossName"></div>${gapV(10)}
+        <div class="row" id="hp" style="gap:6px">${"<i></i>".repeat(10)}</div>${gapV(8)}<div id="hpTxt"></div></div>
+    </div>`;
+    const s = $("shot"); s.style.position = "absolute"; s.style.left = "0"; s.style.top = "50%"; s.style.marginTop = "-24px";
+    document.querySelectorAll("#pips i").forEach(i => Object.assign(i.style, { width: "28px", height: "28px", display: "block" }));
+    document.querySelectorAll("#hp i").forEach(i => Object.assign(i.style, { width: "30px", height: "24px", display: "block" }));
+  } else if (kind === "road") {
+    el.innerHTML = `<div id="road" style="height:440px;position:relative;overflow:hidden;background:${t.screen}">
+      <canvas id="roadCv" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+      <div id="rider" style="position:absolute;left:50%;bottom:20px;transform:translateX(-50%)">${Art(RIDER, t.ink, 12)}</div>
+      <div style="position:absolute;left:16px;top:16px">${Px("TURBO", 32, t.accent, "sb")}</div>
+      <div style="position:absolute;inset:0;box-shadow:inset 0 0 0 6px ${t.accent};pointer-events:none"></div>
+    </div>`;
+  } else {
+    el.innerHTML = `${live() ? `<div class="row ctr">${Art(COIN, t.accent, 7)}${gapH(20)}<div id="coins"></div></div>${gapV(32)}` : ""}
+      <div id="say" class="col"></div>
+      <div class="row" style="align-items:flex-end">${Companion(12)}${gapH(40)}<canvas id="prof" class="sp" style="height:176px"></canvas></div>`;
+    renderSay();
+  }
+  drawBuddies();
+}
+function renderFooter() {
+  const t = T(), el = $("footer"); if (!el) return;
+  if (live()) {
+    const got = { KM: Math.floor(R.dist / 1000), TURBO: Math.floor(R.turboSec), CLIMB: Math.floor(R.ascent) };
+    el.innerHTML = `<div class="row" style="box-shadow:inset 0 0 0 4px ${t.label};padding:12px 20px;justify-content:space-between">${MISSIONS.map(m => {
+      const p = Math.min(got[m.kind], m.target), done = p >= m.target;
+      return Px(`${done ? "◆ " : "◇ "}${m.kind} ${p}/${m.target}`, 40, done ? t.accent : t.ink2, "sb");
+    }).join("")}</div>`;
+  } else {
+    el.innerHTML = `<div class="col" style="align-self:flex-start;display:inline-flex;box-shadow:inset 0 0 0 4px ${t.accent};padding:20px;gap:10px">${Px("TODAY'S MISSIONS", 32, t.accent, "sb")}${MISSIONS.map(m => Px(`◇ ${m.title}   +${m.reward}`, 40, t.ink2, "sb")).join("")}</div>`;
+  }
+}
+let lastFooter = "";
+function rideTick(force) {
+  if (UI.screen !== "ride") return;
+  const t = T();
+  const status = R.state === "IDLE" ? "READY" : R.state === "RECORDING" ? (rideBlink ? "● REC" : "  REC") + " · DEMO" : R.state === "PAUSED" ? "PAUSED" : "DEMO · NOT SAVED";
+  setHTML("hStatus", Px(status, 48, t.bezelInk, "sb"));
+  setHTML("hGps", Px(R.state === "IDLE" ? "GPS READY ±4M" : R.state === "FINISHED" ? "GPS 11/14" : "GPS 11/14 ±4M", 40, t.bezelInk, "sk"));
+  const d = new Date();
+  setHTML("hClock", Px(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`, 48, t.bezelInk, "sb"));
+  const [bx, by] = BURN[burnMinute % BURN.length]; const b = $("burn"); if (b) b.style.transform = `translate(${bx}px,${by}px)`;
+  if (R.state === "FINISHED") return;
+  setHTML("speed", Px(R.speed == null ? "--.-" : pad(f1(R.speed), 4), 8 * DIGIT_SCALES[UI.sizeIx], t.ink));
+  const L = live();
+  setHTML("fMov", Px(L ? hms(R.moving) : "--:--", 80, t.ink));
+  setHTML("fDist", Px(L ? f2(R.dist / 1000) : "--", 80, t.ink));
+  setHTML("fAvg", Px(R.moving > 0 ? f1(R.dist / (R.moving / 1000) * 3.6) : "--", 80, t.ink));
+  setHTML("fGrade", Px(formatGrade(R.grade), 80, t.ink));
+  const want = wantLower();
+  if (force || want !== lowerKind) renderLower(want);
+  const fk = live() + "|" + Math.floor(R.dist / 1000) + "|" + Math.floor(R.turboSec) + "|" + Math.floor(R.ascent);
+  if (force || fk !== lastFooter) { lastFooter = fk; renderFooter(); }
+  if (lowerKind === "idle") {
+    if ($("coins")) setHTML("coins", Px("x" + String(R.coins + R.bonus).padStart(3, "0"), 48, t.ink2));
+    drawProfile();
+  } else if (lowerKind === "battle") updateBattle();
+}
+const htmlCache = new Map();
+function setHTML(id, h) { const el = $(id); if (!el) return; if (el.__h !== h) { el.innerHTML = h; el.__h = h; } }
+setInterval(() => { rideBlink = !rideBlink; if (UI.screen === "ride") rideTick(); }, 1000);
+setInterval(() => { burnMinute++; }, 60000);
+
+// PixelProfile (Pixel.kt)
+function sizeCanvas(cv) {
+  const w = cv.offsetWidth, h = cv.offsetHeight, k = UI.scale * (window.devicePixelRatio || 1);
+  const bw = Math.max(1, Math.round(w * k)), bh = Math.max(1, Math.round(h * k));
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+  const g = cv.getContext("2d"); g.setTransform(bw / w, 0, 0, bh / h, 0, 0); return [g, w, h];
+}
+let profKey = "";
+function drawProfile(force) {
+  const cv = $("prof"); if (!cv) return;
+  const key = R.profile.length + "|" + UI.theme + "|" + UI.scale + "|" + cv.offsetWidth;
+  if (!force && key === profKey) return; profKey = key;
+  const [g, w, h] = sizeCanvas(cv); const t = T();
+  g.clearRect(0, 0, w, h);
+  const v = R.profile; if (!v.length) return;
+  const lo = Math.min(...v), span = Math.max(10, Math.max(...v) - lo), cols = Math.max(40, v.length);
+  const cw = w / cols, ch = h / 10;
+  v.forEach((x, i) => {
+    const rows = 1 + Math.trunc((x - lo) / span * 9);
+    g.fillStyle = i === v.length - 1 ? t.accent : t.ink2;
+    for (let r = 0; r < rows; r++) g.fillRect(i * cw, h - (r + 1) * ch, cw - 4, ch - 4);
+  });
+}
+
+// BattlePanel (GameUi.kt)
+let shot = { frame: -1, last: null };
+function updateBattle() {
+  const t = T(), boss = R.boss; if (!boss) return;
+  const climbed = boss.hpMax - boss.hp, pips = Math.trunc(climbed % 5), shots = Math.trunc(climbed / 5);
+  if (shot.last == null || shot.name !== boss.name) { shot.last = shots; shot.name = boss.name; }
+  if (shots > shot.last) { shot.last = shots; fireShot(); }
+  document.querySelectorAll("#pips i").forEach((el, i) => { el.style.background = i < pips ? t.ink : t.screen; el.style.boxShadow = `inset 0 0 0 4px ${t.ink}`; });
+  const filled = Math.ceil(boss.hp / boss.hpMax * 10);
+  document.querySelectorAll("#hp i").forEach((el, i) => { el.style.background = i < filled ? t.accent : t.screen; el.style.boxShadow = `inset 0 0 0 4px ${t.accent}`; });
+  setHTML("bossName", Px(boss.name, 28, t.accent, "sb"));
+  setHTML("hpTxt", Px(`${Math.trunc(boss.hp)} M TO K.O.`, 24, t.label, "sb"));
+  paintBoss();
+}
+function paintBoss() {
+  const t = T(), img = $("bossImg"), box = $("bossBox"); if (!img || !R.boss) return;
+  const hit = shot.frame >= 10 && shot.frame <= 12;
+  setArt(img, bossArt(R.boss.name), hit ? t.ink : t.accent, 14);
+  box.style.transform = hit && !RM ? `translateX(${shot.frame % 2 === 0 ? 10 : -10}px)` : "";
+}
+async function fireShot() {
+  const s = $("shot"), lane = $("lane");
+  for (let i = 0; i <= 12; i++) {
+    if (!$("shot")) return;
+    shot.frame = RM && i < 10 ? -1 : i;
+    if (s && lane) {
+      if (shot.frame >= 0 && shot.frame <= 9) { s.style.display = "block"; s.style.transform = `translateX(${Math.max(0, Math.trunc(shot.frame / 9 * (lane.offsetWidth - 60)))}px)`; }
+      else s.style.display = "none";
+    }
+    paintBoss();
+    if (!(RM && i < 10)) await sleep(35);
+  }
+  shot.frame = -1; paintBoss();
+}
+
+// RoadScene (GameUi.kt) — OutRun-style, scanline by scanline in 8-px bands.
+const road = { camZ: 0, curve: 0, bob: 0, n: 0 };
+function drawRoad(dt) {
+  const cv = $("roadCv"); if (!cv) return;
+  const speed = R.speed || 0, bend = R.turnRate;
+  if (!RM) road.camZ += speed / 3.6 * dt * 3;
+  road.curve += (clamp(bend / 20, -1, 1) - road.curve) * Math.min(1, dt * 1.5);
+  if (++road.n % 8 === 0 && !RM) { road.bob = 1 - road.bob; const r = $("rider"); if (r) r.style.bottom = (20 + road.bob * 6) + "px"; }
+  const [g, w, h] = sizeCanvas(cv), t = T(), curve = road.curve, camZ = road.camZ;
+  const rect = (c, x, y, ww, hh) => { g.fillStyle = c; g.fillRect(x, y, ww, hh); };
+  const horizon = h * 0.36, band = 8;
+  let y = 0, i = 0;
+  while (y < horizon) { rect(i % 2 === 0 ? t.screen : lerpColor(t.screen, t.accent, 0.12), 0, y, w, band); y += band; i++; }
+  const sunX = w * 0.5 - curve * w * 0.25;
+  for (let r = 0; r < 6; r++) { const rowW = 72 - Math.abs(r - 3) * 16; rect(t.accent, sunX - rowW / 2, horizon - 64 + r * 8, rowW, 8); }
+  const shift = curve * w * 0.15, mtn = lerpColor(t.screen, t.ink2, 0.35);
+  for (let mx = -64, k = 0; mx < w + 64; mx += 64, k++) { const peak = 24 + ((k * 37) % 5) * 12; rect(mtn, mx - shift, horizon - peak, 64, peak); }
+  const g1 = lerpColor(t.screen, t.ink2, 0.28), g2 = lerpColor(t.screen, t.ink2, 0.16), tarmac = lerpColor(t.screen, t.label, 0.35);
+  y = horizon;
+  while (y < h) {
+    const p = (y - horizon) / (h - horizon), z = 1 / (p + 0.02);
+    const seg = Math.trunc((camZ + z * 6) / 4);
+    const center = w / 2 + curve * (1 - p) * (1 - p) * w * 0.45, roadW = w * (0.08 + 0.5 * p);
+    rect(seg % 2 === 0 ? g1 : g2, 0, y, w, band);
+    const rumble = roadW * 0.12;
+    rect(seg % 2 === 0 ? t.accent : t.ink, center - roadW / 2 - rumble, y, roadW + rumble * 2, band);
+    rect(tarmac, center - roadW / 2, y, roadW, band);
+    if (seg % 3 === 0) rect(t.ink, center - roadW * 0.02, y, roadW * 0.04, band);
+    y += band;
+  }
+  const lines = clamp(Math.trunc(speed / 6), 2, 8);
+  for (let s = 0; s < lines; s++) {
+    const ly = horizon + ((camZ * 60 + s * 97) % (h - horizon));
+    rect(t.ink, 16, ly, 8, 40); rect(t.ink, w - 24, (ly + 131) % h, 8, 40);
+  }
+}
+
+// ---- PopupHost (GameUi.kt): one card at a time, queued -------------------------------
+const queue = []; let popBusy = false, popGen = 0;
+function emit(e) { queue.push(e); if (!popBusy) runPopups(); }
+async function runPopups() {
+  popBusy = true;
+  while (queue.length) {
+    let e = queue.shift();
+    while (e.type === "coin" && queue[0] && queue[0].type === "coin") { const m = queue.shift(); e = { type: "coin", gained: e.gained + m.gained, total: m.total }; }
+    await showCard(e);
+    await sleep(120);
+  }
+  popBusy = false;
+}
+function styleOf(e) { return { ko: "C", turbo: "C", spawn: "W", escaped: "S" }[e.type] || "I"; }
+function cardBody(e, tick) {
+  const t = T();
+  switch (e.type) {
+    case "coin": return Art(COIN_SPIN[tick % 4], t.accent, 34, 'data-spin="1"') + gapV(24) + Px(`+${e.gained} COIN${e.gained > 1 ? "S" : ""}`, 136, t.ink) + gapV(16) + Px(`x${e.total}`, 80, t.ink2);
+    case "spawn": return Px("! WARNING !", 64, t.accent) + gapV(20) + Art(bossArt(e.name), t.accent, 22) + gapV(20) + Px(e.name, 112, t.ink) + gapV(16) + Px("CLIMB TO FIGHT!", 64, t.ink2);
+    case "ko": return Px("K.O.!", 224, t.accent) + gapV(20) + Px(e.name, 80, t.ink) + gapV(16) + Px(`+${e.coins} COINS`, 88, t.ink2);
+    case "escaped": return Px("IT GOT AWAY...", 112, t.ink) + gapV(16) + Px("NEXT CLIMB!", 64, t.ink2);
+    case "turbo": return Px("TURBO!", 200, t.accent) + gapV(16) + Px(`OVER ${e.over} KM/H · 20% ABOVE YOUR PACE`, 56, t.ink) + gapV(12) + Px("HOLD IT FOR TURBO MISSIONS", 48, t.ink2);
+  }
+  return "";
+}
+async function showCard(e) {
+  const host = $("popup"); if (!host) return;
+  const gen = ++popGen, st = styleOf(e);
+  const card = document.createElement("div");
+  card.className = "col ctr";
+  card.style.cssText = `padding:64px 110px;will-change:transform,opacity`;
+  host.appendChild(card);
+  let tick = 0;
+  const paint = () => {
+    const t = T();
+    const border = RM ? (st === "S" ? t.label : t.accent) : st === "C" ? [t.accent, t.ink, t.ink2][tick % 3] : st === "W" ? (tick % 2 === 0 ? t.accent : t.ink) : st === "S" ? t.label : t.accent;
+    card.style.background = t.screen; card.style.boxShadow = `inset 0 0 0 14px ${border}`;
+    const spin = card.querySelector("[data-spin]"); if (spin) setArt(spin, COIN_SPIN[RM ? 0 : tick % 4], t.accent, 34);
+  };
+  card.innerHTML = cardBody(e, 0); paint();
+  const ticker = setInterval(() => { tick++; paint(); }, 90);
+  const A = (kf, ms, easing = "linear") => card.animate(kf, { duration: ms, easing, fill: "forwards" }).finished.catch(() => {});
+  const spring = "cubic-bezier(.34,1.56,.64,1)";
+  if (RM) {
+    await A([{ opacity: 0 }, { opacity: 1 }], 120);
+  } else if (st === "C") {
+    sparks();
+    await A([{ transform: "scale(.2)" }, { transform: "scale(1.06)", offset: .55 }, { transform: "scale(.98)", offset: .8 }, { transform: "scale(1)" }], 520);
+  } else if (st === "W") {
+    await A([{ transform: "translateY(-800px)" }, { transform: "translateY(40px)", offset: .7 }, { transform: "translateY(0)" }], 460, "ease-out");
+    const kf = [{ transform: "translateX(0)" }];
+    for (let i = 0; i < 8; i++) kf.push({ transform: `translateX(${i % 2 === 0 ? 26 : -26}px)` });
+    kf.push({ transform: "translateX(0)" });
+    await A(kf, 360);
+  } else if (st === "S") {
+    await A([{ transform: "scale(.6)" }, { transform: "scale(1)" }], 170);
+    A([{ transform: "translateY(0) rotate(0)" }, { transform: "translateY(46px) rotate(2.3deg)" }], 1100, "ease-out");
+  } else {
+    await A([{ transform: "scale(.45)" }, { transform: "scale(1)" }], 380, spring);
+  }
+  await sleep(e.type === "spawn" ? 2800 : 2200);
+  if (gen === popGen) await A([{ opacity: 1, transform: getComputedStyle(card).transform }, { opacity: 0, transform: "scale(.55)" }], RM ? 120 : 180);
+  clearInterval(ticker); card.remove();
+}
+function sparks() {
+  const cv = $("sparks"); if (!cv) return;
+  const t0 = performance.now();
+  const step = now => {
+    const cvs = $("sparks"); if (!cvs) return;
+    const [g, w, h] = sizeCanvas(cvs); const t = T();
+    g.clearRect(0, 0, w, h);
+    const b = (now - t0) / 900; if (b > 1) return;
+    const cx = w / 2, cy = h / 2, tick = Math.floor((now - t0) / 90), cols = [t.accent, t.ink, t.ink2];
+    for (let k = 0; k < 22; k++) {
+      const ang = k * (2 * Math.PI / 22) + (k % 3) * 0.2, speed = 700 + ((k * 53) % 5) * 160, r = b * speed;
+      const px = cx + Math.cos(ang) * r, py = cy + Math.sin(ang) * r + b * b * 260, sz = 22 * (1 - b) + 6;
+      g.globalAlpha = clamp(1 - b, 0, 1); g.fillStyle = cols[(k + tick) % 3]; g.fillRect(px - sz / 2, py - sz / 2, sz, sz);
+    }
+    g.globalAlpha = 1;
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// Hint (RideScreen's centred message, 1.5 s)
+let hintTimer = 0;
+function hint(text) {
+  const el = $("hint"); if (!el) return; const t = T();
+  el.innerHTML = `<div style="background:${t.bezel};padding:32px">${Px(text, 48, t.bezelInk, "sb")}</div>`;
+  clearTimeout(hintTimer); hintTimer = setTimeout(() => { const h = $("hint"); if (h) h.innerHTML = ""; }, 1500);
+}
+
+// ---- Simulation: a synthetic looping course (no real route, no GPS) ------------------
+const LOOP = 3300;
+function course(d) {
+  const m = d % LOOP;
+  if (m < 500) return { g: 0.4, v: 25, bend: 4 * Math.sin(d / 90) };
+  if (m < 950) return { g: 6.2, v: 13, bend: 6 * Math.sin(d / 70) };
+  if (m < 1200) return { g: -4, v: 33, bend: 10 * Math.sin(d / 80) };
+  if (m < 2800) return { g: 0.3, v: 40, bend: 24 * Math.sin(d / 170) + 8 * Math.sin(d / 53) };
+  return { g: 1, v: 22, bend: 5 * Math.sin(d / 90) };
+}
+function simStep(dtReal) {
+  if (R.state !== "RECORDING" && R.state !== "PAUSED") return;
+  const dt = dtReal * SIM;
+  R.elapsed += dt * 1000;
+  if (R.state === "PAUSED") return;
+  R.simT += dt;
+  const c = course(R.dist);
+  const target = c.v + 1.4 * Math.sin(R.simT * 0.21) + 0.8 * Math.sin(R.simT * 0.77);
+  R.speed = R.speed == null ? 8 : R.speed + (target - R.speed) * Math.min(1, dt * 0.22);
+  R.maxKmh = Math.max(R.maxKmh, R.speed);
+  const step = R.speed / 3.6 * dt;
+  R.dist += step; R.moving += dt * 1000;
+  const gNow = c.g + 0.35 * Math.sin(R.simT * 0.5);
+  R.grade = R.grade == null ? gNow : R.grade + (gNow - R.grade) * Math.min(1, dt * 0.3);
+  const dAlt = R.grade / 100 * step;
+  R.alt += dAlt; if (dAlt > 0) R.ascent += dAlt;
+  if (R.dist >= R.nextProfileAt) { R.profile.push(R.alt); if (R.profile.length > 60) R.profile.shift(); R.nextProfileAt = R.dist + 50; }
+  R.turnRate = c.bend;
+  // GameEngine.update (game/Game.kt), free-ride mode
+  const coins = Math.floor(R.dist / 1000);
+  if (coins > R.coins) { R.coins = coins; emit({ type: "coin", gained: 1, total: R.coins + R.bonus }); }
+  if (!R.boss) {
+    R.climbRun = R.grade >= SPAWN_GRADE ? R.climbRun + step : 0;
+    if (R.climbRun >= SPAWN_RUN_M && R.grade >= GPS_ONLY_SPAWN && R.dist >= R.quietUntil) {
+      const lvl = Math.min(9, 1 + Math.floor(levelFor(PROFILE.xp) / 3) + R.beaten);
+      const hp = Math.min(10 + 4 * lvl, FREE_RIDE_MAX_HP);
+      R.boss = { name: `${NAMES[Math.min(lvl - 1, NAMES.length - 1)]} LV${lvl}`, level: lvl, hpMax: hp, hp };
+      R.spawnAscent = R.ascent; R.flatRun = 0;
+      emit({ type: "spawn", name: R.boss.name });
+    }
+  } else {
+    R.boss.hp = Math.max(0, R.boss.hpMax - (R.ascent - R.spawnAscent));
+    if (R.boss.hp <= 0) {
+      const reward = BOSS_COINS * R.boss.level;
+      emit({ type: "ko", name: R.boss.name, coins: reward });
+      R.beaten++; R.bonus += reward; R.boss = null; R.climbRun = 0; R.quietUntil = R.dist + QUIET_M;
+    } else {
+      R.flatRun = R.grade < ESCAPE_GRADE ? R.flatRun + step : 0;
+      if (R.flatRun >= ESCAPE_RUN_M) { emit({ type: "escaped" }); R.boss = null; R.climbRun = 0; R.quietUntil = R.dist + QUIET_M; }
+    }
+  }
+  // FastRun (game/FastRun.kt), timed in demo seconds
+  const now = R.simT * 1000, thr = Math.max(FR_MIN, PROFILE.baselineKmh * FR_FACTOR), flat = R.grade <= FR_MAX_GRADE;
+  if (!R.fast) {
+    if (R.speed >= thr && flat) { if (R.aboveSince == null) R.aboveSince = now; if (now - R.aboveSince >= FR_ENTER) { R.fast = true; R.belowSince = null; emit({ type: "turbo", over: Math.trunc(thr) }); } }
+    else R.aboveSince = null;
+  } else {
+    R.turboSec += dt;
+    if (R.speed < thr * 0.9 || !flat) { if (R.belowSince == null) R.belowSince = now; if (now - R.belowSince >= FR_EXIT) { R.fast = false; R.aboveSince = null; } }
+    else R.belowSince = null;
+  }
+}
+
+let lastT = performance.now(), uiAcc = 0;
+function frame(now) {
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  simStep(dt);
+  if (UI.screen === "ride") {
+    uiAcc += dt;
+    if (uiAcc > 0.1) { uiAcc = 0; rideTick(); }
+    if (lowerKind === "road") drawRoad(dt);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---- actions -------------------------------------------------------------------------
+function go(screen) { UI.screen = screen; queue.length = 0; popGen++; (screen === "title" ? renderTitle : renderRide)(); }
+function startRide() { R = freshRide(); R.state = "RECORDING"; R.speed = 0; renderControls(); rideTick(true); }
+const act = {
+  start: () => go("ride"),
+  showcase: () => { go("ride"); startRide(); },
+  buddy: () => setSpecies(SPECIES[(SPECIES.indexOf(sp()) + 1) % SPECIES.length].id),
+  voice: () => { UI.voice = !UI.voice; renderTitle(); },
+  go: startRide,
+  menu: () => go("title"),
+  pause: () => { R.state = "PAUSED"; R.speed = 0; renderControls(); rideTick(true); },
+  resume: () => { R.state = "RECORDING"; renderControls(); rideTick(true); },
+  stop: () => hint("HOLD 2 SEC TO STOP"),
+  newride: () => { R = freshRide(); renderData(); renderControls(); rideTick(true); },
+  theme: () => { setTheme((UI.theme + 1) % THEMES.length); hint(T().name); },
+  size: () => { UI.sizeIx = (UI.sizeIx + 1) % 3; rideTick(); },
+};
+function doAct(name) {
+  if (name.startsWith("na:")) { hint(`${name.slice(3)} · NOT IN REPLICA`); return; }
+  (act[name] || (() => {}))();
+}
+const stage = $("stage");
+stage.addEventListener("click", e => {
+  const bud = e.target.closest(".buddy"); if (bud) { tapBuddy(bud); return; }
+  const b = e.target.closest("button[data-act]"); if (!b || b.dataset.act === "stop") return;
+  doAct(b.dataset.act);
+});
+stage.addEventListener("keydown", e => {
+  const bud = e.target.closest && e.target.closest(".buddy");
+  if (bud && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); tapBuddy(bud); }
+});
+// HOLD STOP: a deliberate 2 s press ends the ride; a shorter press is a tap.
+let holdTimer = 0, held = false;
+function holdStart(e) {
+  const b = e.target.closest && e.target.closest('button[data-act="stop"]'); if (!b) return;
+  if (e.type === "keydown") { if (e.repeat || (e.key !== "Enter" && e.key !== " ")) return; e.preventDefault(); }
+  held = false; clearTimeout(holdTimer);
+  holdTimer = setTimeout(() => { held = true; R.state = "FINISHED"; R.boss = null; R.fast = false; queue.length = 0; popGen++; const p = $("popup"); if (p) p.innerHTML = ""; renderData(); renderControls(); rideTick(true); }, 2000);
+}
+function holdEnd(e) {
+  const b = e.target.closest && e.target.closest('button[data-act="stop"]'); if (!b) return;
+  if (e.type === "keyup" && e.key !== "Enter" && e.key !== " ") return;
+  clearTimeout(holdTimer); if (!held) act.stop();
+}
+stage.addEventListener("pointerdown", holdStart); stage.addEventListener("keydown", holdStart);
+stage.addEventListener("pointerup", holdEnd); stage.addEventListener("keyup", holdEnd);
+stage.addEventListener("pointerleave", () => clearTimeout(holdTimer), true);
+
+function rerender() { (UI.screen === "title" ? renderTitle : renderRide)(); syncBar(); }
+function setTheme(i) { UI.theme = i; profKey = ""; rerender(); }
+function setSpecies(id) { UI.species = id; rerender(); }
+
+// ---- toolbar outside the device ------------------------------------------------------
+function buildBar() {
+  $("gTheme").insertAdjacentHTML("beforeend", THEMES.map((t, i) => `<button data-theme="${i}" style="--sel:${t.bezelInk === "#000000" ? t.accent : t.bezelInk}"><span class="sw" style="background:${t.accent};box-shadow:0 0 0 2px ${t.bezel}"></span>${t.id.toUpperCase()}</button>`).join(""));
+  $("gBuddy").insertAdjacentHTML("beforeend", SPECIES.map(s => `<button data-sp="${s.id}">${s.root}</button>`).join(""));
+  $("gMore").innerHTML = `<button id="bColour">COLOUR <span class="sw" id="cSw"></span><span id="cName"></span></button><button id="bCrt" aria-pressed="false">SCANLINES</button>`;
+  $("bar").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.theme) setTheme(+b.dataset.theme);
+    else if (b.dataset.sp) setSpecies(b.dataset.sp);
+    else if (b.id === "bColour") { const i = BUDDY_COLOURS.findIndex(c => c[1] === UI.tint); UI.tint = BUDDY_COLOURS[(i + 1) % BUDDY_COLOURS.length][1]; rerender(); }
+    else if (b.id === "bCrt") { UI.crt = !UI.crt; rerender(); }
+  });
+  syncBar();
+}
+function syncBar() {
+  document.querySelectorAll("#bar [data-theme]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.theme === UI.theme));
+  document.querySelectorAll("#bar [data-sp]").forEach(b => b.setAttribute("aria-pressed", b.dataset.sp === UI.species));
+  const c = BUDDY_COLOURS.find(c => c[1] === UI.tint) || BUDDY_COLOURS[0];
+  $("cSw").style.background = body(); $("cName").textContent = c[0];
+  $("bCrt").setAttribute("aria-pressed", UI.crt);
+}
+
+// ---- fit the 2992×1344 device into whatever box the iframe gives us ------------------
+function fit() {
+  const bar = $("bar"), vw = innerWidth, vh = innerHeight;
+  bar.style.maxWidth = (vw - 16) + "px";
+  const barH = bar.offsetHeight + 8;
+  const availW = vw - 16, availH = vh - 30 - barH;
+  let s = Math.min(availW / (W * 1.04), availH / (H * 1.09));
+  s = Math.max(0.05, s);
+  const sw = W * s, sh = H * s, bz = Math.max(6, Math.round(sh * 0.045)), bzx = Math.max(10, Math.round(sw * 0.02));
+  const ph = $("phone"); ph.style.width = (sw + bzx * 2) + "px"; ph.style.height = (sh + bz * 2) + "px";
+  ph.style.borderRadius = Math.max(10, bz * 2) + "px"; ph.style.setProperty("--bz", bzx + "px");
+  const vp = $("viewport"); Object.assign(vp.style, { left: bzx + "px", top: bz + "px", width: sw + "px", height: sh + "px" });
+  $("stage").style.transform = `scale(${s})`;
+  const changed = s !== UI.scale; UI.scale = s;
+  if (changed) { profKey = ""; drawProfile(true); }
+}
+addEventListener("resize", fit);
+
+buildBar();
+renderTitle();
+fit();
+document.fonts && document.fonts.ready.then(fit);
+// test/debug hook: jump the synthetic course forward (demo metres)
+window.kamride = { skip(m) { for (let i = 0; i < m; i += 2) { const v = (R.speed || 20) / 3.6; simStep(Math.min(0.1, 2 / v / SIM)); } }, R: () => R };
+</script>
+</body>
+</html>

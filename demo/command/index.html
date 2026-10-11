@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command Dashboard (replica)</title>
+<meta name="description" content="Interactive replica of the Command dashboard: header, agent rail, command centre, team health and navigable department tabs, on demo data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ═══ COMMAND replica · KAM palette (from Command.html :root + RESET) ═══ */
+  :root{
+    --zone-c:#00d4ff;
+    --av-bg:#04080f; --av-text:#aacce0;
+    --av-yerdad:#00d4ff; --av-scout:#00ff88; --av-builder:#ff7700; --av-analyst:#ffcc00;
+    --av-reviewer:#eef6ff; --av-envoy:#44aaff; --av-archivist:#aa66ff; --av-sentinel:#ff3355;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'IBM Plex Mono','SF Mono',Menlo,monospace;background:#070e1c;color:#eef6ff;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  ::selection{background:#00d4ff44;color:#fff}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:#070e1c}
+  ::-webkit-scrollbar-thumb{background:#3a5c7a;border-radius:0}
+  ::-webkit-scrollbar-thumb:hover{background:#00d4ff}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes tpulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+  @keyframes scanline{0%{top:38px;opacity:0}10%{opacity:.6}90%{opacity:.6}100%{top:100%;opacity:0}}
+  @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  @keyframes rowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @keyframes cortexNodePulse{0%,100%{opacity:.6}50%{opacity:1}}
+  :focus-visible{outline:1px solid var(--zone-c);outline-offset:1px}
+
+  /* ═══ APP LAYOUT · header / agent-view rail / workspace / ticker ═══ */
+  .app{display:grid;grid-template-rows:44px 1fr 30px;grid-template-columns:clamp(210px,24vw,250px) 1fr;height:100vh;width:100vw;gap:1px;background:#00d4ff15}
+  .header{grid-column:1/-1;grid-row:1}
+  .brain{grid-column:1;grid-row:2}
+  .work{grid-column:2;grid-row:2}
+  .ticker{grid-column:1/-1;grid-row:3}
+
+  .header{background:#070e1c;border-bottom:1px solid var(--zone-c);display:flex;align-items:stretch;z-index:20;position:relative;
+    box-shadow:0 1px 0 var(--zone-c),0 6px 32px color-mix(in srgb,var(--zone-c) 22%,transparent);transition:border-color .6s,box-shadow .6s}
+  .header-left{display:flex;align-items:stretch;flex:0 0 auto;height:100%}
+  .brand{font-size:10px;color:#00d4ff;text-shadow:0 0 8px #00d4ff66;letter-spacing:5px;font-weight:700;display:flex;align-items:center;padding:0 14px;border-right:1px solid #1e3a5f;white-space:nowrap;cursor:default}
+  .brand .dot{color:#00ff88;margin-right:6px;animation:pulse 2.4s ease-in-out infinite}
+  .hbtn{display:flex;align-items:center;height:100%;padding:0 12px;border:none;border-right:1px solid #1e3a5f;background:transparent;color:#6a8eaa;font-size:9px;letter-spacing:2px;transition:color .15s,background .15s;white-space:nowrap}
+  .hbtn:hover{background:#00d4ff10;color:#00d4ff}
+  #yerdad-jump-chip{display:flex;align-items:center;gap:6px;align-self:center;background:transparent;border:1px solid #aa66ff66;color:#aa66ff;font-size:10px;letter-spacing:2px;padding:5px 10px;margin:0 8px;transition:filter .12s,border-color .12s;white-space:nowrap}
+  #yerdad-jump-chip:hover{filter:brightness(1.4);border-color:#aa66ff}
+  .yj-dot{width:6px;height:6px;border-radius:50%;background:#aa66ff;box-shadow:0 0 6px #aa66ff;animation:pulse 1.6s infinite}
+  .livestrip{display:flex;flex:1;flex-wrap:nowrap;align-items:stretch;overflow-x:auto;overflow-y:hidden;height:100%;min-width:0}
+  .livestrip::-webkit-scrollbar{height:2px}
+  .live-stat{display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid #1e3a5f;height:100%;flex-shrink:0;white-space:nowrap}
+  .live-stat:hover{background:color-mix(in srgb,var(--zone-c) 6%,transparent)}
+  .live-stat-icon{font-size:11px;line-height:1}
+  .live-stat-val{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .live-stat-cap{font-size:7px;color:#4a6888;letter-spacing:2px;margin-left:3px}
+  .header-right{display:flex;align-items:stretch;flex:0 0 auto}
+  .header-right>*{display:flex;align-items:center;padding:0 12px;border:none;border-left:1px solid #1e3a5f;background:transparent;white-space:nowrap}
+  .clock{font-variant-numeric:tabular-nums;color:#00d4ff;letter-spacing:2px;font-size:11px}
+
+  /* ═══ BRAIN RAIL · AGENT VIEW ═══ */
+  .brain{background:#070e1c;border-right:1px solid color-mix(in srgb,var(--zone-c) 30%,#3a5c7a 70%);overflow:hidden;min-height:0;display:grid}
+  .cortex{background:#050a14;position:relative;overflow:hidden;box-shadow:inset 0 0 60px color-mix(in srgb,var(--zone-c) 12%,transparent)}
+  #agent-view-rail{display:flex;flex-direction:column;height:100%;padding:10px 12px;gap:10px;color:#aacce0;overflow-y:auto}
+  .av-lab{font-size:8px;color:#1e3a5f;letter-spacing:3px}
+  .av-agent-row{display:grid;grid-template-columns:8px 1fr auto;gap:6px;align-items:center;padding:3px 5px;border-left:2px solid currentColor;opacity:.5;transition:opacity .3s,background .3s}
+  .av-agent-row.on{opacity:1;background:color-mix(in srgb,currentColor 7%,transparent)}
+  .av-agent-row .d{width:6px;height:6px;background:currentColor;border-radius:50%}
+  .av-agent-row.on .d{box-shadow:0 0 6px currentColor;animation:pulse 1s infinite}
+  .av-agent-row .t{font-size:9px;color:var(--av-text);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .av-agent-row strong{color:currentColor}
+  .av-agent-row .s{font-size:7px;color:#4a6888;letter-spacing:2px}
+  .av-agent-row.on .s{color:currentColor}
+  .av-agent-row[data-agent="scout"]{color:var(--av-scout)}
+  .av-agent-row[data-agent="builder"]{color:var(--av-builder)}
+  .av-agent-row[data-agent="analyst"]{color:var(--av-analyst)}
+  .av-agent-row[data-agent="reviewer"]{color:var(--av-reviewer)}
+  .av-agent-row[data-agent="envoy"]{color:var(--av-envoy)}
+  .av-agent-row[data-agent="archivist"]{color:var(--av-archivist)}
+  .av-agent-row[data-agent="sentinel"]{color:var(--av-sentinel)}
+
+  /* ═══ WORKSPACE · tabs + views ═══ */
+  .work{background:#04080f;overflow:hidden;position:relative;display:grid;grid-template-rows:38px 1fr;min-width:0}
+  .work::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,#00000060 100%);z-index:1}
+  .work::before{content:"";position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00d4ff44,transparent);pointer-events:none;z-index:3;top:38px;animation:scanline 7s linear infinite;opacity:.6}
+  .work-tabs{display:flex;border-bottom:1px solid #162540;background:#060d1a;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .work-tabs::-webkit-scrollbar{display:none}
+  .work-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#4a6888;padding:10px 16px;font-size:9px;letter-spacing:3px;transition:all .15s;white-space:nowrap;--tc:#00d4ff}
+  .work-tab[data-view="missions"]{--tc:#ff3355}.work-tab[data-view="territory"]{--tc:#00ff88}.work-tab[data-view="people"]{--tc:#44aaff}
+  .work-tab[data-view="inbox"]{--tc:#44aaff}.work-tab[data-view="timeline"]{--tc:#aa66ff}.work-tab[data-view="career"]{--tc:#ffcc00}
+  .work-tab[data-view="academic"]{--tc:#aa66ff}.work-tab[data-view="sports"]{--tc:#00ff88}.work-tab[data-view="resell"]{--tc:#ff66aa}
+  .work-tab[data-view="routine"]{--tc:#ff7a00}.work-tab[data-view="strategy"]{--tc:#aa66ff}.work-tab[data-view="skills"]{--tc:#00ff88}.work-tab[data-view="builder"]{--tc:#ff7700}
+  .work-tab:hover{color:var(--tc);filter:brightness(1.2)}
+  .work-tab.active{color:var(--tc);border-bottom-color:var(--tc);text-shadow:0 0 8px var(--tc)}
+  .work-tab[aria-disabled="true"]{opacity:.55}
+  .view{overflow:hidden;position:absolute;top:38px;left:0;right:0;bottom:0;opacity:0;transform:translateY(8px);transition:opacity .32s ease,transform .32s ease;pointer-events:none;visibility:hidden}
+  .view.active{opacity:1;transform:none;pointer-events:auto;visibility:visible;z-index:2}
+  .view-inner{height:100%;overflow-y:auto;overflow-x:hidden}
+
+  /* ═══ TICKER ═══ */
+  .ticker{background:#060d1a;border-top:1px solid #00ff8822;display:flex;align-items:center;padding:0 14px;gap:14px;overflow:hidden;position:relative}
+  .ticker-label{font-size:8px;color:#00ff88;letter-spacing:3px;font-weight:700;padding-right:14px;border-right:1px solid #1e3c58;white-space:nowrap}
+  .ticker-stream{flex:1;overflow:hidden;white-space:nowrap;display:flex;gap:28px;align-items:center;min-width:0}
+  .ticker-item{font-size:9px;color:#c0d8f0;letter-spacing:1px;animation:rowIn .4s both}
+  .ticker-item .cat{color:#00ff88;padding-right:6px}
+  .ticker-pulse{color:#00ff88;font-size:12px;line-height:0;animation:tpulse 1.6s ease-in-out infinite}
+  .replica-tag{font-size:8px;letter-spacing:2px;color:#ffcc00;border:1px solid #ffcc0055;background:#ffcc000d;padding:2px 7px;white-space:nowrap;text-transform:lowercase}
+
+  /* ═══ CARDS / PILLS / TOAST / DRAWER ═══ */
+  .card{background:#060d1a;border:1px solid #1e3c58;padding:12px 14px;transition:all .2s;box-shadow:0 2px 0 #00000050}
+  .card:hover{border-color:#00d4ff66;background:#08152e;box-shadow:0 4px 18px #00d4ff22,0 0 0 1px #00d4ff44 inset}
+  .card-title{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+  .card-meta{font-size:9px;color:#4a6888;letter-spacing:2px;margin-bottom:6px}
+  .card-body{font-size:10px;color:#c0d8f0;line-height:1.5}
+  .pill{display:inline-block;padding:2px 7px;font-size:8px;letter-spacing:2px;margin-right:4px;font-weight:700}
+  .section-label{font-size:9px;color:#1e3a5f;letter-spacing:3px;text-transform:uppercase}
+  .toast{position:fixed;bottom:42px;right:14px;max-width:calc(100vw - 28px);visibility:hidden;background:#04080f;border:1px solid #00d4ff;padding:10px 14px;font-size:10px;color:#00d4ff;box-shadow:0 8px 32px #00000099,0 0 20px #00d4ff44;z-index:300;transform:translateX(calc(100% + 40px));transition:transform .4s,visibility .4s;letter-spacing:1px}
+  .toast.show{transform:translateX(0);visibility:visible}
+  .modal-backdrop{position:fixed;inset:0;z-index:200;display:none;pointer-events:none}
+  .modal-backdrop.open{display:block}
+  .modal-backdrop.open .modal{pointer-events:auto}
+  .modal{position:fixed;top:44px;right:0;bottom:30px;background:#04080ff5;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-left:2px solid var(--zone-c);box-shadow:-12px 0 32px #000000aa,-2px 0 28px color-mix(in srgb,var(--zone-c) 22%,transparent);width:min(560px,100vw);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;animation:slideInRight .28s cubic-bezier(.22,.61,.36,1)}
+  .modal-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #3a5c7a;background:linear-gradient(180deg,#0b1830 0%,#050a14 100%)}
+  .modal-title{font-size:15px;color:var(--zone-c);letter-spacing:4px;text-shadow:0 0 10px color-mix(in srgb,var(--zone-c) 50%,transparent)}
+  .modal-sub{font-size:9px;color:#6a8eaa;letter-spacing:2px;margin-top:2px;word-break:break-all}
+  .modal-close{background:transparent;border:1px solid #3a5c7a;color:#6a8eaa;width:30px;height:30px;font-size:14px;line-height:1;flex-shrink:0;transition:all .15s}
+  .modal-close:hover{background:#ff335515;color:#ff3355;border-color:#ff3355}
+  .modal-body{overflow-y:auto;padding:18px 22px;font-size:12px;line-height:1.7;color:#b0c8e0}
+  .modal-body h1{font-size:18px;color:var(--zone-c);letter-spacing:2px;margin:0 0 12px;line-height:1.35}
+  .modal-body h2{font-size:15px;color:color-mix(in srgb,var(--zone-c) 80%,#c0d8f0);letter-spacing:3px;margin:18px 0 10px}
+  .modal-body h3{font-size:13px;color:#aa66ff;letter-spacing:2px;margin:14px 0 8px;font-weight:700}
+  .modal-body h4{font-size:12px;color:#00d4ff;letter-spacing:1px;margin:12px 0 6px;font-weight:700}
+  .modal-body p{margin-bottom:10px}
+  .modal-body strong{color:#fff;font-weight:700}
+  .modal-body em{color:#c0d8f0;font-style:italic}
+  .modal-body code{color:var(--zone-c);background:#050a14;padding:1px 6px;font-size:.9em}
+  .modal-body ul{margin:6px 0 12px 20px}
+  .modal-body li{margin-bottom:5px}
+  .modal-body hr{border:none;border-top:1px solid #3a5c7a;margin:16px 0}
+  .modal-foot{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #3a5c7a;background:#050a14;flex-wrap:wrap}
+  .modal-foot .meta{font-size:8px;color:#6a8eaa;letter-spacing:2px}
+  .modal-btn{background:transparent;border:1px solid #00d4ff66;color:#00d4ff;padding:7px 12px;font-size:9px;letter-spacing:2px;font-weight:600;transition:all .15s}
+  .modal-btn:hover{background:#00d4ff15}
+  .modal-btn.primary{border-color:#00ff88;color:#00ff88}
+  .modal-btn.primary:hover{background:#00ff8815}
+
+  /* ═══ PHONE · 720px breakpoint (Command: hide AV column, single column) ═══ */
+  @media (max-width:720px){
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr 30px}
+    .brain{display:none}
+    .work{grid-column:1}
+    .header{flex-wrap:wrap;height:auto;min-height:44px}
+    .header-left{height:44px}
+    .hbtn,.global-search,.clock,.hide-sm{display:none !important}
+    .livestrip{order:3;flex:1 1 100%;height:34px;border-top:1px solid #1e3a5f}
+    .header-right{margin-left:auto;height:44px}
+    .header-right>*{padding:0 10px}
+    .live-stat-cap{display:none}
+    .work-tab{padding:10px 12px}
+    .ticker-label{padding-right:10px}
+    .modal{width:100vw;top:0;bottom:0;border-left:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  }
+
+  body[data-view="hq"]{--zone-c:#00d4ff} body[data-view="missions"]{--zone-c:#ff3355} body[data-view="territory"]{--zone-c:#00ff88}
+  body[data-view="people"],body[data-view="inbox"]{--zone-c:#44aaff} body[data-view="timeline"],body[data-view="academic"],body[data-view="strategy"]{--zone-c:#aa66ff}
+  body[data-view="career"]{--zone-c:#ffcc00} body[data-view="sports"],body[data-view="skills"]{--zone-c:#00ff88} body[data-view="resell"]{--zone-c:#ff66aa}
+  body[data-view="routine"]{--zone-c:#ff7a00} body[data-view="builder"]{--zone-c:#ff7700}
+  .global-search{position:relative;display:flex;align-items:center;gap:6px;padding:0 12px;border-right:1px solid #1e3a5f;height:100%}
+  .gs-glyph{font-size:11px;color:#4a6888}
+  #global-search-input{width:170px;background:#020a14;border:1px solid #1e3a5f;color:#c0d8f0;padding:6px 34px 6px 10px;font-size:9px;letter-spacing:2px;outline:none;transition:width .15s,border-color .15s}
+  #global-search-input::placeholder{color:#1e3a5f}
+  #global-search-input:focus{border-color:#00d4ff;width:230px}
+  .gs-key{position:absolute;right:18px;padding:1px 5px;border:1px solid #1e3a5f;color:#4a6888;font-size:7px;pointer-events:none}
+  .spotify-widget{display:flex;align-items:center;gap:8px;min-width:120px;max-width:160px;cursor:pointer}
+  .sp-bars{display:inline-flex;gap:2px;align-items:flex-end;height:14px}
+  .sp-bars span{display:inline-block;width:2px;background:#3a5c7a;opacity:.5}
+  .sp-track{font-size:9px;color:#c0d8f0;letter-spacing:1px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp-artist{font-size:7px;color:#4a6888;letter-spacing:1.5px;margin-top:2px}
+  .feed-btn{color:#00ff88 !important;font-size:10px;letter-spacing:2px;font-weight:600}
+  .feed-btn:hover,.deadline-btn:hover{background:#00d4ff14 !important}
+  .deadline-btn{color:#ffcc00 !important;font-size:9px;letter-spacing:2px}
+  .deadline-pop{position:absolute;top:100%;right:0;min-width:300px;max-width:min(400px,100vw);background:#04080fee;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid #ffcc0044;box-shadow:0 12px 40px #00000099,0 0 24px #ffcc0011;z-index:100;display:none;padding:8px 0}
+  .deadline-pop.open{display:block}
+  .deadline-pop-head{padding:6px 14px;font-size:9px;color:#ffcc00;letter-spacing:3px;border-bottom:1px solid #1e3c58}
+  .dl-row{display:flex;justify-content:space-between;gap:10px;padding:6px 14px;font-size:10px;color:#c0d8f0;border-bottom:1px solid #0a1e35}
+  /* HQ */
+  .lab6{font-size:8px;color:#1e3a5f;letter-spacing:3px}
+  .num{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .cd{background:#04080f;border:1px solid color-mix(in srgb,var(--c) 20%,transparent);border-left:3px solid var(--c);padding:8px 12px;flex:1;min-width:130px}
+  .cd .k{font-size:8px;color:color-mix(in srgb,var(--c) 67%,transparent);letter-spacing:2px}
+  .cd .v{font-size:19px;color:var(--c);font-weight:700;letter-spacing:2px;margin-top:3px}
+  .cd .v span{font-size:10px;color:color-mix(in srgb,var(--c) 53%,transparent);margin-left:4px}
+  .ms{background:#04080f;border:1px solid color-mix(in srgb,var(--c) 20%,transparent);border-left:3px solid var(--c);padding:10px 14px}
+  .ms .k{font-size:8px;color:var(--c);letter-spacing:3px}
+  .ms .b{font-size:10px;color:#c0d8f0;margin-top:5px;line-height:1.5}
+  .lanes{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:1px;background:#0a1e35;min-height:260px}
+  .lane{background:#020a14;padding:14px 16px;min-width:0}
+  .lane-h{display:flex;align-items:center;gap:6px;padding-bottom:6px;border-bottom:1px solid color-mix(in srgb,var(--c) 20%,transparent);margin-bottom:10px}
+  .lane-h .d{width:5px;height:5px;background:var(--c);border-radius:50%;box-shadow:0 0 5px var(--c);animation:pulse 1.6s infinite}
+  .lane-h .l{font-size:9px;color:var(--c);letter-spacing:3px;font-weight:600}
+  .next-action{width:100%;background:transparent;border:1px solid var(--c);color:var(--c);padding:8px;font-size:9px;letter-spacing:3px;margin-bottom:6px;text-align:left;transition:background .15s}
+  .next-action:hover{background:color-mix(in srgb,var(--c) 10%,transparent)}
+  .team-agent{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#04080f;border-left:2px solid var(--c);margin-bottom:3px;cursor:pointer}
+  .team-agent:hover{background:#0a1422}
+  .team-agent .g{color:var(--c);font-size:12px;width:14px;text-align:center}
+  .team-agent .n{font-size:10px;color:var(--c);letter-spacing:2px;flex:1;font-weight:600}
+  .team-agent .r{font-size:9px;color:color-mix(in srgb,var(--c) 40%,transparent)}
+  .team-agent .o{width:5px;height:5px;border-radius:50%;background:#00ff88;box-shadow:0 0 4px #00ff88}
+  .op{padding:7px 9px;background:#04080f;border-left:2px solid var(--c);margin-bottom:4px;font-size:10px;color:#c0d8f0}
+  .op .k{font-size:8px;color:var(--c);letter-spacing:2px;display:block}
+  .op .bar{height:3px;background:#0a1e35;margin-top:5px;position:relative;overflow:hidden}
+  .op .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c);transition:width .8s}
+  .empty{color:#1e3a5f;font-size:9px}
+  .panel-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+  .card{cursor:pointer}
+  .card .more{display:none;margin-top:8px;padding-top:8px;border-top:1px solid #1e3c58;font-size:9.5px;color:#aacce0;line-height:1.55}
+  .card.open .more{display:block}
+  .hb{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);animation:pulse 2s infinite}
+  .estat{flex:1;min-width:120px;padding:8px 12px;background:#04080f;border:1px solid #1e3a5f;border-left:3px solid var(--c)}
+  .estat .v{font-size:16px;color:var(--c);font-weight:700}
+  .estat .k{font-size:8px;color:#4a6888;letter-spacing:2px}
+  /* department shells */
+  .dept-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid color-mix(in srgb,var(--zone-c) 20%,transparent);background:#020a14}
+  .dept-t{font-size:15px;color:var(--zone-c);letter-spacing:5px;font-weight:700;margin-top:2px;text-shadow:0 0 12px color-mix(in srgb,var(--zone-c) 27%,transparent)}
+  .dept-b{padding:14px 16px}
+  .chip{display:inline-block;font-size:8px;letter-spacing:2px;padding:2px 7px;border:1px solid color-mix(in srgb,var(--c) 40%,transparent);color:var(--c);background:color-mix(in srgb,var(--c) 8%,transparent)}
+  .skill{margin-bottom:8px}
+  .skill .t{display:flex;justify-content:space-between;font-size:9px;color:#aacce0;letter-spacing:1.5px}
+  .skill .bar{height:5px;background:#0a1e35;margin-top:3px;position:relative}
+  .skill .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c)}
+  .link-card{display:block;text-decoration:none;color:inherit}
+  #focus-input{width:100%;background:#020a14;border:1px solid #ffcc00;color:#ffcc00;font-size:12px;padding:4px 6px;margin-top:4px;outline:none}
+  @media (max-width:1000px){ .lanes{grid-template-columns:1fr 1fr} .hide-md{display:none !important} }
+  @media (max-width:720px){
+    .lanes{grid-template-columns:1fr}
+    .ms-grid{grid-template-columns:1fr !important}
+    .strip-top{grid-template-columns:repeat(4,1fr) !important;gap:10px !important}
+    .strip-top>div:nth-child(-n+2){grid-column:span 4}
+    .strip-top>div{padding-left:6px !important}
+    .banner{grid-template-columns:1fr 1fr 1fr !important;gap:10px !important}
+    .banner>div:nth-child(-n+2){grid-column:span 3}
+    .pad{padding-left:12px !important;padding-right:12px !important}
+    .spotify-widget{display:none !important}
+    .deadline-pop{position:fixed;top:80px;left:8px;right:8px;min-width:0}
+  }
+</style>
+</head>
+<body data-view="hq">
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="brand" id="brand-home" style="cursor:pointer" title="Click → COMMAND HQ"><span class="dot">●</span>BINNING.AI · HQ</div>
+      <button class="hbtn" data-toast="settings are not part of the public replica">⚙ SETTINGS</button>
+      <button class="hbtn hide-md" data-toast="full-screen is disabled in the embedded replica">⛶ FULL</button>
+      <button id="yerdad-jump-chip" class="hide-sm" title="Talk to Yer Dad · jumps to OFFICE"><span class="yj-dot"></span>YER DAD</button>
+      <div class="global-search hide-md">
+        <span class="gs-glyph">⌕</span>
+        <input id="global-search-input" type="text" placeholder="SEARCH VAULT · OPS…" aria-label="Search (demo)">
+        <kbd class="gs-key">⌘K</kbd>
+      </div>
+    </div>
+    <div class="livestrip">
+      <div class="live-stat" title="Heartbeat tick"><span class="live-stat-icon" style="color:#00d4ff">⌁</span><span class="live-stat-val" id="ls-tick" style="color:#00d4ff">IDLE</span><span class="live-stat-cap">ACTIVE</span></div>
+      <div class="live-stat" title="Unread alerts (demo)"><span class="live-stat-icon" style="color:#4a6888">🔔</span><span class="live-stat-val">2</span><span class="live-stat-cap">ALERTS</span></div>
+      <div class="live-stat" title="Inbox notes (demo)"><span class="live-stat-icon" style="color:#aa66ff">✉</span><span class="live-stat-val">5</span><span class="live-stat-cap">INBOX</span></div>
+      <span style="display:inline-block;width:1px;height:18px;background:#1e3c58;margin:auto 4px;flex-shrink:0"></span>
+      <div class="live-stat" title="Today's model spend (demo)"><span class="live-stat-icon" style="color:#00ff88">$</span><span class="live-stat-val" id="ls-spend">1.84</span><span class="live-stat-cap">TODAY</span></div>
+      <div class="live-stat" title="Reviewer pass rate (demo)"><span class="live-stat-icon" style="color:#ff7700">◉</span><span class="live-stat-val">92%</span><span class="live-stat-cap">PASS</span></div>
+    </div>
+    <div class="header-right">
+      <div class="spotify-widget" title="Music widget (off in replica)"><span class="sp-bars"><span style="height:7px"></span><span style="height:12px"></span><span style="height:9px"></span></span><div style="min-width:0"><div class="sp-track">— SPOTIFY OFF —</div><div class="sp-artist">replica</div></div></div>
+      <button class="feed-btn" id="feed-btn" title="Quick capture into the vault">▲ FEED</button>
+      <button class="deadline-btn" id="deadline-btn" aria-expanded="false">◉ <span class="hide-md">DEADLINES </span><span id="deadline-count" style="color:#ff7700">5</span> ▾</button>
+      <span class="clock" id="clock">—</span>
+    </div>
+    <div class="deadline-pop" id="deadline-pop">
+      <div class="deadline-pop-head">UPCOMING · NEXT 30 DAYS · DEMO</div>
+      <div id="deadline-body"></div>
+    </div>
+  </header>
+
+  <aside class="brain">
+    <div class="cortex">
+      <div id="agent-view-rail">
+        <div style="display:flex;align-items:baseline;gap:8px;padding-bottom:6px;border-bottom:1px solid #1e3a5f">
+          <span id="av-phase-dot" style="display:inline-block;width:7px;height:7px;background:#aa66ff;border-radius:50%;box-shadow:0 0 5px #aa66ff"></span>
+          <span style="font-size:9px;color:#aa66ff;letter-spacing:3px;font-weight:700">◉ AGENT VIEW · YER DAD</span>
+          <span style="flex:1"></span><span id="av-tok" class="av-lab" style="letter-spacing:2px">— TOK</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:6px"><span class="av-lab">PHASE</span><span id="av-phase" style="font-size:12px;color:#aa66ff;letter-spacing:3px;font-weight:700">IDLE</span></div>
+        <div style="background:#04080f;border-left:2px solid #aa66ff;padding:6px 9px">
+          <div class="av-lab" style="margin-bottom:3px">▸ WHAT IT'S DOING</div>
+          <div id="av-doing" style="font-size:10px;color:#aacce0;line-height:1.45">awaiting input</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span class="av-lab">▸ SUB-AGENTS · 7</span><span style="flex:1"></span><span id="av-agents-active" class="av-lab" style="letter-spacing:2px">0 ACTIVE</span></div>
+          <div id="av-agents-rich" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
+        <div>
+          <div class="av-lab" style="margin-bottom:3px">▸ TOOL TRACE · LAST 5</div>
+          <div id="av-trace" style="font-size:9px;color:#6a8eaa;line-height:1.5;min-height:60px"></div>
+        </div>
+        <div>
+          <div class="av-lab" style="margin-bottom:3px">▸ ACTIVE FOCUS</div>
+          <div id="av-focus" style="font-size:9px;color:#aacce0;line-height:1.5">ship the portfolio replicas · demo</div>
+        </div>
+        <span style="flex:1"></span>
+        <div style="display:flex;gap:4px;align-items:stretch">
+          <div style="flex:1;display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #ffcc00;background:#ffcc0010"><span style="font-size:11px">☀</span><span style="font-size:8px;color:#ffcc00;letter-spacing:2px;font-weight:700">DAY SHIFT · ANTHROPIC</span></div>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid #00d4ff;background:#00d4ff10"><span style="font-size:8px;color:#00d4ff;letter-spacing:2px;font-weight:700">DEMO</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #1e3a5f;background:#04080f">
+          <span style="display:inline-block;width:5px;height:5px;background:#4a6888;border-radius:50%"></span>
+          <span style="font-size:8px;color:#4a6888;letter-spacing:2px;font-weight:700">VOICE CHASSIS · STANDBY</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="work">
+    <div class="work-tabs" id="work-tabs">
+      <button class="work-tab active" data-view="hq">▣ COMMAND</button>
+      <button class="work-tab" data-view="routine">◷ ROUTINE</button>
+      <button class="work-tab" data-view="office">⊞ OFFICE</button>
+      <button class="work-tab" data-view="inbox">✉ INBOX</button>
+      <button class="work-tab" data-view="missions">▴ MISSIONS</button>
+      <button class="work-tab" data-view="territory">⊞ TERRITORY</button>
+      <button class="work-tab" data-view="intel">◆ INTEL</button>
+      <button class="work-tab" data-view="strategy">◈ STRATEGY</button>
+      <button class="work-tab" data-view="people">◉ PEOPLE</button>
+      <button class="work-tab" data-view="career">▲ CAREER</button>
+      <button class="work-tab" data-view="skills">◇ SKILLS</button>
+      <button class="work-tab" data-view="builder">⚒ BUILDER</button>
+      <button class="work-tab" data-view="academic">◈ ACADEMIC</button>
+      <button class="work-tab" data-view="sports">⚑ SPORTS</button>
+      <button class="work-tab" data-view="timeline">◷ TIMELINE</button>
+      <button class="work-tab" data-view="resell">⊟ SHOPPY</button>
+      <button class="work-tab" data-view="vault">⌕ VAULT</button>
+    </div>
+
+    <section class="view active" id="view-hq">
+      <div class="view-inner">
+        <!-- MORNING STATE STRIP -->
+        <div class="pad" style="background:#020a14;border-bottom:1px solid #00d4ff33;padding:14px 20px">
+          <div class="strip-top" style="display:grid;grid-template-columns:auto 1fr auto auto auto auto;gap:20px;align-items:center;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:inline-block;width:8px;height:8px;background:#00ff88;box-shadow:0 0 8px #00ff88;border-radius:50%;animation:pulse 1.6s infinite"></span>
+              <div><div class="lab6">SENTINEL</div><div style="font-size:12px;color:#00ff88;letter-spacing:3px;font-weight:700">SECURE</div></div>
+            </div>
+            <div style="border-left:1px solid #162540;padding-left:16px">
+              <div class="lab6">YER DAD · STATUS</div>
+              <div id="yd-status" style="font-size:11px;color:#00d4ff;letter-spacing:2px;margin-top:2px">conducting · 3 ops in flight</div>
+            </div>
+            <div style="text-align:center;border-left:1px solid #162540;padding-left:12px"><div class="lab6" style="letter-spacing:2px">CONTACTS</div><div class="num" style="color:#44aaff">24</div></div>
+            <div style="text-align:center;border-left:1px solid #162540;padding-left:12px"><div class="lab6" style="letter-spacing:2px">DRAFTS</div><div class="num" style="color:#ff7700">3</div></div>
+            <div style="text-align:center;border-left:1px solid #162540;padding-left:12px"><div class="lab6" style="letter-spacing:2px">STRATEGY</div><div class="num" style="color:#aa66ff">7</div></div>
+            <div style="text-align:center;border-left:1px solid #162540;padding-left:12px"><div class="lab6" style="letter-spacing:2px">DISPATCHES · 12h</div><div class="num" id="dispatch-n" style="color:#00ff88">18</div></div>
+          </div>
+          <div id="countdowns" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+          <div class="ms-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="ms" style="--c:#aa66ff"><div class="k">▸ LATEST BRIEF</div><div class="b">morning brief · 6 sections · filed 07:05 <span style="color:#1e3a5f">(demo)</span></div></div>
+            <div class="ms" style="--c:#ffcc00"><div class="k">▸ DECISIONS WAITING</div><div class="b" id="decisions"></div></div>
+            <div class="ms" style="--c:#00ff88"><div class="k">▸ I'VE BEEN AT MY DESK</div><div class="b">night shift · 14 dispatches · 13 passed review · 1 kept in the ledger</div></div>
+          </div>
+        </div>
+        <!-- MORNING BRIEF -->
+        <div class="pad" style="margin:14px 20px 0;background:#020a14;border:1px solid #aa66ff66;border-left:3px solid #aa66ff">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #aa66ff33;flex-wrap:wrap">
+            <span style="display:inline-block;width:8px;height:8px;background:#aa66ff;border-radius:50%;box-shadow:0 0 6px #aa66ff"></span>
+            <span style="font-size:10px;color:#aa66ff;letter-spacing:5px;font-weight:700">▸ MORNING BRIEF</span>
+            <span style="font-size:8px;color:#aa66ffaa;letter-spacing:2px">morning-brief · demo</span>
+            <span style="flex:1"></span>
+            <button class="btn-s" id="mb-refresh" style="background:transparent;border:1px solid #aa66ff;color:#aa66ff;padding:3px 8px;font-size:8px;letter-spacing:2px">↻ REFRESH</button>
+            <button class="btn-s" id="mb-compile" style="background:transparent;border:1px solid #00ff88;color:#00ff88;padding:3px 8px;font-size:8px;letter-spacing:2px">▸ COMPILE NOW</button>
+          </div>
+          <div id="mb-content" style="padding:12px 18px;max-height:220px;overflow-y:auto;font-size:10px;color:#c0d8f0;line-height:1.65;white-space:pre-wrap"></div>
+        </div>
+        <!-- COMMAND BANNER -->
+        <div class="pad banner" style="padding:16px 20px;border-bottom:1px solid #00d4ff;background:radial-gradient(ellipse at top,#00d4ff10 0%,transparent 70%);display:grid;grid-template-columns:auto 1fr auto auto auto;gap:22px;align-items:center;margin-top:14px">
+          <div>
+            <div class="lab6">COMMAND CENTRE</div>
+            <div style="font-size:19px;color:#00d4ff;letter-spacing:6px;font-weight:700;margin-top:3px;text-shadow:0 0 14px #00d4ff44">▣ COMMAND</div>
+            <div id="today" style="font-size:9px;color:#4a6888;letter-spacing:3px;margin-top:6px">—</div>
+          </div>
+          <div id="focus-card" style="border-left:3px solid #ffcc00;background:#04080f;padding:10px 14px;cursor:pointer" title="Click to set today's focus">
+            <div style="font-size:8px;color:#ffcc00aa;letter-spacing:3px">▸ TODAY'S FOCUS</div>
+            <div id="focus-text" style="font-size:13px;color:#ffcc00;letter-spacing:1px;margin-top:4px;font-weight:600">ship the portfolio replicas</div>
+          </div>
+          <div style="text-align:center"><div class="lab6" style="letter-spacing:2px">ACTIVE OPS</div><div style="font-size:19px;color:#ff3355;font-weight:700">3</div></div>
+          <div style="text-align:center"><div class="lab6" style="letter-spacing:2px">INBOX</div><div style="font-size:19px;color:#44aaff;font-weight:700">5</div></div>
+          <div style="text-align:center"><div class="lab6" style="letter-spacing:2px">SPEND</div><div id="spend-big" style="font-size:19px;color:#00ff88;font-weight:700">$1.84</div></div>
+        </div>
+        <!-- 4-COLUMN COMMAND BOARD -->
+        <div class="lanes">
+          <div class="lane" style="--c:#ffcc00">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ TODAY · MY PLAN</span></div>
+            <div class="lab6" style="letter-spacing:2px;margin-bottom:5px">▸ ACTIVE PURSUITS</div>
+            <div class="op" style="--c:#ffcc00">portfolio · interactive replicas</div>
+            <div class="op" style="--c:#ffcc00">collector schema v2 migration</div>
+            <div class="lab6" style="letter-spacing:2px;margin:12px 0 5px">▸ NEXT MOVES · DECIDED</div>
+            <button class="next-action" style="--c:#ffcc00" data-a="next 3 hours · plan">▸ NEXT 3 HOURS · plan</button>
+            <button class="next-action" style="--c:#44aaff" data-a="end-of-day · review">▸ END-OF-DAY · review</button>
+            <button class="next-action" style="--c:#aa66ff" data-a="weekly · digest">▸ WEEKLY · digest</button>
+          </div>
+          <div class="lane" style="--c:#ff3355">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ LIVE OPERATIONS</span></div>
+            <div id="live-ops"></div>
+          </div>
+          <div class="lane" style="--c:#aa66ff">
+            <div class="lane-h"><span class="d" style="animation:none"></span><span class="l">▸ RECENT WORK</span></div>
+            <div id="recent-work"></div>
+          </div>
+          <div class="lane" style="--c:#00ff88">
+            <div class="lane-h"><span class="d"></span><span class="l">▸ TEAM HEALTH</span></div>
+            <div id="team-health"></div>
+            <div style="margin-top:10px;padding:8px 10px;background:#04080f;border:1px solid #1e3a5f;font-size:8.5px;color:#4a6888;letter-spacing:1.5px;line-height:1.6"><span style="color:#00ff88">●</span> <span id="tot-reports">0</span> TOTAL REPORTS · DEMO</div>
+          </div>
+        </div>
+        <!-- ESTATE -->
+        <div class="pad" style="padding:14px 18px;margin:12px 0 4px;border-bottom:1px solid #162540">
+          <div class="section-label">ESTATE · CHASSIS · DEVICES · SERVERS</div>
+          <div style="font-size:9px;color:#4a6888;letter-spacing:2px;margin-top:6px">CLICK ANY CARD TO EXPAND</div>
+        </div>
+        <div class="pad" style="padding:8px 18px 18px">
+          <div class="panel-grid" id="estate-grid"></div>
+          <div style="display:flex;align-items:baseline;gap:14px;margin:18px 0 8px"><div class="section-label">DATA ESTATE</div><div style="font-size:8px;color:#1e3a5f;letter-spacing:2px">ORDERS OF MAGNITUDE · ROUNDED</div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="estat" style="--c:#00ff88"><div class="k">TRADE PRINTS</div><div class="v">~46.8M</div></div>
+            <div class="estat" style="--c:#ffcc00"><div class="k">COLLECTOR ROWS · WORLD CUP</div><div class="v">4.24M</div></div>
+            <div class="estat" style="--c:#00d4ff"><div class="k">MARKET SNAPSHOTS</div><div class="v">1.87M</div></div>
+            <div class="estat" style="--c:#aa66ff"><div class="k">ARCHIVE</div><div class="v">12 TB</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div id="dept-views"></div>
+  </main>
+
+  <footer class="ticker">
+    <span class="ticker-label">◉ LIVE</span>
+    <div class="ticker-stream" id="ticker-stream"><span class="ticker-item"><span class="cat">SYNC</span>connected · demo activity feed</span></div>
+    <span class="replica-tag">replica · demo data</span>
+    <span class="ticker-pulse">●</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let toastT;
+  function toast(msg, col) { const t = $('toast'); t.textContent = msg; t.style.color = col || '#00d4ff'; t.style.borderColor = col || '#00d4ff'; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+  function tick(cat, msg, col) {
+    const s = $('ticker-stream'); const el = document.createElement('span'); el.className = 'ticker-item';
+    el.innerHTML = `<span class="cat" style="color:${col || '#00ff88'}">${esc(cat)}</span>${esc(msg)}`;
+    s.prepend(el); while (s.children.length > 6) s.removeChild(s.lastChild);
+  }
+  const fmtDay = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+  const AGENTS = [
+    ['scout', 'SCT', '#00ff88', '⌖', 'scout · search · OSINT'], ['builder', 'BLD', '#ff7700', '⚒', 'builder · drafts · canvas'],
+    ['analyst', 'ANL', '#ffcc00', '∑', 'analyst · metrics · digest'], ['reviewer', 'RVW', '#eef6ff', '⌥', 'reviewer · stamp · gate'],
+    ['envoy', 'ENV', '#44aaff', '✈', 'envoy · drafts · comms'], ['archivist', 'ARC', '#aa66ff', '◐', 'archivist · vault · curate'],
+    ['sentinel', 'SNT', '#ff3355', '⛨', 'sentinel · baseline · diff'],
+  ];
+  const reports = { scout: 6, builder: 9, analyst: 4, reviewer: 14, envoy: 2, archivist: 13, sentinel: 3 };
+
+  // ── rail ──
+  $('av-agents-rich').innerHTML = AGENTS.map(([id, code, , , rail]) => `<div class="av-agent-row" data-agent="${id}"><div class="d"></div><span class="t"><strong>${code}</strong> · ${rail}</span><span class="s" data-s>IDLE</span></div>`).join('');
+  const trace = [];
+  function renderTrace() {
+    const now = Date.now();
+    $('av-trace').innerHTML = trace.length ? trace.map(x => `<div style="display:flex;gap:6px"><span style="color:${x.c}">▸</span><span style="color:#aacce0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.t)}</span><span style="color:#1e3a5f">${Math.round((now - x.at) / 1000)}s</span></div>`).join('') : '<div style="color:#1e3a5f;font-style:italic">no tool calls yet</div>';
+  }
+  const DEMO_CALLS = [
+    ['scout', 'web_search · open datasets', 'SEARCHING'], ['analyst', 'query_db · collector counts', 'ANALYSING'], ['builder', 'write_patch · ticker poller', 'BUILDING'],
+    ['reviewer', 'verdict · PASS T-0441', 'REVIEWING'], ['archivist', 'archive · T-0441', 'FILING'], ['sentinel', 'baseline_diff · 0 new', 'WATCHING'],
+    ['envoy', 'draft_message · weekly note', 'DRAFTING'], ['builder', 'run_tests · lint suite', 'BUILDING'], ['reviewer', 'verdict · PASS T-0442', 'REVIEWING'],
+  ];
+  let ci = 0, tokIn = 1840;
+  function step() {
+    const [a, t, ph] = DEMO_CALLS[ci++ % DEMO_CALLS.length];
+    const col = AGENTS.find(x => x[0] === a)[2];
+    document.querySelectorAll('.av-agent-row').forEach(r => { const on = r.dataset.agent === a; r.classList.toggle('on', on); r.querySelector('[data-s]').textContent = on ? 'ACTIVE' : 'IDLE'; });
+    $('av-agents-active').textContent = '1 ACTIVE';
+    $('av-phase').textContent = ph; $('av-phase').style.color = col; $('av-phase-dot').style.background = col; $('av-phase-dot').style.boxShadow = '0 0 5px ' + col;
+    $('ls-tick').textContent = ph;
+    $('av-doing').textContent = `${a.toUpperCase()} · ${t}`;
+    trace.unshift({ t, c: col, at: Date.now() }); trace.length = Math.min(trace.length, 5);
+    tokIn += 200 + Math.round(Math.random() * 600);
+    $('av-tok').textContent = (tokIn / 1000).toFixed(1) + 'K TOK';
+    renderTrace();
+    if (a === 'reviewer' || a === 'archivist') reports[a]++;
+    renderTeam();
+    if (ci % 3 === 0) tick(a.toUpperCase(), t, col);
+  }
+
+  // ── HQ demo data ──
+  const now = new Date();
+  $('today').textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+  const CDS = [['ESSAY DRAFT', 12, '#ff7700'], ['SPRINT REVIEW', 5, '#ff3355'], ['RELEASE v1.2', 9, '#aa66ff'], ['READING WEEK', 16, '#44aaff'], ['PORTFOLIO LAUNCH', 21, '#00d4ff']];
+  $('countdowns').innerHTML = CDS.map(([k, d, c]) => { const dt = new Date(now); dt.setDate(dt.getDate() + d); return `<div class="cd" style="--c:${c}"><div class="k">${k} · ${fmtDay(dt)}</div><div class="v">${d}<span>DAYS</span></div></div>`; }).join('');
+  $('deadline-body').innerHTML = CDS.slice().sort((a, b) => a[1] - b[1]).map(([k, d, c]) => { const dt = new Date(now); dt.setDate(dt.getDate() + d); return `<div class="dl-row"><span style="color:${c}">● ${k}</span><span style="color:#4a6888">${fmtDay(dt)} · ${d}d</span></div>`; }).join('') + '<div style="padding:6px 14px;font-size:8px;color:#1e3a5f;letter-spacing:2px">demo deadlines · not real</div>';
+  $('decisions').innerHTML = '<div>▸ approve builder patch · ticker poller</div><div>▸ merge collector schema change</div>';
+  const BRIEF = `▸ OVERNIGHT
+  · 14 tasks dispatched · 13 passed independent review · 1 failed and kept in the ledger
+  · collectors ran on schedule · no gaps over 5 minutes
+
+▸ SECURITY
+  · sentinel baseline diff · no new listeners · no new launch agents
+
+▸ TODAY
+  · review two pending decisions
+  · finish the portfolio replicas
+  · weekly digest due end of day
+
+(demo brief · illustrative content only)`;
+  $('mb-content').textContent = BRIEF;
+  $('mb-refresh').addEventListener('click', () => { $('mb-content').style.opacity = .3; setTimeout(() => { $('mb-content').style.opacity = 1; toast('↻ brief refreshed (demo)', '#aa66ff'); }, 350); });
+  $('mb-compile').addEventListener('click', () => toast('▸ compile queued for the night shift (demo)', '#00ff88'));
+
+  const OPS = [{ k: 'COLLECTOR · MARKET SNAPSHOTS', t: 'snapshot sweep · batch 14/20', p: 70 }, { k: 'BUILDER · T-0443', t: 'ticker → single poller', p: 40 }, { k: 'SCOUT · OPEN DATA', t: 'release-notes sweep', p: 20 }];
+  function renderOps() {
+    $('live-ops').innerHTML = OPS.map(o => `<div class="op" style="--c:#ff3355"><span class="k">${o.k}</span>${o.t}<div class="bar"><i style="width:${o.p}%"></i></div></div>`).join('');
+  }
+  const RECENT = ['T-0442 · lint path checks · PASS', 'T-0441 · retry jitter · PASS', 'T-0440 · tab overflow fix · PASS', 'T-0439 · date normaliser · FAIL · kept'];
+  $('recent-work').innerHTML = RECENT.map(r => `<div class="op" style="--c:${r.includes('FAIL') ? '#ff3355' : '#aa66ff'}">${esc(r)}</div>`).join('');
+  function renderTeam() {
+    const order = ['scout', 'analyst', 'archivist', 'builder', 'reviewer', 'sentinel', 'envoy'];
+    $('team-health').innerHTML = order.map(id => { const [, , c, g] = AGENTS.find(x => x[0] === id); return `<div class="team-agent" data-agent="${id}" style="--c:${c}"><span class="g">${g}</span><span class="n">${id.toUpperCase()}</span><span class="r">${reports[id]} R</span><span class="o" title="online"></span></div>`; }).join('');
+    $('tot-reports').textContent = Object.values(reports).reduce((a, b) => a + b, 0);
+  }
+  $('team-health').addEventListener('click', (e) => { const r = e.target.closest('.team-agent'); if (r) toast(`${r.dataset.agent.toUpperCase()} · ${reports[r.dataset.agent]} reports filed (demo)`, getComputedStyle(r).getPropertyValue('--c')); });
+  document.querySelectorAll('.next-action').forEach(b => b.addEventListener('click', () => toast('▸ ' + b.dataset.a + ' · would be sent to Yer Dad (demo)', getComputedStyle(b).getPropertyValue('--c'))));
+  $('focus-card').addEventListener('click', () => {
+    if ($('focus-input')) return;
+    const cur = $('focus-text').textContent;
+    $('focus-text').innerHTML = `<input id="focus-input" maxlength="60" value="${esc(cur)}" aria-label="Today's focus">`;
+    const i = $('focus-input'); i.focus(); i.select();
+    const done = () => { const v = i.value.trim() || cur; $('focus-text').textContent = v; $('av-focus').textContent = v + ' · demo'; };
+    i.addEventListener('blur', done); i.addEventListener('keydown', e => { if (e.key === 'Enter') i.blur(); if (e.key === 'Escape') { i.value = cur; i.blur(); } });
+  });
+
+  // ── ESTATE · four Macs + Sentinel (no addresses, no hostnames) ──
+  const ESTATE = [
+    { n: 'M1 · CANONICAL NODE', c: '#00d4ff', pill: 'ONLINE', meta: 'vault host · command dashboard', body: 'Holds the canonical vault on a 12 TB drive and serves it; every other machine is a client.', more: 'Runs this dashboard, the Claude Code agent sessions and the vault lint. One drive, one writer.' },
+    { n: 'M3 · WORKSTATION', c: '#00ff88', pill: 'ONLINE', meta: 'daily driver · career node', body: 'Where the day happens: editor, browser, the K·A·M Notch music app.', more: 'Client of the vault; never holds a second copy. Career materials are worked here.' },
+    { n: 'iMAC · COLLECTOR', c: '#ffcc00', pill: 'ONLINE', meta: 'intel collector database · morning system', body: 'Runs the collectors and the morning system that prints the brief.', more: 'Long-running database host; collectors write append-only.' },
+    { n: 'YERSON · INTELLIGENCE ENGINE', c: '#ff7700', pill: 'ONLINE', meta: 'MacBook · local-model classifier', body: 'Collects OSINT, news, geopolitics, academic, markets, law and jobs; a local model classifies everything.', more: 'Has its own Telegram agent for summaries. Output lands in the lake tier, never the human-facing vault.' },
+    { n: 'SENTINEL · SECURITY AGENT', c: '#ff3355', pill: 'WATCHING', meta: 'runs across all nodes', body: 'Baseline-diff monitoring; alerts only on change.', more: 'Its first run caught 224 real brute-force login attempts. Telemetry goes to the lake; alerts to the phone.' },
+  ];
+  $('estate-grid').innerHTML = ESTATE.map((e, i) => `<div class="card" data-i="${i}" style="border-left:3px solid ${e.c}" tabindex="0" role="button" aria-expanded="false">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><div class="card-title">${e.n}</div><span class="hb" style="--c:${e.pill === 'WATCHING' ? '#ff3355' : '#00ff88'};animation-delay:${i * .35}s"></span></div>
+    <div class="card-meta">${e.meta}</div>
+    <div class="card-body"><span class="pill" style="background:${e.pill === 'WATCHING' ? '#ff3355' : '#00ff88'};color:#04080f">${e.pill}</span>${e.body}</div>
+    <div class="more">${e.more}<div style="margin-top:6px;color:#4a6888;font-size:8.5px;letter-spacing:1.5px">HEALTH · <span data-h>—</span></div></div></div>`).join('');
+  const toggleCard = (c) => { c.classList.toggle('open'); c.setAttribute('aria-expanded', c.classList.contains('open')); };
+  $('estate-grid').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) toggleCard(c); });
+  $('estate-grid').addEventListener('keydown', e => { const c = e.target.closest('.card'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleCard(c); } });
+  function pulseHealth() {
+    document.querySelectorAll('#estate-grid [data-h]').forEach((h, i) => { h.textContent = `cpu ${8 + Math.round(Math.random() * (i === 3 ? 50 : 25))}% · disk ok · heartbeat ${1 + Math.round(Math.random() * 4)}s ago (demo)`; });
+  }
+
+  // ── department shells (neutral demo content) ──
+  const card = (t, meta, body, c) => `<div class="card" style="border-left:3px solid ${c}"><div class="card-title">${t}</div><div class="card-meta">${meta}</div><div class="card-body">${body}</div></div>`;
+  const pill = (t, c) => `<span class="pill" style="background:${c};color:#04080f">${t}</span>`;
+  const skill = (t, v, c) => `<div class="skill" style="--c:${c}"><div class="t"><span>${t}</span><span>${v}%</span></div><div class="bar"><i style="width:${v}%"></i></div></div>`;
+  const bot = (c) => `<svg width="22" height="28" viewBox="0 0 22 28" aria-hidden="true"><rect x="6" y="2" width="10" height="8" fill="${c}aa" stroke="${c}" stroke-width=".5"/><rect x="8" y="4" width="2" height="2" fill="#02050a"/><rect x="12" y="4" width="2" height="2" fill="#02050a"/><rect x="4" y="11" width="14" height="10" fill="${c}88" stroke="${c}" stroke-width=".5"/><rect x="3" y="22" width="6" height="5" fill="${c}66"/><rect x="13" y="22" width="6" height="5" fill="${c}66"/></svg>`;
+  const DEPTS = {
+    routine: ['ROUTINE', '◷ DAY SHAPE', 'routine engine · demo day', `<div class="panel-grid">${[['07:00', 'wake · brief printed', '#ff7a00'], ['09:00', 'deep work block', '#00d4ff'], ['13:00', 'review queue · decisions', '#ffcc00'], ['18:00', 'shutdown checklist', '#aa66ff']].map(([t, d, c]) => card(t, 'DEMO BLOCK', d, c)).join('')}</div>`],
+    office: ['OFFICE', '⊞ COWORK FLOOR', 'director + 7 agents · see the agents replica for the live floor', `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">${AGENTS.map(([id, , c, , rail]) => `<div style="text-align:center;padding:12px 6px;border:1px solid ${c}33;border-top:2px solid ${c}66;background:${c}06">${bot(c)}<div style="font-size:10px;color:${c};letter-spacing:3px;font-weight:700;margin-top:6px">${id.toUpperCase()}</div><div style="font-size:8px;color:${c}88;margin-top:2px">${rail}</div></div>`).join('')}</div>`],
+    inbox: ['INBOX', '✉ CAPTURE', '5 notes awaiting sort · demo', `<div class="panel-grid">${['capture · idea for the ticker', 'capture · article to read', 'capture · voice memo transcript', 'capture · screenshot to file', 'capture · todo from phone'].map((t, i) => card(t.toUpperCase(), 'DEMO NOTE · ' + (i + 1) + 'h AGO', 'Lands in the desk; the archivist proposes a domain, a human promotes it.', '#44aaff')).join('')}</div>`],
+    missions: ['MISSIONS', '▴ OPERATIONS', '3 demo operations', `<div class="panel-grid">${card('OP DEMO-1 · COLLECTOR SCHEMA V2', 'ENGINEERING', pill('ACTIVE', '#00ff88') + 'Migrate collectors to the v2 schema without gaps.', '#00ff88')}${card('OP DEMO-2 · PORTFOLIO REPLICAS', 'PUBLIC', pill('ACTIVE', '#00ff88') + 'Rebuild dashboard views on demo data.', '#00ff88')}${card('OP DEMO-3 · ARCHIVE TIDY', 'HOUSEKEEPING', pill('PLANNED', '#44aaff') + 'Move superseded notes with a superseded_by line.', '#44aaff')}</div>`],
+    territory: ['TERRITORY', '⊞ INTELLIGENCE LAYERS', 'lead pipeline · demo counts · no locations shown', `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">${[['SCANNED', 412, '#aacce0'], ['BRIEFED', 96, '#ffcc00'], ['BUILT', 31, '#4cffb3'], ['SITE LIVE', 11, '#00ff88'], ['EMAILED', 22, '#00d4ff'], ['REPLIED', 6, '#aa66ff']].map(([k, v, c]) => `<div class="estat" style="--c:${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div><svg viewBox="0 0 600 200" style="width:100%;height:auto;background:#04080f;border:1px solid #00ff8833">${Array.from({ length: 40 }, (_, i) => { const x = 20 + ((i * 137) % 560), y = 20 + ((i * 89) % 160), cs = ['#aacce0', '#ffcc00', '#4cffb3', '#00d4ff', '#aa66ff']; return `<circle cx="${x}" cy="${y}" r="3" fill="${cs[i % 5]}" opacity=".8"/>`; }).join('')}<text x="10" y="192" fill="#1e3a5f" font-size="9" font-family="IBM Plex Mono" letter-spacing="2">ABSTRACT GRID · DEMO PINS · NO REAL GEOGRAPHY</text></svg>`],
+    intel: ['INTEL', '◆ COLLECTION', 'what the intelligence engine classifies · demo counts', `<div class="panel-grid">${[['OSINT', '1,204 items classified today'], ['NEWS · GEOPOLITICS', '3,410 articles · 41 sources'], ['ACADEMIC', '312 papers indexed'], ['MARKETS', '1.87M snapshots to date'], ['LAW', '58 rulings tagged'], ['JOBS', 'category counts only · listings withheld']].map(([t, b]) => card(t, 'LOCAL MODEL · CLASSIFIED', b, '#00d4ff')).join('')}</div>`],
+    strategy: ['STRATEGY', '◈ DOCTRINE', '7 strategy notes · demo titles', `<div class="panel-grid">${['one writer, one truth', 'no agent closes its own work', 'archive, never delete', 'timeouts outlive their callees'].map(t => card(t.toUpperCase(), 'PRINCIPLE', 'A rule the estate runs on, written once and linted.', '#aa66ff')).join('')}</div>`],
+    people: ['PEOPLE', '◉ NETWORK', 'contacts withheld in the public replica', `<svg viewBox="0 0 600 220" style="width:100%;height:auto;background:#04080f;border:1px solid #44aaff33">${(() => { const pts = Array.from({ length: 18 }, (_, i) => [300 + Math.cos(i * 0.35) * (60 + (i % 4) * 30), 110 + Math.sin(i * 0.35) * (40 + (i % 3) * 22)]); return pts.map(([x, y], i) => `<line x1="300" y1="110" x2="${x}" y2="${y}" stroke="#00d4ff22"/>` + (i ? `<line x1="${pts[i - 1][0]}" y1="${pts[i - 1][1]}" x2="${x}" y2="${y}" stroke="#00d4ff18"/>` : '')).join('') + pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#04080f" stroke="#44aaff" stroke-width="1.5"/>`).join('') + '<circle cx="300" cy="110" r="8" fill="#04080f" stroke="#00d4ff" stroke-width="2"/>'; })()}<text x="10" y="212" fill="#1e3a5f" font-size="9" font-family="IBM Plex Mono" letter-spacing="2">UNLABELLED · SHAPE ONLY</text></svg>`],
+    career: ['CAREER', '▲ SKILLS LEDGER', 'evidence-backed skills · applications withheld', skill('DATA ENGINEERING', 82, '#ffcc00') + skill('AGENT SYSTEMS', 78, '#ffcc00') + skill('SECURITY OPS', 61, '#ffcc00') + skill('RESEARCH METHODS', 70, '#ffcc00')],
+    skills: ['SKILLS', '◇ XP', 'demo XP per track', skill('PYTHON', 88, '#00ff88') + skill('SQL · SQLITE', 80, '#00ff88') + skill('FRONTEND · VANILLA JS', 74, '#00ff88') + skill('CYBER · DEFENCE', 55, '#00ff88')],
+    builder: ['BUILDER', '⚒ SOFTWARE ENGINEERING AGENT', 'builder wants to do these · 3 · demo', `<div class="panel-grid">${['Make the ticker survive a missed poll without going blank', 'Add a CSV export to the reviewer ledger', 'Warn when a save fails instead of losing the draft'].map((t, i) => `<div class="card" style="border-top:2px solid #ffcc00"><div class="card-title" style="line-height:1.45">${t}</div><div class="card-meta">${['reliability', 'feature', 'data loss'][i]}</div><div style="display:flex;gap:8px;margin-top:8px"><button class="bld" data-v="approve" style="background:transparent;border:1px solid #00ff88;color:#00ff88;padding:6px 12px;font-size:9px;letter-spacing:3px">APPROVE</button><button class="bld" data-v="not" style="background:transparent;border:1px solid #ff3355;color:#ff3355;padding:6px 12px;font-size:9px;letter-spacing:3px">NOT THIS</button></div></div>`).join('')}</div>`],
+    academic: ['ACADEMIC', '◈ ACADEMY', 'two academy surfaces have their own replicas', `<div class="panel-grid"><a class="link-card" href="../declaration/"><div class="card" style="border-left:3px solid #aa66ff"><div class="card-title">◈ AI DECLARATION SYSTEM →</div><div class="card-meta">COMPLIANCE LEDGER</div><div class="card-body">Log AI-assisted sessions, generate a three-step declaration.</div></div></a><a class="link-card" href="../futurewarfare/"><div class="card" style="border-left:3px solid #ff4444"><div class="card-title">⚔ FUTURE WARFARE →</div><div class="card-meta">15-DOMAIN CURRICULUM</div><div class="card-body">Zones, live drills, XP.</div></div></a></div>`],
+    sports: ['SPORTS', '⚑ COLLECTORS', 'sports data collection · demo view', `<div style="display:flex;gap:8px;flex-wrap:wrap">${[['WORLD CUP COLLECTOR ROWS', '4.24M', '#00ff88'], ['MATCHES TRACKED', '1,180', '#ffcc00'], ['ODDS SNAPSHOTS', '312K', '#00d4ff']].map(([k, v, c]) => `<div class="estat" style="--c:${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>`],
+    timeline: ['TIMELINE', '◷ MILESTONES', 'estate milestones', `<div style="border-left:2px solid #aa66ff33;padding-left:14px">${[['VAULT LAW', 'one drive, one writer, one truth · lint is the law'], ['DOMAIN-FIRST RESTRUCTURE', 'organised by what a thing is'], ['SENTINEL PHASE 1', 'baseline-diff alerts across nodes'], ['REVIEWER LEDGER', '1,000+ independent verdicts']].map(([t, b]) => `<div style="position:relative;margin-bottom:14px"><span style="position:absolute;left:-19px;top:3px;width:8px;height:8px;border-radius:50%;background:#aa66ff;box-shadow:0 0 6px #aa66ff"></span><div style="font-size:10px;color:#aa66ff;letter-spacing:3px;font-weight:700">${t}</div><div style="font-size:10px;color:#aacce0;margin-top:2px">${b}</div></div>`).join('')}</div>`],
+    resell: ['SHOPPY', '⊟ RESELL TRACKER', 'demo listings', `<div class="panel-grid">${[['VINTAGE LAMP', 'listed · 3 watchers'], ['CAMERA LENS', 'sold · margin 34%'], ['BOARD GAME', 'draft listing']].map(([t, b]) => card(t, 'DEMO ITEM', b, '#ff66aa')).join('')}</div>`],
+    vault: ['VAULT', '⌕ KNOWLEDGE STORE', 'five tiers · human work ranked above machine output', `<div class="panel-grid">${[['vault/', 'human-authored or human-promoted only', '#00d4ff'], ['lake/', 'machine output · append-only · searched, never browsed', '#ffcc00'], ['media/', 'content-addressed binaries', '#00ff88'], ['evidence/', 'hashed, manifested · no agent write path', '#ff3355'], ['system/', 'the law, the lint, the schema', '#aa66ff']].map(([t, b, c]) => card(t, 'TIER', b, c)).join('')}</div>`],
+  };
+  $('dept-views').innerHTML = Object.entries(DEPTS).map(([id, [lab, title, sub, body]]) => `<section class="view" id="view-${id}"><div class="view-inner"><div class="dept-h"><div><div class="section-label">DEPARTMENT · ${lab}</div><div class="dept-t">${title}</div><div style="font-size:9px;color:#4a6888;letter-spacing:2px;margin-top:2px">${sub}</div></div><span class="replica-tag">shell · demo data</span></div><div class="dept-b">${body}</div></div></section>`).join('');
+  document.querySelectorAll('.bld').forEach(b => b.addEventListener('click', () => { const c = b.closest('.card'); c.style.opacity = .45; c.querySelectorAll('.bld').forEach(x => x.disabled = true); toast(b.dataset.v === 'approve' ? '✓ approved · queued for builder (demo)' : '✗ declined · noted (demo)', b.dataset.v === 'approve' ? '#00ff88' : '#ff3355'); }));
+
+  // ── tabs ──
+  function switchView(v) {
+    document.querySelectorAll('.work-tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+    document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
+    document.body.dataset.view = v;
+    document.querySelector('.work-tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  $('work-tabs').addEventListener('click', e => { const b = e.target.closest('.work-tab'); if (b) switchView(b.dataset.view); });
+  $('brand-home').addEventListener('click', () => switchView('hq'));
+  $('yerdad-jump-chip').addEventListener('click', () => switchView('office'));
+  document.querySelectorAll('[data-toast]').forEach(b => b.addEventListener('click', () => toast(b.dataset.toast, '#4a6888')));
+  $('feed-btn').addEventListener('click', () => toast('▲ FEED · quick capture is not wired in the replica', '#00ff88'));
+  $('deadline-btn').addEventListener('click', e => { e.stopPropagation(); const p = $('deadline-pop'); p.classList.toggle('open'); $('deadline-btn').setAttribute('aria-expanded', p.classList.contains('open')); });
+  document.addEventListener('click', e => { if (!e.target.closest('#deadline-pop')) $('deadline-pop').classList.remove('open'); });
+  $('global-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { toast('search is not wired in the replica', '#4a6888'); } });
+  document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('global-search-input').focus(); } if (e.key === 'Escape') $('deadline-pop').classList.remove('open'); });
+
+  // ── live loops ──
+  const clock = () => { $('clock').textContent = new Date().toTimeString().slice(0, 8); renderTrace(); };
+  setInterval(clock, 1000); clock();
+  renderOps(); renderTeam(); pulseHealth(); step();
+  let spend = 1.84, disp = 18;
+  setInterval(() => {
+    if (document.hidden) return;
+    step();
+    OPS.forEach(o => { o.p += 4 + Math.round(Math.random() * 8); if (o.p >= 100) { o.p = 5; disp++; $('dispatch-n').textContent = disp; } });
+    renderOps();
+    spend += Math.random() * 0.03; $('ls-spend').textContent = spend.toFixed(2); $('spend-big').textContent = '$' + spend.toFixed(2);
+  }, RM ? 5000 : 3200);
+  setInterval(() => { if (!document.hidden) pulseHealth(); }, 4000);
+})();
+</script>
+</body>
+</html>

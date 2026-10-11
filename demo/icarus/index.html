@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICARUS Flight Deck</title>
+<meta name="description" content="Interactive replica of ICARUS, autonomous flight software for a DJI Mini 2 running on an Android handset. Real deck UI, real self-test names, a JS port of the control law and envelope guard. Simulated telemetry.">
+<style>
+@font-face{font-family:"IBM Plex Mono";font-weight:400;src:url(assets/fonts/plex-mono-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Mono";font-weight:600;src:url(assets/fonts/plex-mono-600.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Bebas Neue";src:url(assets/fonts/bebas-neue.woff2) format("woff2");font-display:swap}
+:root{
+  --bg:#03060c; --ink:#cfe0f0; --muted:#5d7a97; --dim:#2c4560; --line:#13243a;
+  --cyan:#00d4ff; --green:#00ff88; --amber:#ffcc00; --red:#ff3355;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace; --disp:'Bebas Neue',Impact,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(120% 90% at 50% 40%,#0a1424 0%,var(--bg) 70%);color:var(--ink);
+  font-family:var(--mono);overflow:hidden;display:flex;flex-direction:column}
+button{font-family:var(--mono);cursor:pointer}
+
+.top{flex:none;display:flex;align-items:center;gap:12px;padding:8px 16px 0;min-height:30px}
+.top .t{font-family:var(--disp);font-size:17px;letter-spacing:4px;color:var(--cyan);line-height:1}
+.top .s{font-size:9px;color:var(--muted);letter-spacing:.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.top .sp{margin-left:auto;display:flex;gap:0;border:1px solid var(--line);flex:none}
+.top .sp button{background:none;border:none;color:var(--muted);font-size:9px;letter-spacing:1px;padding:4px 8px;font-weight:600}
+.top .sp button[aria-pressed="true"]{color:var(--cyan);background:#00d4ff14}
+.corner{position:fixed;right:10px;bottom:7px;z-index:5;font-size:9px;letter-spacing:1.2px;color:var(--amber);
+  background:#0a0f18e6;border:1px solid #3a3210;padding:3px 8px;pointer-events:none}
+
+.stagewrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 16px}
+/* OnePlus 7 Pro, landscape: 891 x 411 CSS px of WebView, curved long edges, pop-up camera (no notch) */
+.phone{position:relative;flex:none;border-radius:34px;padding:11px 15px;
+  background:linear-gradient(180deg,#2a3038 0%,#0d0f13 7%,#07080a 50%,#0d0f13 93%,#2a3038 100%);
+  box-shadow:0 0 0 1px #3a424d,0 18px 50px #000c,0 0 80px #00d4ff10}
+.phone::before{content:'';position:absolute;left:28px;right:28px;top:3px;height:2px;border-radius:2px;background:#4a5562;opacity:.6}
+.phone::after{content:'';position:absolute;left:-2px;top:46px;width:3px;height:38px;border-radius:2px;background:#2b323b}
+.glass{position:relative;overflow:hidden;border-radius:20px;background:#070e1c}
+.glass::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:20px;
+  box-shadow:inset 0 9px 10px -9px #ffffff22,inset 0 -9px 10px -9px #ffffff18}
+.glass iframe{display:block;border:0;width:891px;height:411px;transform-origin:0 0;background:#070e1c}
+
+.under{flex:none;padding:0 16px 8px;display:flex;flex-direction:column;gap:5px}
+.hint{font-size:9px;color:var(--muted);letter-spacing:.4px;line-height:1.5;text-align:center}
+.hint b{color:var(--ink);font-weight:600}
+.ticker{font-size:9px;color:#8fb0cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-top:1px solid var(--line);padding-top:5px;text-align:center;padding-right:170px;padding-left:170px}
+.ticker .lv{color:var(--dim);margin-right:6px}
+.ticker .W{color:var(--amber)} .ticker .E{color:var(--red)}
+
+/* narrow: the phone shrinks to fit, so its small type is mirrored here at a readable size */
+.mirror{display:none}
+@media (max-width:640px){
+  body{overflow-y:auto}
+  .top{padding:8px 10px 0}
+  .top .s{display:none}
+  .stagewrap{flex:none;padding:6px 8px}
+  .phone{border-radius:18px;padding:6px 8px}
+  .glass{border-radius:11px}
+  .ticker{display:none}
+  .hint{text-align:left}
+  .under{padding:0 10px 30px}
+  .mirror{display:flex;flex-direction:column;gap:6px}
+  .card{border:1px solid var(--line);border-top:2px solid var(--cyan);background:#07101e;padding:7px 9px}
+  .card.bad{border-top-color:var(--red)}
+  .card .h{font-size:9px;letter-spacing:1.4px;color:var(--cyan);font-weight:600;margin-bottom:3px}
+  .card.bad .h{color:var(--red)}
+  .card .m{font-size:11px;line-height:1.45;color:#c8dff0}
+  .row{display:flex;gap:5px;flex-wrap:wrap}
+  .row button{flex:1 1 0;min-width:64px;min-height:36px;background:#00d4ff10;border:1px solid #1e3c58;color:var(--cyan);
+    font-size:10px;letter-spacing:1px;font-weight:600}
+  .row button.ab{color:#fff;background:#a4132c;border-color:#ff6b83}
+  .row button.ok{color:var(--green);border-color:#2a6a4a}
+  .row button.am{color:var(--amber);border-color:#6a5a20}
+  .tests{font-size:10px;line-height:1.5;color:#9cb8d0;max-height:132px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+  .tests div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tests .p{color:var(--green);font-weight:600;margin-right:5px}
+  .tests .g{color:var(--dim);margin-right:5px}
+  .tl{font-size:10px;color:#8fb0cc;line-height:1.45;max-height:72px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+  .tl div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat{font-size:10px;color:var(--muted);letter-spacing:.5px}
+  .stat b{color:var(--ink)}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="t">I·C·A·R·U·S</span>
+  <span class="s">flight deck replica · DJI Mini 2 on an Android handset · deck UI, self-tests and control law from source</span>
+  <div class="sp" role="group" aria-label="simulation speed">
+    <button data-x="1" aria-pressed="true">×1</button><button data-x="4" aria-pressed="false">×4</button>
+  </div>
+</div>
+
+<div class="stagewrap" id="wrap">
+  <div class="phone" id="phone">
+    <div class="glass" id="glass">
+      <iframe id="deck" src="assets/deck.html" title="ICARUS flight deck (replica)" scrolling="no"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="under">
+  <div class="hint" id="hint">Self-test runs first. Then <b>ENTER FLIGHT DECK</b> → <b>LAUNCH</b> → tap or drag on the plan → <b>QUEUE GOTO</b> → <b>1·ARM</b> → <b>3·RUN</b>. Tap outside the green VLOS ring to watch the envelope guard refuse — and clamp.</div>
+  <div class="ticker" id="ticker"><span class="lv">logcat</span>waiting for the deck…</div>
+  <div class="mirror" id="mirror">
+    <div class="card" id="m-card"><div class="h" id="m-h">PRE-FLIGHT SELF-TEST</div><div class="m" id="m-m">starting…</div></div>
+    <div class="tests" id="m-tests"></div>
+    <div class="stat" id="m-stat"></div>
+    <div class="row">
+      <button data-fn="enterDeck">DECK</button><button data-fn="takeOff" class="ok">LAUNCH</button>
+      <button data-fn="queueGoto">QUEUE GOTO</button><button data-fn="queueClamp" class="am">CLAMPED</button>
+    </div>
+    <div class="row">
+      <button data-fn="apArm" class="ok">1·ARM</button><button data-fn="apStart" class="am">3·RUN</button>
+      <button data-fn="land">LAND</button><button data-fn="abort" class="ab">ABORT</button>
+    </div>
+    <div class="row"><button data-fn="handPaused" class="am">HAND (PAUSED)</button></div>
+    <div class="tl" id="m-log"></div>
+  </div>
+</div>
+
+<div class="corner">replica · simulated telemetry</div>
+
+<script>
+(function(){
+  'use strict';
+  const W = 891, H = 411;
+  const frame = document.getElementById('deck'), glass = document.getElementById('glass');
+  const phone = document.getElementById('phone'), wrap = document.getElementById('wrap');
+  const narrow = () => window.innerWidth <= 640;
+
+  function fit(){
+    const cs = getComputedStyle(phone);
+    const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    const ws = getComputedStyle(wrap);
+    const availW = wrap.clientWidth - parseFloat(ws.paddingLeft) - parseFloat(ws.paddingRight) - padX;
+    let s = availW / W;
+    if (!narrow()) {
+      const availH = wrap.clientHeight - parseFloat(ws.paddingTop) - parseFloat(ws.paddingBottom) - padY;
+      s = Math.min(s, availH / H);
+    }
+    s = Math.max(0.2, Math.min(s, 1.25));
+    frame.style.transform = 'scale(' + s + ')';
+    glass.style.width = (W * s) + 'px'; glass.style.height = (H * s) + 'px';
+  }
+  window.addEventListener('resize', fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(wrap);
+  fit();
+
+  const send = msg => { try { frame.contentWindow.postMessage(Object.assign({ src: 'icarus-host' }, msg), '*'); } catch (e) {} };
+
+  document.querySelectorAll('.sp button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.sp button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    send({ type: 'speed', value: +b.dataset.x });
+  }));
+  document.querySelectorAll('.mirror [data-fn]').forEach(b => b.addEventListener('click', () => send({ type: 'call', fn: b.dataset.fn })));
+
+  const ticker = document.getElementById('ticker'), mlog = document.getElementById('m-log');
+  const mtests = document.getElementById('m-tests'), mcard = document.getElementById('m-card');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function card(h, m, bad){
+    document.getElementById('m-h').textContent = h; document.getElementById('m-m').textContent = m;
+    mcard.classList.toggle('bad', !!bad);
+  }
+  window.addEventListener('message', ev => {
+    if (ev.source !== frame.contentWindow) return;
+    const d = ev.data || {}; if (d.src !== 'icarus') return;
+    if (d.type === 'log') {
+      ticker.innerHTML = '<span class="lv">logcat</span><span class="' + esc(d.level) + '">' + esc(d.level) + '/ICARUS ' + esc(d.msg) + '</span>';
+      const el = document.createElement('div'); el.textContent = d.level + '/ICARUS ' + d.msg; mlog.appendChild(el);
+      while (mlog.children.length > 8) mlog.removeChild(mlog.firstChild);
+    } else if (d.type === 'tests-begin') {
+      mtests.innerHTML = ''; card('PRE-FLIGHT SELF-TEST', d.suites.length + ' suites · ' + d.total + ' assertions, run at every launch');
+    } else if (d.type === 'tests') {
+      for (const [g, n] of d.lines) {
+        const el = document.createElement('div');
+        el.innerHTML = '<span class="p">PASS</span><span class="g">' + esc(g) + '</span>' + esc(n);
+        mtests.appendChild(el);
+      }
+      while (mtests.children.length > 9) mtests.removeChild(mtests.firstChild);
+      ticker.innerHTML = '<span class="lv">self-test</span>' + d.passed + ' / ' + d.total + ' PASS';
+    } else if (d.type === 'tests-end') {
+      card('SELF-TEST · ' + d.passed + '/' + d.total + ' PASS', 'All suites pass. Tap DECK, then LAUNCH; tap the plan view to set a target.');
+      ticker.innerHTML = '<span class="lv">self-test</span>' + d.passed + ' / ' + d.total + ' PASS';
+      setTimeout(() => { mtests.innerHTML = ''; }, 1600);
+    } else if (d.type === 'target') {
+      card(d.title, d.text, d.bad);
+    } else if (d.type === 'state') {
+      const s = d.s;
+      document.getElementById('m-stat').innerHTML = s.connected
+        ? 'LINKED · <b>' + (s.flying ? 'AIRBORNE' : 'ON GROUND') + '</b> · ALT <b>' + s.alt.toFixed(1) + ' m</b> · AP <b>' + esc(s.ap) + '</b>'
+          + (s.note ? ' · ' + esc(s.note) : '')
+        : 'no aircraft linked yet';
+    }
+  });
+})();
+</script>
+</body>
+</html>

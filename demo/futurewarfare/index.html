@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Future Warfare (replica)</title>
+<meta name="description" content="Interactive replica of the Command dashboard's Future Warfare curriculum: fifteen domains, five zones each, with playable drills on demo data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ═══ COMMAND replica · KAM palette (from Command.html :root + RESET) ═══ */
+  :root{
+    --zone-c:#00d4ff;
+    --av-bg:#04080f; --av-text:#aacce0;
+    --av-yerdad:#00d4ff; --av-scout:#00ff88; --av-builder:#ff7700; --av-analyst:#ffcc00;
+    --av-reviewer:#eef6ff; --av-envoy:#44aaff; --av-archivist:#aa66ff; --av-sentinel:#ff3355;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'IBM Plex Mono','SF Mono',Menlo,monospace;background:#070e1c;color:#eef6ff;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  ::selection{background:#00d4ff44;color:#fff}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:#070e1c}
+  ::-webkit-scrollbar-thumb{background:#3a5c7a;border-radius:0}
+  ::-webkit-scrollbar-thumb:hover{background:#00d4ff}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes tpulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+  @keyframes scanline{0%{top:38px;opacity:0}10%{opacity:.6}90%{opacity:.6}100%{top:100%;opacity:0}}
+  @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  @keyframes rowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @keyframes cortexNodePulse{0%,100%{opacity:.6}50%{opacity:1}}
+  :focus-visible{outline:1px solid var(--zone-c);outline-offset:1px}
+
+  /* ═══ APP LAYOUT · header / agent-view rail / workspace / ticker ═══ */
+  .app{display:grid;grid-template-rows:44px 1fr 30px;grid-template-columns:clamp(210px,24vw,250px) 1fr;height:100vh;width:100vw;gap:1px;background:#00d4ff15}
+  .header{grid-column:1/-1;grid-row:1}
+  .brain{grid-column:1;grid-row:2}
+  .work{grid-column:2;grid-row:2}
+  .ticker{grid-column:1/-1;grid-row:3}
+
+  .header{background:#070e1c;border-bottom:1px solid var(--zone-c);display:flex;align-items:stretch;z-index:20;position:relative;
+    box-shadow:0 1px 0 var(--zone-c),0 6px 32px color-mix(in srgb,var(--zone-c) 22%,transparent);transition:border-color .6s,box-shadow .6s}
+  .header-left{display:flex;align-items:stretch;flex:0 0 auto;height:100%}
+  .brand{font-size:10px;color:#00d4ff;text-shadow:0 0 8px #00d4ff66;letter-spacing:5px;font-weight:700;display:flex;align-items:center;padding:0 14px;border-right:1px solid #1e3a5f;white-space:nowrap;cursor:default}
+  .brand .dot{color:#00ff88;margin-right:6px;animation:pulse 2.4s ease-in-out infinite}
+  .hbtn{display:flex;align-items:center;height:100%;padding:0 12px;border:none;border-right:1px solid #1e3a5f;background:transparent;color:#6a8eaa;font-size:9px;letter-spacing:2px;transition:color .15s,background .15s;white-space:nowrap}
+  .hbtn:hover{background:#00d4ff10;color:#00d4ff}
+  #yerdad-jump-chip{display:flex;align-items:center;gap:6px;align-self:center;background:transparent;border:1px solid #aa66ff66;color:#aa66ff;font-size:10px;letter-spacing:2px;padding:5px 10px;margin:0 8px;transition:filter .12s,border-color .12s;white-space:nowrap}
+  #yerdad-jump-chip:hover{filter:brightness(1.4);border-color:#aa66ff}
+  .yj-dot{width:6px;height:6px;border-radius:50%;background:#aa66ff;box-shadow:0 0 6px #aa66ff;animation:pulse 1.6s infinite}
+  .livestrip{display:flex;flex:1;flex-wrap:nowrap;align-items:stretch;overflow-x:auto;overflow-y:hidden;height:100%;min-width:0}
+  .livestrip::-webkit-scrollbar{height:2px}
+  .live-stat{display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid #1e3a5f;height:100%;flex-shrink:0;white-space:nowrap}
+  .live-stat:hover{background:color-mix(in srgb,var(--zone-c) 6%,transparent)}
+  .live-stat-icon{font-size:11px;line-height:1}
+  .live-stat-val{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .live-stat-cap{font-size:7px;color:#4a6888;letter-spacing:2px;margin-left:3px}
+  .header-right{display:flex;align-items:stretch;flex:0 0 auto}
+  .header-right>*{display:flex;align-items:center;padding:0 12px;border:none;border-left:1px solid #1e3a5f;background:transparent;white-space:nowrap}
+  .clock{font-variant-numeric:tabular-nums;color:#00d4ff;letter-spacing:2px;font-size:11px}
+
+  /* ═══ BRAIN RAIL · AGENT VIEW ═══ */
+  .brain{background:#070e1c;border-right:1px solid color-mix(in srgb,var(--zone-c) 30%,#3a5c7a 70%);overflow:hidden;min-height:0;display:grid}
+  .cortex{background:#050a14;position:relative;overflow:hidden;box-shadow:inset 0 0 60px color-mix(in srgb,var(--zone-c) 12%,transparent)}
+  #agent-view-rail{display:flex;flex-direction:column;height:100%;padding:10px 12px;gap:10px;color:#aacce0;overflow-y:auto}
+  .av-lab{font-size:8px;color:#1e3a5f;letter-spacing:3px}
+  .av-agent-row{display:grid;grid-template-columns:8px 1fr auto;gap:6px;align-items:center;padding:3px 5px;border-left:2px solid currentColor;opacity:.5;transition:opacity .3s,background .3s}
+  .av-agent-row.on{opacity:1;background:color-mix(in srgb,currentColor 7%,transparent)}
+  .av-agent-row .d{width:6px;height:6px;background:currentColor;border-radius:50%}
+  .av-agent-row.on .d{box-shadow:0 0 6px currentColor;animation:pulse 1s infinite}
+  .av-agent-row .t{font-size:9px;color:var(--av-text);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .av-agent-row strong{color:currentColor}
+  .av-agent-row .s{font-size:7px;color:#4a6888;letter-spacing:2px}
+  .av-agent-row.on .s{color:currentColor}
+  .av-agent-row[data-agent="scout"]{color:var(--av-scout)}
+  .av-agent-row[data-agent="builder"]{color:var(--av-builder)}
+  .av-agent-row[data-agent="analyst"]{color:var(--av-analyst)}
+  .av-agent-row[data-agent="reviewer"]{color:var(--av-reviewer)}
+  .av-agent-row[data-agent="envoy"]{color:var(--av-envoy)}
+  .av-agent-row[data-agent="archivist"]{color:var(--av-archivist)}
+  .av-agent-row[data-agent="sentinel"]{color:var(--av-sentinel)}
+
+  /* ═══ WORKSPACE · tabs + views ═══ */
+  .work{background:#04080f;overflow:hidden;position:relative;display:grid;grid-template-rows:38px 1fr;min-width:0}
+  .work::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,#00000060 100%);z-index:1}
+  .work::before{content:"";position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00d4ff44,transparent);pointer-events:none;z-index:3;top:38px;animation:scanline 7s linear infinite;opacity:.6}
+  .work-tabs{display:flex;border-bottom:1px solid #162540;background:#060d1a;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .work-tabs::-webkit-scrollbar{display:none}
+  .work-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#4a6888;padding:10px 16px;font-size:9px;letter-spacing:3px;transition:all .15s;white-space:nowrap;--tc:#00d4ff}
+  .work-tab[data-view="missions"]{--tc:#ff3355}.work-tab[data-view="territory"]{--tc:#00ff88}.work-tab[data-view="people"]{--tc:#44aaff}
+  .work-tab[data-view="inbox"]{--tc:#44aaff}.work-tab[data-view="timeline"]{--tc:#aa66ff}.work-tab[data-view="career"]{--tc:#ffcc00}
+  .work-tab[data-view="academic"]{--tc:#aa66ff}.work-tab[data-view="sports"]{--tc:#00ff88}.work-tab[data-view="resell"]{--tc:#ff66aa}
+  .work-tab[data-view="routine"]{--tc:#ff7a00}.work-tab[data-view="strategy"]{--tc:#aa66ff}.work-tab[data-view="skills"]{--tc:#00ff88}.work-tab[data-view="builder"]{--tc:#ff7700}
+  .work-tab:hover{color:var(--tc);filter:brightness(1.2)}
+  .work-tab.active{color:var(--tc);border-bottom-color:var(--tc);text-shadow:0 0 8px var(--tc)}
+  .work-tab[aria-disabled="true"]{opacity:.55}
+  .view{overflow:hidden;position:absolute;top:38px;left:0;right:0;bottom:0;opacity:0;transform:translateY(8px);transition:opacity .32s ease,transform .32s ease;pointer-events:none;visibility:hidden}
+  .view.active{opacity:1;transform:none;pointer-events:auto;visibility:visible;z-index:2}
+  .view-inner{height:100%;overflow-y:auto;overflow-x:hidden}
+
+  /* ═══ TICKER ═══ */
+  .ticker{background:#060d1a;border-top:1px solid #00ff8822;display:flex;align-items:center;padding:0 14px;gap:14px;overflow:hidden;position:relative}
+  .ticker-label{font-size:8px;color:#00ff88;letter-spacing:3px;font-weight:700;padding-right:14px;border-right:1px solid #1e3c58;white-space:nowrap}
+  .ticker-stream{flex:1;overflow:hidden;white-space:nowrap;display:flex;gap:28px;align-items:center;min-width:0}
+  .ticker-item{font-size:9px;color:#c0d8f0;letter-spacing:1px;animation:rowIn .4s both}
+  .ticker-item .cat{color:#00ff88;padding-right:6px}
+  .ticker-pulse{color:#00ff88;font-size:12px;line-height:0;animation:tpulse 1.6s ease-in-out infinite}
+  .replica-tag{font-size:8px;letter-spacing:2px;color:#ffcc00;border:1px solid #ffcc0055;background:#ffcc000d;padding:2px 7px;white-space:nowrap;text-transform:lowercase}
+
+  /* ═══ CARDS / PILLS / TOAST / DRAWER ═══ */
+  .card{background:#060d1a;border:1px solid #1e3c58;padding:12px 14px;transition:all .2s;box-shadow:0 2px 0 #00000050}
+  .card:hover{border-color:#00d4ff66;background:#08152e;box-shadow:0 4px 18px #00d4ff22,0 0 0 1px #00d4ff44 inset}
+  .card-title{font-size:11px;color:#eef6ff;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+  .card-meta{font-size:9px;color:#4a6888;letter-spacing:2px;margin-bottom:6px}
+  .card-body{font-size:10px;color:#c0d8f0;line-height:1.5}
+  .pill{display:inline-block;padding:2px 7px;font-size:8px;letter-spacing:2px;margin-right:4px;font-weight:700}
+  .section-label{font-size:9px;color:#1e3a5f;letter-spacing:3px;text-transform:uppercase}
+  .toast{position:fixed;bottom:42px;right:14px;max-width:calc(100vw - 28px);visibility:hidden;background:#04080f;border:1px solid #00d4ff;padding:10px 14px;font-size:10px;color:#00d4ff;box-shadow:0 8px 32px #00000099,0 0 20px #00d4ff44;z-index:300;transform:translateX(calc(100% + 40px));transition:transform .4s,visibility .4s;letter-spacing:1px}
+  .toast.show{transform:translateX(0);visibility:visible}
+  .modal-backdrop{position:fixed;inset:0;z-index:200;display:none;pointer-events:none}
+  .modal-backdrop.open{display:block}
+  .modal-backdrop.open .modal{pointer-events:auto}
+  .modal{position:fixed;top:44px;right:0;bottom:30px;background:#04080ff5;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-left:2px solid var(--zone-c);box-shadow:-12px 0 32px #000000aa,-2px 0 28px color-mix(in srgb,var(--zone-c) 22%,transparent);width:min(560px,100vw);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;animation:slideInRight .28s cubic-bezier(.22,.61,.36,1)}
+  .modal-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #3a5c7a;background:linear-gradient(180deg,#0b1830 0%,#050a14 100%)}
+  .modal-title{font-size:15px;color:var(--zone-c);letter-spacing:4px;text-shadow:0 0 10px color-mix(in srgb,var(--zone-c) 50%,transparent)}
+  .modal-sub{font-size:9px;color:#6a8eaa;letter-spacing:2px;margin-top:2px;word-break:break-all}
+  .modal-close{background:transparent;border:1px solid #3a5c7a;color:#6a8eaa;width:30px;height:30px;font-size:14px;line-height:1;flex-shrink:0;transition:all .15s}
+  .modal-close:hover{background:#ff335515;color:#ff3355;border-color:#ff3355}
+  .modal-body{overflow-y:auto;padding:18px 22px;font-size:12px;line-height:1.7;color:#b0c8e0}
+  .modal-body h1{font-size:18px;color:var(--zone-c);letter-spacing:2px;margin:0 0 12px;line-height:1.35}
+  .modal-body h2{font-size:15px;color:color-mix(in srgb,var(--zone-c) 80%,#c0d8f0);letter-spacing:3px;margin:18px 0 10px}
+  .modal-body h3{font-size:13px;color:#aa66ff;letter-spacing:2px;margin:14px 0 8px;font-weight:700}
+  .modal-body h4{font-size:12px;color:#00d4ff;letter-spacing:1px;margin:12px 0 6px;font-weight:700}
+  .modal-body p{margin-bottom:10px}
+  .modal-body strong{color:#fff;font-weight:700}
+  .modal-body em{color:#c0d8f0;font-style:italic}
+  .modal-body code{color:var(--zone-c);background:#050a14;padding:1px 6px;font-size:.9em}
+  .modal-body ul{margin:6px 0 12px 20px}
+  .modal-body li{margin-bottom:5px}
+  .modal-body hr{border:none;border-top:1px solid #3a5c7a;margin:16px 0}
+  .modal-foot{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #3a5c7a;background:#050a14;flex-wrap:wrap}
+  .modal-foot .meta{font-size:8px;color:#6a8eaa;letter-spacing:2px}
+  .modal-btn{background:transparent;border:1px solid #00d4ff66;color:#00d4ff;padding:7px 12px;font-size:9px;letter-spacing:2px;font-weight:600;transition:all .15s}
+  .modal-btn:hover{background:#00d4ff15}
+  .modal-btn.primary{border-color:#00ff88;color:#00ff88}
+  .modal-btn.primary:hover{background:#00ff8815}
+
+  /* ═══ PHONE · 720px breakpoint (Command: hide AV column, single column) ═══ */
+  @media (max-width:720px){
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr 30px}
+    .brain{display:none}
+    .work{grid-column:1}
+    .header{flex-wrap:wrap;height:auto;min-height:44px}
+    .header-left{height:44px}
+    .hbtn,.global-search,.clock,.hide-sm{display:none !important}
+    .livestrip{order:3;flex:1 1 100%;height:34px;border-top:1px solid #1e3a5f}
+    .header-right{margin-left:auto;height:44px}
+    .header-right>*{padding:0 10px}
+    .live-stat-cap{display:none}
+    .work-tab{padding:10px 12px}
+    .ticker-label{padding-right:10px}
+    .modal{width:100vw;top:0;bottom:0;border-left:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  }
+
+  :root{--zone-c:#ff4444}
+  .app{grid-template-columns:1fr}
+  .work{grid-column:1}
+  /* Future Warfare · Civilian Survival glow (Command.html fw-pulse) */
+  @keyframes fw-pulse{0%,100%{box-shadow:0 0 14px #ffaa0066,inset 0 0 12px #ffaa0022}50%{box-shadow:0 0 22px #ffaa00aa,inset 0 0 18px #ffaa0044}}
+  #acad-cyber-section{padding:16px 20px;background:linear-gradient(180deg,#1a0608 0%,#020a14 60%);border-bottom:2px solid #ff444433;min-height:100%}
+  .fwbtn{background:transparent;border:1px solid var(--c,#ff4444);color:var(--c,#ff4444);padding:6px 14px;font-size:9px;letter-spacing:3px;font-weight:700;white-space:nowrap;transition:background .12s}
+  .fwbtn:hover{background:color-mix(in srgb,var(--c,#ff4444) 12%,transparent)}
+  .xp{flex:1;min-width:130px;padding:8px 12px;background:#04080f;border:1px solid color-mix(in srgb,var(--c) 27%,transparent);border-left:3px solid var(--c)}
+  .xp .k{font-size:8px;color:color-mix(in srgb,var(--c) 60%,transparent);letter-spacing:3px}
+  .xp .v{font-size:16px;color:var(--c);font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+  #fw-modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-bottom:14px}
+  .fw-mod-tile{background:#04080f;border:1px solid color-mix(in srgb,var(--c) 20%,transparent);border-left:3px solid var(--c);padding:10px 12px;cursor:pointer;transition:background 120ms ease;text-align:left;color:inherit;font:inherit;width:100%}
+  .fw-mod-tile:not(.fw-glow):hover{background:#0a1422}
+  .fw-mod-tile.fw-glow{box-shadow:0 0 14px #ffaa0066,inset 0 0 12px #ffaa0022;animation:fw-pulse 2.4s ease-in-out infinite}
+  .t-name{font-size:10px;color:var(--c);letter-spacing:3px;font-weight:700}
+  .badge{padding:1px 5px;font-size:7.5px;letter-spacing:2px;white-space:nowrap}
+  .t-tag{font-size:8.5px;color:color-mix(in srgb,var(--c) 67%,transparent);letter-spacing:1.5px;margin-bottom:4px}
+  .t-sec{font-size:7.5px;color:#1e3a5f;letter-spacing:2px;margin-top:6px;padding-top:5px;border-top:1px solid color-mix(in srgb,var(--c) 13%,transparent)}
+  .t-zone{font-size:8.5px;color:color-mix(in srgb,var(--c) 80%,transparent);line-height:1.4;margin-top:2px}
+  .t-zone.done::after{content:" ✓";color:#00ff88}
+  .t-drill{font-size:8.5px;color:var(--c);letter-spacing:1.5px;font-weight:600;margin-top:2px}
+  .zone-tile{background:#04080f;border:1px solid color-mix(in srgb,var(--c) 20%,transparent);border-left:2px solid var(--c);padding:9px 12px;cursor:pointer;transition:background 120ms ease;text-align:left;font:inherit;color:inherit;width:100%}
+  .zone-tile:hover{background:#0a1422}
+  .opt{display:block;width:100%;text-align:left;padding:10px 14px;background:#04080f;border:1px solid color-mix(in srgb,var(--c) 27%,transparent);border-left:3px solid var(--c);transition:background 120ms ease;font:inherit;color:#fff;font-size:10px;font-weight:600}
+  .opt:hover{background:#0a1422}
+  #fw-nd-stage{position:relative;height:240px;background:#04080f;margin-bottom:10px;overflow:hidden}
+  .fw-nd-node{position:absolute;transform:translate(-50%,-50%);padding:7px 9px;background:#020a14;border:1px solid #ff444466;min-width:104px;text-align:center;font:inherit;color:inherit;transition:transform .12s,box-shadow .2s,background .2s}
+  .fw-nd-node:hover{box-shadow:0 0 12px #ff444488;background:#0a1422}
+  .narr{margin:0 0 14px;padding:10px 14px;background:#04080f;border:1px solid color-mix(in srgb,var(--c) 40%,transparent);border-left:3px solid var(--c);max-height:240px;overflow-y:auto;box-shadow:inset 0 0 12px color-mix(in srgb,var(--c) 13%,transparent)}
+  .narr .h{font-size:8px;color:var(--c);letter-spacing:4px;margin-bottom:8px;font-weight:700;text-shadow:0 0 6px var(--c)}
+  .narr .e{padding:7px 0;border-bottom:1px solid color-mix(in srgb,var(--c) 13%,transparent);font-size:10px;color:#aacce0;line-height:1.6;animation:rowIn .3s both}
+  .narr .e .ts{color:var(--c);font-size:8px;letter-spacing:2px;font-weight:700}
+  .sub{font-size:8px;color:#aacce0aa}
+  @media (max-width:720px){
+    #acad-cyber-section{padding:12px 10px}
+    #fw-modules-grid{grid-template-columns:1fr}
+    #fw-nd-stage{height:280px}
+    .fw-nd-node{min-width:84px;padding:5px 6px}
+    .hide-sm{display:none !important}
+    .sum-grid{grid-template-columns:1fr 1fr !important}
+  }
+</style>
+</head>
+<body data-view="academic">
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="brand"><span class="dot">●</span>BINNING.AI · HQ</div>
+    </div>
+    <div class="livestrip">
+      <div class="live-stat" title="Future Warfare XP · this visit"><span class="live-stat-icon" style="color:#ff4444">⚔</span><span class="live-stat-val" id="ls-xp" style="color:#ff4444">0</span><span class="live-stat-cap">XP</span></div>
+      <div class="live-stat" title="Drills completed · this visit"><span class="live-stat-icon" style="color:#00ff88">🎯</span><span class="live-stat-val" id="ls-drills">0</span><span class="live-stat-cap">DRILLS</span></div>
+    </div>
+    <div class="header-right"><span class="clock" id="clock">—</span></div>
+  </header>
+
+  <main class="work">
+    <div class="work-tabs" id="work-tabs">
+      <button class="work-tab" data-view="hq" aria-disabled="true">▣ COMMAND</button>
+      <button class="work-tab" data-view="office" aria-disabled="true">⊞ OFFICE</button>
+      <button class="work-tab" data-view="skills" aria-disabled="true">◇ SKILLS</button>
+      <button class="work-tab active" data-view="academic">◈ ACADEMIC</button>
+      <button class="work-tab" data-view="career" aria-disabled="true">▲ CAREER</button>
+      <button class="work-tab" data-view="vault" aria-disabled="true">⌕ VAULT</button>
+    </div>
+    <section class="view active" id="view-academic">
+      <div class="view-inner" id="scroller">
+        <div id="acad-cyber-section">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+            <span style="font-size:15px">⚔</span>
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:12px;color:#ff4444;letter-spacing:4px;font-weight:700">▸ FUTURE WARFARE</div>
+              <div style="font-size:8px;color:#ff444499;letter-spacing:2px;margin-top:2px;line-height:1.5">15-DOMAIN CURRICULUM · ACADEMIC ZONES + LIVE DRILLS + GAMIFIED LAYER · WORKSTATION = AI BRAIN · CIVILIAN-LITERACY FIRST · PER-USER TRACKS · SKILLS+CAREER AUTO-FEED</div>
+            </div>
+            <button id="acad-cyber-open-ws" class="fwbtn" title="Open Cyber Security workstation (zones C1-C5)">▸ OPEN CYBER WS</button>
+            <span class="replica-tag">replica · demo data</span>
+          </div>
+          <div id="acad-cyber-progress-strip" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="xp" style="--c:#ff4444"><div class="k">XP · FUTURE WARFARE</div><div class="v" id="acad-cyber-xp">0</div></div>
+            <div class="xp" style="--c:#00d4ff"><div class="k">ZONES VISITED</div><div class="v" id="acad-cyber-zones-done">0 / 75</div></div>
+            <div class="xp" style="--c:#00ff88"><div class="k">DRILLS COMPLETE</div><div class="v" id="acad-cyber-drills-done">0</div></div>
+            <div class="xp" style="--c:#aa66ff"><div class="k">TRACKS DECLARED</div><div class="v" id="acad-cyber-tracks">0</div></div>
+          </div>
+          <div id="fw-grid-wrap">
+            <div style="font-size:8px;color:#1e3a5f;letter-spacing:3px;margin-bottom:8px">▸ 15 DOMAINS · CURRICULUM ARC · CLICK TO ENTER OR DECLARE TRACK</div>
+            <div id="fw-modules-grid"></div>
+            <div style="background:#04080f;border:1px solid #ff444433;border-left:3px solid #ff4444;padding:10px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <div style="font-size:8px;color:#ff4444;letter-spacing:3px;font-weight:700">▸ AI WORKSTATION = THE BRAIN OF EVERY MODULE</div>
+                <div style="font-size:9px;color:#aacce0;letter-spacing:1px;margin-top:3px;line-height:1.4">Click a domain above → in-tab curriculum view (zones + drills + DEFENCE/OFFENSE) · workstation always one click away</div>
+              </div>
+              <button id="fw-jump-to-ws" class="fwbtn">▸ JUMP TO WS</button>
+            </div>
+          </div>
+          <div id="fw-domain-detail" style="display:none;background:#020a14;border:1px solid #ff444444;border-left:3px solid #ff4444;padding:14px 16px;margin-bottom:14px"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ticker">
+    <span class="ticker-label">◉ LIVE</span>
+    <div class="ticker-stream" id="ticker-stream"><span class="ticker-item"><span class="cat">FW</span>15 domains loaded · 2 live · 2 sim-later · 11 scaffolded</span></div>
+    <span class="replica-tag">replica · demo data</span>
+    <span class="ticker-pulse">●</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // FW_MODULES · 15 domains as Command.html defines them (tags neutralised: no personal or academic names)
+  const FW_MODULES = [
+    { id:'civilian', icon:'🛟', name:'CIVILIAN SURVIVAL',  col:'#ffaa00', tag:'START HERE · open by default · CIVILIAN difficulty', status:'live', glow:true, zones:['S1 Threat Assessment','S2 Shelter & Resources','S3 Navigation & Evasion','S4 Medical & First Aid','S5 Comms & Rescue'], drill:'SCENARIO ENGINE' },
+    { id:'modwar',   icon:'⚔', name:'MODERN WARFARE',     col:'#c84444', tag:'EXPERT · combined arms · Ukraine live case', status:'skeleton', zones:['MW1 Combined Arms','MW2 Logistics','MW3 Ukraine Live Case','MW4 Air Power & C2','MW5 Doctrine Shifts'], drill:'COMMAND POST' },
+    { id:'hybrid',   icon:'⌬', name:'HYBRID & GREY ZONE', col:'#9966cc', tag:'EXPERT + DISSERTATION · grey-zone terrain', status:'skeleton', zones:['HG1 Gerasimov Doctrine','HG2 Proxy Warfare','HG3 Economic Coercion','HG4 Lawfare','HG5 Deniability & Attribution'], drill:'ATTRIBUTION ANALYST' },
+    { id:'cyber',    icon:'⛨', name:'CYBER SECURITY',     col:'#ff4444', tag:'ENTRY MODULE · live · zones C1-C5', status:'live', zones:['C1 Threat Landscape','C2 Offense Ops','C3 Defence Ops','C4 AI in Cyber','C5 Geopolitics & Law'], drill:'NETWORK DEFENDER' },
+    { id:'infowar',  icon:'⌥', name:'INFO & COGNITIVE',   col:'#f59e0b', tag:'EXPERT · disinformation · deepfake · psyops', status:'skeleton', zones:['IW1 Disinfo Architecture','IW2 Deepfake Detection','IW3 Narrative Kill Chain','IW4 Psyops History','IW5 Cognitive Resilience'], drill:'DEEPFAKE COURT' },
+    { id:'ew',       icon:'⌇', name:'ELECTRONIC WARFARE', col:'#22d3ee', tag:'EXPERT · GPS denial · jamming · directed energy', status:'skeleton', zones:['EW1 The EM Spectrum','EW2 GPS Denial & Spoofing','EW3 Jamming & Attack','EW4 Directed Energy','EW5 EW in Ukraine'], drill:'SPECTRUM ANALYST' },
+    { id:'drone',    icon:'⌖', name:'DRONE WARFARE',      col:'#ff9500', tag:'CIVILIAN→EXPERT · BETA-SIM-LATER (phone controller)', status:'sim-later', zones:['D1 UAS Doctrine','D2 Swarm Tactics','D3 Counter-Drone','D4 Civilian Infra Targeting','D5 Legal & Ethical'], drill:'SWARM COMMANDER' },
+    { id:'pilot',    icon:'✈', name:'PILOT & AVIATION',   col:'#7c3aed', tag:'CIVILIAN→EXPERT · BETA-SIM-LATER · flight trainer', status:'sim-later', zones:['P1 Flight Fundamentals','P2 Military Aviation','P3 RAF Pathway','P4 Cockpit Systems','P5 Space Transition'], drill:'INTERCEPT' },
+    { id:'autosys',  icon:'◐', name:'AI & AUTONOMOUS',    col:'#ef4444', tag:'EXPERT + DISSERTATION · LAWS · AI targeting', status:'skeleton', zones:['AI1 LAWS & IHL','AI2 Kill-Chain Accountability','AI3 Gospel & Lavender','AI4 Human-in-Loop','AI5 AI Arms Control'], drill:'TARGETING COMMITTEE' },
+    { id:'space',    icon:'★', name:'SPACE WARFARE',      col:'#aa66ff', tag:'EXPERT + DISSERTATION · orbital security · UK Space Cmd', status:'skeleton', zones:['SP1 The Orbital Domain','SP2 ASAT Weapons','SP3 Starlink as Mil Infra','SP4 Outer Space Treaty Gaps','SP5 UK & NATO Posture'], drill:'ORBITAL CHESS' },
+    { id:'biocbrn',  icon:'🧬', name:'BIOSECURITY & CBRN', col:'#10b981', tag:'EXPERT + DISSERTATION · biosecurity track', status:'skeleton', zones:['B1 BWC','B2 Dual-Use Research','B3 Pandemic as Weapon','B4 Synthetic Biology','B5 CBRN Response'], drill:'OUTBREAK ANALYST' },
+    { id:'specops',  icon:'⚹', name:'SPEC OPS & IRREGULAR', col:'#a3a3a3', tag:'EXPERT · COIN · proxies · non-state actors', status:'skeleton', zones:['SO1 SOF Doctrine','SO2 Insurgency Theory','SO3 Counterinsurgency','SO4 Proxy Forces','SO5 Irregular Future'], drill:'COIN COMMANDER' },
+    { id:'maritime', icon:'⚓', name:'MARITIME & NAVAL',   col:'#0ea5e9', tag:'EXPERT · subsea cables · carrier doctrine · SCS', status:'skeleton', zones:['MN1 Undersea Cables','MN2 Carrier Group Doctrine','MN3 South China Sea','MN4 Mine Warfare','MN5 Naval IHL'], drill:'SEA LANES' },
+    { id:'econwar',  icon:'$', name:'ECONOMIC & FINANCIAL', col:'#84cc16', tag:'EXPERT · sanctions · supply chain · dollar weapon', status:'skeleton', zones:['EF1 Sanctions Architecture','EF2 Supply Chain as Weapon','EF3 Dollar Weaponisation','EF4 Energy as Leverage','EF5 Financial Intelligence'], drill:'TREASURY ANALYST' },
+    { id:'strategy', icon:'◈', name:'STRATEGIC STUDIES',  col:'#e879f9', tag:'DISSERTATION · capstone · strategic theory', status:'skeleton', zones:['SS1 Clausewitz to Now','SS2 Deterrence Theory','SS3 Just War Theory','SS4 AI Ethics in Conflict','SS5 The Dissertation Thread'], drill:'WAR CABINET' },
+  ];
+  // Cyber workstation zones C1-C5 (CYBER_ZONES)
+  const CYBER_ZONES = [
+    { code:'C1', label:'THE THREAT LANDSCAPE',    col:'#00d4ff', sub:'NIST CSF 2.0 · NCSC CAF · MITRE ATT&CK', teach:'threat actors · kill chain · real exposure of a small estate' },
+    { code:'C2', label:'OFFENCE / RED TEAM',      col:'#ff4444', sub:'PTES · OSSTMM · SANS PEN-200 · NCSC SCAN', teach:'recon · initial access · same-LAN attacks · ETHICAL on own systems only' },
+    { code:'C3', label:'DEFENCE / BLUE TEAM',     col:'#00ff88', sub:'NCSC 4 Pillars · NIST 800-53 · CIS v8 · OWASP', teach:'defence in depth · IR lifecycle · audit your own stack' },
+    { code:'C4', label:'AI IN CYBER',             col:'#aa66ff', sub:'NCSC Secure AI · NIST AI RMF · OWASP LLM Top 10', teach:'offensive AI · defensive AI · prompt injection · poisoning' },
+    { code:'C5', label:'GEOPOLITICS + CYBER WAR', col:'#ffcc00', sub:'Tallinn Manual · NATO CCDCOE · ENISA · APT taxonomy', teach:'cyber as a domain · Ukraine 2022 · state APT doctrine' },
+  ];
+
+  const S = { xp: 0, drills: 0, zones: new Set(), tracks: new Set() };
+  let toastT;
+  function toast(msg, col) { const t = $('toast'); t.textContent = msg; t.style.color = col; t.style.borderColor = col; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
+  function tick(cat, msg, col) {
+    const s = $('ticker-stream'); const el = document.createElement('span'); el.className = 'ticker-item';
+    el.innerHTML = `<span class="cat" style="color:${col || '#00ff88'}">${esc(cat)}</span>${esc(msg)}`;
+    s.prepend(el); while (s.children.length > 5) s.removeChild(s.lastChild);
+  }
+  function renderStats() {
+    $('acad-cyber-xp').textContent = S.xp; $('ls-xp').textContent = S.xp;
+    $('acad-cyber-zones-done').textContent = S.zones.size + ' / 75';
+    $('acad-cyber-drills-done').textContent = S.drills; $('ls-drills').textContent = S.drills;
+    $('acad-cyber-tracks').textContent = S.tracks.size;
+  }
+
+  // ── _cyberspaceSection · 15-domain grid ──
+  function renderGrid() {
+    $('fw-modules-grid').innerHTML = FW_MODULES.map(m => {
+      const badge = m.status === 'live' ? `<span class="badge" style="background:${m.col}22;color:${m.col}">● LIVE</span>`
+        : m.status === 'sim-later' ? '<span class="badge" style="background:#ffcc0022;color:#ffcc00">◐ SIM-LATER</span>'
+        : '<span class="badge" style="background:#1e3a5f22;color:#4a6888">○ SKELETON</span>';
+      const start = m.glow ? `<div style="font-size:8px;color:${m.col};letter-spacing:4px;font-weight:700;margin-top:2px;text-shadow:0 0 6px ${m.col}">▸ START HERE</div>` : '';
+      return `<button class="fw-mod-tile${m.glow ? ' fw-glow' : ''}" data-mod="${m.id}" style="--c:${m.col}" title="Click to open module · zones + drill + workstation">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px"><div class="t-name">${m.icon} ${m.name}</div>${badge}</div>
+        ${start}
+        <div class="t-tag" style="margin-top:${m.glow ? 4 : 0}px">${esc(m.tag)}${S.tracks.has(m.id) ? ' · <span style="color:#00ff88">TRACK ✓</span>' : ''}</div>
+        <div class="t-sec">ZONES · ${m.zones.length}</div>
+        ${m.zones.map((z, i) => `<div class="t-zone${S.zones.has(m.id + ':' + i) ? ' done' : ''}">· ${esc(z)}</div>`).join('')}
+        <div class="t-sec">DRILL</div><div class="t-drill">▸ ${m.drill}</div>
+      </button>`;
+    }).join('');
+  }
+  $('fw-modules-grid').addEventListener('click', (e) => {
+    const t = e.target.closest('.fw-mod-tile'); if (!t) return;
+    const mod = FW_MODULES.find(m => m.id === t.dataset.mod); if (!mod) return;
+    if (!S.tracks.has(mod.id)) { S.tracks.add(mod.id); tick('TRACK', mod.name + ' · TRACK_DECLARED', mod.col); renderStats(); }
+    renderFWDomainDetail(mod);
+  });
+
+  // ── inline narration · sibling of the drill panel ──
+  function narrate(text, col) {
+    let box = $('fw-drill-panel-narration');
+    const panel = $('fw-drill-panel');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'fw-drill-panel-narration'; box.className = 'narr'; box.style.setProperty('--c', col);
+      box.innerHTML = '<div class="h">▸ LIVE NARRATION · FW-DRILL-PANEL</div><div class="b"></div>';
+      if (panel && panel.parentNode) panel.parentNode.insertBefore(box, panel.nextSibling); else $('fw-domain-detail').appendChild(box);
+    }
+    const e = document.createElement('div'); e.className = 'e';
+    e.innerHTML = `<span class="ts">▸ ${new Date().toLocaleTimeString()}</span><br>${text}`;
+    const b = box.querySelector('.b'); b.prepend(e); while (b.children.length > 10) b.removeChild(b.lastChild);
+    box.scrollTop = 0;
+  }
+
+  // ── renderFWDomainDetail · zones (dual lens) + drill tile + workstation ──
+  function renderFWDomainDetail(mod) {
+    const $d = $('fw-domain-detail');
+    $d.style.borderColor = mod.col + '44'; $d.style.borderLeftColor = mod.col;
+    const hasToggle = !['hybrid', 'econwar', 'strategy'].includes(mod.id);
+    const pair = mod.id === 'civilian'
+      ? { a:'⚡ REACT', aCol:'#ff7700', b:'🛟 PREPARE', bCol:'#00d4ff', aLabel:'react', bLabel:'prepare' }
+      : { a:'⚔ OFFENSE', aCol:'#ff4444', b:'🛡 DEFENCE', bCol:'#00d4ff', aLabel:'offense', bLabel:'defence' };
+    const lensSuffix = (side) => mod.id === 'civilian' ? (side === 'a' ? '· REACT lens' : '· PREPARE lens') : (side === 'a' ? '· OFFENSE lens' : '· DEFENCE lens');
+    let side = 'a';
+    const badge = mod.status === 'live' ? `<span class="badge" style="padding:2px 7px;background:${mod.col}22;color:${mod.col};font-weight:700">● LIVE · drill engine playable</span>`
+      : mod.status === 'sim-later' ? '<span class="badge" style="padding:2px 7px;background:#ffcc0022;color:#ffcc00;font-weight:700">◐ SIM-LATER · phone-controller + 3D arena · own pass</span>'
+      : '<span class="badge" style="padding:2px 7px;background:#1e3a5f44;color:#aacce0">○ SKELETON · curriculum visible · workstation-driven · expanding</span>';
+    let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+        <button id="fw-back-to-grid" class="fwbtn" style="--c:${mod.col};font-size:8px;padding:6px 12px">◀ ALL DOMAINS</button>
+        <div style="flex:1;min-width:180px">
+          <div style="font-size:14px;color:${mod.col};letter-spacing:5px;font-weight:700;text-shadow:0 0 10px ${mod.col}66">${mod.icon} ${mod.name}</div>
+          <div style="font-size:8px;color:${mod.col}aa;letter-spacing:2px;margin-top:2px">${esc(mod.tag)}</div>
+        </div>${badge}</div>`;
+    if (hasToggle) html += `<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+        <button class="fw-perspective fwbtn" data-side="a" style="--c:${pair.aCol};border-width:2px;padding:8px 16px">${pair.a}</button>
+        <button class="fw-perspective fwbtn" data-side="b" style="--c:${pair.bCol};border-width:2px;padding:8px 16px">${pair.b}</button>
+        <div class="hide-sm" style="flex:1;font-size:8px;color:#aacce0aa;letter-spacing:2px;padding-left:8px;line-height:1.4">DUAL CURRICULUM · 5 zones per side · 10 total · click toggle to swap zone set · workstation seeds with active lens</div></div>`;
+    html += `<div style="font-size:8px;color:${mod.col};letter-spacing:3px;margin-bottom:8px;font-weight:700">▸ ACADEMIC · ZONES (active: <span id="fw-active-lens"></span>) · click any zone → workstation</div>
+      <div id="fw-zones-container"></div>`;
+    html += `<div style="font-size:8px;color:${mod.col};letter-spacing:3px;margin-bottom:8px;font-weight:700">▸ LIVE DRILL · gamified visual layer · workstation-narrated</div>
+      <button id="fw-drill-tile" class="zone-tile" style="--c:${mod.col};background:linear-gradient(90deg,${mod.col}14,#04080f);border-left-width:3px;padding:12px 16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:15px">🎯</span>
+          <div style="flex:1;min-width:160px"><div style="font-size:12px;color:${mod.col};letter-spacing:4px;font-weight:700">▸ ${mod.drill}</div>
+          <div style="font-size:8px;color:#aacce0aa;letter-spacing:1.5px;margin-top:3px">Click → drill scenario · live narration · score on completion · Skills+Career auto-feed</div></div>
+          <span style="font-size:8px;color:${mod.status === 'live' ? '#00ff88' : '#ffcc00'};letter-spacing:2px">${mod.status === 'live' ? '● DRILL ENGINE · PLAYABLE' : mod.status === 'sim-later' ? '◐ SIM · LATER PASS' : '◐ DRILL ENGINE · GENERIC FALLBACK'}</span></div>
+      </button>
+      <div style="background:#04080f;border:1px solid #ff444433;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px"><div style="font-size:8px;color:#ff4444;letter-spacing:3px;font-weight:700">▸ AI WORKSTATION READY</div>
+        <div style="font-size:9px;color:#aacce0;letter-spacing:1px;margin-top:3px">Pick a zone or drill above to seed a contextual session · or open workstation directly to free-roam this domain</div></div>
+        <button id="fw-detail-open-ws" class="fwbtn">▸ OPEN WORKSTATION</button></div>`;
+    $d.innerHTML = html; $d.style.display = 'block';
+    $('fw-grid-wrap').style.display = 'none';
+    const renderZones = () => {
+      const col = side === 'a' ? pair.aCol : pair.bCol, lab = side === 'a' ? pair.aLabel : pair.bLabel;
+      $('fw-active-lens').textContent = side === 'a' ? pair.a : pair.b; $('fw-active-lens').style.color = col;
+      $('fw-zones-container').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px;margin-bottom:14px">` +
+        mod.zones.map((z, i) => `<button class="zone-tile fw-zone-tile" data-i="${i}" style="--c:${col}" title="Open this zone · ${lab.toUpperCase()} lens">
+          <div style="font-size:9px;color:${col};letter-spacing:2px;font-weight:700">${esc(z)}${S.zones.has(mod.id + ':' + i) ? ' <span style="color:#00ff88">✓</span>' : ''}</div>
+          <div style="font-size:8px;color:${col}cc;letter-spacing:1.5px;margin-top:3px;font-style:italic">${lensSuffix(side)}</div>
+          <div style="font-size:7.5px;color:#1e3a5f;letter-spacing:2px;margin-top:4px">○ click → workstation seeds 6-chunk Socratic · ${lab.toUpperCase()}</div></button>`).join('') + '</div>';
+      $d.querySelectorAll('.fw-perspective').forEach(b => {
+        const on = b.dataset.side === side, c = b.dataset.side === 'a' ? pair.aCol : pair.bCol;
+        b.style.background = on ? c + '14' : 'transparent'; b.style.boxShadow = on ? '0 0 12px ' + c + '44' : 'none'; b.style.opacity = on ? '1' : '.65';
+      });
+    };
+    renderZones();
+    $d.querySelectorAll('.fw-perspective').forEach(b => b.addEventListener('click', () => { side = b.dataset.side; renderZones(); toast('▸ lens · ' + b.textContent.trim(), b.dataset.side === 'a' ? pair.aCol : pair.bCol); }));
+    $('fw-zones-container').addEventListener('click', (e) => {
+      const z = e.target.closest('.fw-zone-tile'); if (!z) return;
+      const i = +z.dataset.i, key = mod.id + ':' + i;
+      const first = !S.zones.has(key);
+      if (first) { S.zones.add(key); S.xp += 10; renderStats(); }
+      renderZones();
+      narrate(`<span style="color:${mod.col}">▸ ZONE ${esc(mod.zones[i])}</span> · ${lensSuffix(side)}<br><span class="sub">${first ? '+10 XP · zone visited' : 'already visited'} · in Command the AI workstation would now open a 6-chunk Socratic session on this topic (not included in the replica)</span>`, mod.col);
+    });
+    $('fw-back-to-grid').addEventListener('click', () => { $d.style.display = 'none'; $d.innerHTML = ''; $('fw-grid-wrap').style.display = ''; renderGrid(); $('scroller').scrollTop = 0; });
+    $('fw-drill-tile').addEventListener('click', () => launchDrill(mod));
+    $('fw-detail-open-ws').addEventListener('click', () => toast('workstation (AI tutor) is not part of the public replica', '#4a6888'));
+    toast('▸ ' + mod.name + ' · opening detail view', mod.col);
+    requestAnimationFrame(() => { $d.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+  }
+
+  // ── fwLaunchDrill · choose renderer ──
+  function launchDrill(mod) {
+    ['fw-drill-panel', 'fw-drill-panel-narration', 'fw-drill-summary'].forEach(id => $(id)?.remove());
+    const tile = $('fw-drill-tile');
+    const panel = document.createElement('div'); panel.id = 'fw-drill-panel';
+    panel.style.cssText = `background:#020a14;border:2px solid ${mod.col};border-left:4px solid ${mod.col};padding:14px 16px;margin-bottom:14px;box-shadow:0 0 18px ${mod.col}33`;
+    tile.style.display = 'none'; tile.parentNode.insertBefore(panel, tile);
+    if (mod.status === 'sim-later') {
+      panel.innerHTML = `<div style="padding:10px 4px;color:#aacce0;font-size:10px;line-height:1.6"><div style="font-size:12px;color:${mod.col};letter-spacing:4px;font-weight:700;margin-bottom:6px">◐ ${mod.drill} · SIM-LATER</div>The ${mod.name.toLowerCase()} simulator (phone controller + 3D arena) is scheduled for its own pass. It is not playable yet — in Command or here.<div style="margin-top:10px"><button class="fwbtn" id="fw-sim-close" style="--c:${mod.col}">× CLOSE</button></div></div>`;
+      $('fw-sim-close').addEventListener('click', () => { panel.remove(); tile.style.display = ''; });
+    } else if (mod.id === 'cyber') drillNetworkDefender(panel, mod);
+    else if (mod.id === 'infowar') drillDeepfakeCourt(panel, mod);
+    else drillScenarioEngine(panel, mod);
+    tick('DRILL', mod.drill + ' · started', mod.col);
+    panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  // ── DRILL 1 · NETWORK DEFENDER (nodes neutralised: generic estate) ──
+  function drillNetworkDefender($panel, mod) {
+    const nodes = [
+      { id:'edge', name:'EDGE VPS',   ip:'public edge',  x:.18, y:.30 },
+      { id:'stg',  name:'STAGING VPS', ip:'(staging)',   x:.46, y:.16 },
+      { id:'prod', name:'PROD VPS',    ip:'(prod)',      x:.76, y:.30 },
+      { id:'vault',name:'VAULT NODE',  ip:'private mesh', x:.30, y:.70 },
+      { id:'decoy',name:'DECOY HOST',  ip:'decoy ports', x:.68, y:.70 },
+    ];
+    const attackers = [
+      { id:'a1', target:'edge',  type:'BRUTE-FORCE', defence:'auth' },
+      { id:'a2', target:'prod',  type:'PROBE :8080', defence:'firewall' },
+      { id:'a3', target:'vault', type:'CVE-EXPLOIT', defence:'patch' },
+      { id:'a4', target:'decoy', type:'PORT-SCAN',   defence:'firewall' },
+    ];
+    let score = 0, activeDef = null; const done = new Set(), defended = new Set();
+    $panel.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <span style="font-size:14px">⛨</span>
+        <div style="flex:1"><div style="font-size:12px;color:${mod.col};letter-spacing:4px;font-weight:700">▸ NETWORK DEFENDER · LIVE DRILL</div>
+        <div style="font-size:8px;color:#aacce0;margin-top:2px">Pick a defence, then click a node · 4 attacks incoming · each move is narrated</div></div>
+        <div style="text-align:right"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">SCORE</div><div id="fw-nd-score" style="font-size:18px;color:#00ff88;font-weight:700">0/4</div></div></div>
+      <div id="fw-nd-stage" style="border:1px solid ${mod.col}33">
+        ${nodes.map(n => `<button class="fw-nd-node" data-nid="${n.id}" style="left:${n.x * 100}%;top:${n.y * 100}%"><div style="font-size:9px;color:${mod.col};font-weight:700;letter-spacing:1px">${n.name}</div><div style="font-size:7.5px;color:#aacce0aa;margin-top:2px">${n.ip}</div><div class="st" style="font-size:7.5px;color:#4a6888;margin-top:3px;letter-spacing:1px">○ UNDEFENDED</div></button>`).join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 6px;margin:-4px 0 10px">${attackers.map(a => `<div data-aid="${a.id}" style="font-size:8px;color:#ff4444;padding:3px 6px;background:#1a060833;border-left:2px solid #ff4444">⚔ ${a.type} → ${a.target.toUpperCase()}</div>`).join('')}</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;align-items:center">
+        <button class="fw-nd-def fwbtn" data-def="firewall" style="--c:#00d4ff;letter-spacing:2px">▸ FIREWALL</button>
+        <button class="fw-nd-def fwbtn" data-def="auth" style="--c:#aa66ff;letter-spacing:2px">▸ AUTH HARDEN</button>
+        <button class="fw-nd-def fwbtn" data-def="patch" style="--c:#00ff88;letter-spacing:2px">▸ PATCH</button>
+        <div id="fw-nd-hint" style="flex:1;min-width:140px;font-size:8px;color:#1e3a5f;letter-spacing:2px">PICK A DEFENCE → CLICK A NODE</div>
+        <button id="fw-nd-end" class="fwbtn" style="--c:#ff7700;letter-spacing:2px;font-weight:400">▸ END DRILL</button></div>`;
+    $panel.querySelectorAll('.fw-nd-def').forEach(b => b.addEventListener('click', () => {
+      activeDef = b.dataset.def;
+      $panel.querySelectorAll('.fw-nd-def').forEach(o => { o.style.boxShadow = ''; o.style.background = ''; });
+      b.style.boxShadow = '0 0 12px ' + getComputedStyle(b).color; b.style.background = 'color-mix(in srgb,' + getComputedStyle(b).color + ' 14%,transparent)';
+      $('fw-nd-hint').textContent = activeDef.toUpperCase() + ' SELECTED → CLICK A NODE'; $('fw-nd-hint').style.color = '#aacce0';
+    }));
+    $panel.querySelectorAll('.fw-nd-node').forEach(n => n.addEventListener('click', () => {
+      if (!activeDef) { toast('▸ pick a DEFENCE type first (firewall / auth / patch)', '#ffcc00'); narrate('<span style="color:#ffcc00">⚠ NO DEFENCE SELECTED</span> · pick FIREWALL, AUTH HARDEN, or PATCH first then click a node', mod.col); return; }
+      const node = nodes.find(x => x.id === n.dataset.nid);
+      if (defended.has(node.id)) { narrate(`<span style="color:#aacce0">○ ${node.name} already handled this round</span>`, mod.col); return; }
+      const attack = attackers.find(a => a.target === node.id && !done.has(a.id));
+      defended.add(node.id);
+      const st = n.querySelector('.st');
+      if (!attack) { st.textContent = '◐ ' + activeDef.toUpperCase() + ' · no incoming'; n.style.borderColor = '#aacce0'; narrate(`<span style="color:#aacce0">◐ DEFENDED EARLY</span> · ${node.name} · ${activeDef.toUpperCase()} applied · no attack on this node yet · reasonable proactive posture`, mod.col); return; }
+      done.add(attack.id);
+      const ok = attack.defence === activeDef;
+      if (ok) { score++; st.textContent = '✓ ' + activeDef.toUpperCase() + ' · BLOCKED'; st.style.color = '#00ff88'; n.style.borderColor = '#00ff88'; n.style.boxShadow = '0 0 18px #00ff88aa'; n.style.background = '#04140a'; }
+      else { st.textContent = '✗ ' + activeDef.toUpperCase() + ' · BREACH'; st.style.color = '#ff4444'; n.style.borderColor = '#ff4444'; n.style.boxShadow = '0 0 18px #ff4444aa'; n.style.background = '#140404'; }
+      const $a = $panel.querySelector(`[data-aid="${attack.id}"]`); $a.style.opacity = '.45'; $a.style.color = ok ? '#00ff88' : '#ff4444';
+      $a.textContent = (ok ? '✓ ' : '✗ ') + attack.type + ' → ' + attack.target.toUpperCase() + ' · ' + (ok ? 'blocked' : 'BREACHED');
+      $('fw-nd-score').textContent = score + '/4';
+      const why = attack.defence === 'firewall' ? 'NCSC CAF "Protect" pillar · network-layer block' : attack.defence === 'auth' ? 'NIST CSF "Identify+Protect" · access control hardening' : 'NIST CSF "Detect+Respond" · vuln management';
+      narrate((ok ? '<span style="color:#00ff88">✓ CORRECT</span>' : '<span style="color:#ff4444">✗ WRONG</span>') + ` · ${node.name} · attack=${attack.type} · correct defence=<strong>${attack.defence.toUpperCase()}</strong><br><span class="sub">` +
+        (ok ? `${activeDef.toUpperCase()} is the right defence here · ${why}` : `${activeDef.toUpperCase()} wouldn't stop this attack · ${attack.type} requires ${attack.defence.toUpperCase()} · breach logged`) + '</span>', mod.col);
+      if (done.size === attackers.length) drillComplete(mod, score, attackers.length);
+    }));
+    $('fw-nd-end').addEventListener('click', () => { drillComplete(mod, score, attackers.length); });
+  }
+
+  // ── DRILL 2 · SCENARIO ENGINE (Civilian Survival · generic fallback for scaffolded domains) ──
+  function drillScenarioEngine($panel, mod) {
+    const scenario = mod.id === 'civilian' ? {
+      title: 'CITY GRID DOWN · 3AM',
+      setup: 'Power out across 4 boroughs. Phone signal degraded. You are at home. No injuries. Your decision tree starts now.',
+      steps: [
+        { q:'Step 1 · IMMEDIATE', opts:[
+          { t:'Shelter in place · stay put', good:true, note:'FEMA recommends · most safe outcomes · power may return in hours' },
+          { t:'Drive to family across town', good:false, note:'Traffic chaos · GPS may fail · fuel scarcity · risk vs benefit poor' },
+          { t:'Investigate outside · check neighbours', good:'partial', note:'Reasonable but only AFTER first 30min assessment of immediate area' } ] },
+        { q:'Step 2 · COMMS', opts:[
+          { t:'Battery FM radio · BBC + local emergency', good:true, note:'Correct · official broadcasts · low power · ham radio next tier' },
+          { t:'Keep refreshing phone · social media', good:false, note:'Battery drain · info pollution · high deepfake/disinfo risk in crisis' },
+          { t:'Wait for someone to update you', good:false, note:'Passive · violates situational awareness doctrine (Cooper Code)' } ] },
+        { q:'Step 3 · 24-HOUR HORIZON', opts:[
+          { t:'Inventory water + food · ration', good:true, note:'Correct · 1 gal water/person/day baseline · check medications' },
+          { t:'Check on elderly neighbour', good:'partial', note:'Right call but AFTER your own household secured · oxygen mask rule' },
+          { t:'Charge devices from car battery', good:'partial', note:'OK only if safe · ventilation matters · avoid running engine indoors' } ] },
+      ] } : {
+      title: mod.name + ' · DECISION SCENARIO',
+      setup: 'Scaffolded domain · generic decision pattern until its own drill ships. 3 decision points · pick reasoning > outcome.',
+      steps: [1, 2, 3].map(n => ({ q:'Step ' + n, opts:[ { t:'Option A', good:true, note:'doctrinal fit · workstation narrates' }, { t:'Option B', good:false, note:'wrong call · workstation narrates why' }, { t:'Option C', good:'partial', note:'partial credit · workstation narrates trade-off' } ] })),
+    };
+    let stepIdx = 0, score = 0;
+    const render = () => {
+      const step = scenario.steps[stepIdx];
+      $panel.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span style="font-size:14px">🎯</span>
+          <div style="flex:1"><div style="font-size:12px;color:${mod.col};letter-spacing:4px;font-weight:700">▸ SCENARIO ENGINE · ${esc(scenario.title)}</div><div style="font-size:8.5px;color:#aacce0;margin-top:2px;line-height:1.5">${esc(scenario.setup)}</div></div>
+          <div style="text-align:right"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">STEP</div><div style="font-size:15px;color:${mod.col};font-weight:700">${stepIdx + 1}/${scenario.steps.length}</div></div></div>
+        <div style="font-size:10px;color:${mod.col};letter-spacing:3px;font-weight:700;margin-bottom:8px">${step.q}</div>
+        <div style="display:grid;gap:6px;margin-bottom:10px">${step.opts.map((o, i) => `<button class="opt" data-oi="${i}" style="--c:${mod.col}">${esc(o.t)}</button>`).join('')}</div>
+        <div style="font-size:8px;color:#1e3a5f;letter-spacing:2px">PICK ONE → narrated against doctrine + reasoning scored</div>`;
+      $panel.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+        const pick = step.opts[+b.dataset.oi];
+        const pts = pick.good === true ? 1 : pick.good === 'partial' ? 0.5 : 0;
+        score += pts;
+        const lab = pts === 1 ? '<span style="color:#00ff88">✓ CORRECT</span>' : pts === 0.5 ? '<span style="color:#ffcc00">◐ PARTIAL</span>' : '<span style="color:#ff4444">✗ RECONSIDER</span>';
+        narrate(`${lab} · ${step.q} · pick: <strong>${esc(pick.t)}</strong><br><span class="sub">${esc(pick.note)}</span>`, mod.col);
+        toast('▸ ' + (pts === 1 ? 'good call' : pts === 0.5 ? 'partial' : 'reconsider'), mod.col);
+        stepIdx++;
+        if (stepIdx >= scenario.steps.length) {
+          $panel.innerHTML = `<div style="padding:18px;text-align:center"><div style="font-size:14px;color:${mod.col};letter-spacing:5px;font-weight:700;margin-bottom:8px">▸ DRILL COMPLETE</div><div style="font-size:11px;color:#aacce0;margin-bottom:14px">Score: ${score}/${scenario.steps.length}</div><button id="fw-se-restart" class="fwbtn" style="--c:${mod.col}">▸ RESTART</button></div>`;
+          $('fw-se-restart').addEventListener('click', () => { stepIdx = 0; score = 0; $('fw-drill-summary')?.remove(); render(); });
+          drillComplete(mod, score, scenario.steps.length);
+        } else render();
+      }));
+    };
+    render();
+  }
+
+  // ── DRILL 3 · DEEPFAKE COURT ──
+  function drillDeepfakeCourt($panel, mod) {
+    const clips = [
+      { id:1, kind:'VIDEO', label:'POLITICAL FIGURE · public address (45s clip)', truth:'fake', tells:['lip-sync drift','blink rate too low','jawline shimmer'] },
+      { id:2, kind:'AUDIO', label:'CEO · earnings call leaked recording',         truth:'real', tells:['consistent breath cadence','natural disfluencies','room tone'] },
+      { id:3, kind:'IMAGE', label:'WAR ZONE · alleged civilian casualty photo',   truth:'fake', tells:['EXIF metadata mismatch','shadow direction inconsistent','face symmetry too perfect'] },
+      { id:4, kind:'VIDEO', label:'POLICE BODYCAM · footage from incident',       truth:'real', tells:['camera shake authentic','audio sync perfect','timestamp burn-in'] },
+    ];
+    let idx = 0, score = 0;
+    const render = () => {
+      const c = clips[idx];
+      $panel.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span style="font-size:14px">⚖</span>
+          <div style="flex:1"><div style="font-size:12px;color:${mod.col};letter-spacing:4px;font-weight:700">▸ DEEPFAKE COURT · CLIP ${c.id}/4</div><div style="font-size:8.5px;color:#aacce0;margin-top:2px">Judge each clip · pick REAL or SYNTHETIC · reason matters more than outcome</div></div>
+          <div style="text-align:right"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">SCORE</div><div style="font-size:15px;color:${mod.col};font-weight:700">${score}/${clips.length}</div></div></div>
+        <div style="padding:14px;background:#020a14;border:1px solid ${mod.col}33;margin-bottom:10px">
+          <div style="font-size:8px;color:#1e3a5f;letter-spacing:3px">${c.kind} · MEDIA SAMPLE</div>
+          <div style="font-size:12px;color:#fff;margin-top:4px">${c.label}</div>
+          <div style="margin-top:10px;padding:10px;background:#04080f;font-size:9px;color:#aacce0aa;font-style:italic;border-left:2px solid ${mod.col}">[media playback stub · in beta this would show actual video/audio/image · workstation gets the metadata]</div></div>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <button class="fw-df-judge fwbtn" data-v="real" style="--c:#00ff88;flex:1;padding:11px;border-width:2px;background:#00ff8814">✓ REAL</button>
+          <button class="fw-df-judge fwbtn" data-v="fake" style="--c:#ff4444;flex:1;padding:11px;border-width:2px;background:#ff444414">⚠ SYNTHETIC</button></div>`;
+      $panel.querySelectorAll('.fw-df-judge').forEach(b => b.addEventListener('click', () => {
+        const ok = b.dataset.v === c.truth; if (ok) score++;
+        narrate((ok ? '<span style="color:#00ff88">✓ CORRECT</span>' : '<span style="color:#ff4444">✗ WRONG</span>') + ` · clip ${c.id} (${c.kind}) · truth=<strong>${c.truth.toUpperCase()}</strong><br><span class="sub">forensic tells: ${c.tells.join(' · ')}</span>`, mod.col);
+        toast('▸ clip ' + c.id + ' · ' + (ok ? 'correct' : 'wrong'), mod.col);
+        idx++;
+        if (idx >= clips.length) {
+          $panel.innerHTML = `<div style="padding:18px;text-align:center"><div style="font-size:14px;color:${mod.col};letter-spacing:5px;font-weight:700;margin-bottom:8px">▸ COURT ADJOURNED</div><div style="font-size:11px;color:#aacce0">Final: ${score}/${clips.length}</div></div>`;
+          drillComplete(mod, score, clips.length);
+        } else render();
+      }));
+    };
+    render();
+  }
+
+  // ── DRILL COMPLETE · session summary card ──
+  function drillComplete(mod, score, total) {
+    const xp = Math.round((score / total) * 50);
+    S.xp += xp; S.drills++; renderStats();
+    tick('DRILL_COMPLETE', `${mod.drill} · ${score}/${total} · +${xp} XP`, mod.col);
+    toast('▸ ' + mod.drill + ' complete · ' + score + '/' + total, mod.col);
+    const panel = $('fw-drill-panel'); if (!panel) return;
+    $('fw-drill-summary')?.remove();
+    const pct = Math.round((score / total) * 100);
+    const grade = pct >= 90 ? 'A · expert' : pct >= 75 ? 'B · solid' : pct >= 50 ? 'C · developing' : 'D · review';
+    const gc = pct >= 90 ? '#00ff88' : pct >= 75 ? '#aacce0' : pct >= 50 ? '#ffcc00' : '#ff7700';
+    const s = document.createElement('div'); s.id = 'fw-drill-summary';
+    s.style.cssText = `margin:0 0 14px;padding:14px 16px;background:linear-gradient(135deg,${mod.col}22,#020a14);border:2px solid ${mod.col};box-shadow:0 0 24px ${mod.col}66`;
+    s.innerHTML = `<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+        <span style="font-size:18px">▣</span>
+        <div style="flex:1"><div style="font-size:13px;color:${mod.col};letter-spacing:4px;font-weight:700;text-shadow:0 0 10px ${mod.col}">▸ SESSION COMPLETE · ${mod.drill}</div><div style="font-size:8px;color:#aacce0;letter-spacing:2px;margin-top:3px">drill ended · skills+career logged (demo) · workstation breakdown ready</div></div>
+        <div style="text-align:right"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">SCORE</div><div style="font-size:24px;color:${gc};font-weight:700;text-shadow:0 0 10px ${gc}">${score}/${total}</div><div style="font-size:8px;color:${gc};letter-spacing:2px">${grade}</div></div></div>
+      <div class="sum-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0">
+        <div style="padding:8px 10px;background:#04080f;border-left:2px solid ${mod.col}"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">PCT</div><div style="font-size:15px;color:${mod.col};font-weight:700">${pct}%</div></div>
+        <div style="padding:8px 10px;background:#04080f;border-left:2px solid ${mod.col}"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">XP EARNED</div><div style="font-size:15px;color:#00ff88;font-weight:700">+${xp}</div></div>
+        <div style="padding:8px 10px;background:#04080f;border-left:2px solid ${mod.col}"><div style="font-size:7px;color:#1e3a5f;letter-spacing:2px">CAREER</div><div style="font-size:10px;color:${mod.col};font-weight:700;margin-top:3px">DRILL_COMPLETE logged</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button id="fw-summary-replay" class="fwbtn" style="--c:${mod.col};flex:1">▸ REPLAY</button>
+        <button id="fw-summary-close" class="fwbtn" style="--c:#aacce0">× CLOSE</button></div>`;
+    panel.parentNode.insertBefore(s, panel.nextSibling);
+    $('fw-summary-replay').addEventListener('click', () => launchDrill(mod));
+    $('fw-summary-close').addEventListener('click', () => { s.remove(); panel.remove(); $('fw-drill-panel-narration')?.remove(); const t = $('fw-drill-tile'); if (t) t.style.display = ''; });
+  }
+
+  // ── Cyber workstation · zones C1-C5 ──
+  function openCyberWs() {
+    const mod = FW_MODULES.find(m => m.id === 'cyber');
+    renderFWDomainDetail(mod);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:#04080f;border:1px solid #ff444444;border-top:2px solid #ff4444;padding:12px 14px;margin-bottom:14px';
+    wrap.innerHTML = `<div style="font-size:9px;color:#ff4444;letter-spacing:3px;font-weight:700;margin-bottom:8px">▸ CYBER SECURITY WORKSTATION · ZONES C1–C5</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px">${CYBER_ZONES.map(z => `<div style="background:#020a14;border:1px solid ${z.col}33;border-left:3px solid ${z.col};padding:9px 11px">
+        <div style="font-size:9px;color:${z.col};letter-spacing:2px;font-weight:700">${z.code} · ${z.label}</div>
+        <div style="font-size:8px;color:#4a6888;letter-spacing:1px;margin-top:3px">${esc(z.sub)}</div>
+        <div style="font-size:8.5px;color:#aacce0;margin-top:4px;line-height:1.45">${esc(z.teach)}</div></div>`).join('')}</div>
+      <div style="font-size:8px;color:#1e3a5f;letter-spacing:2px;margin-top:8px">framework references per zone · the AI tutor that runs each zone is not part of the replica</div>`;
+    const d = $('fw-domain-detail'); d.insertBefore(wrap, d.children[1]);
+  }
+  $('acad-cyber-open-ws').addEventListener('click', openCyberWs);
+  $('fw-jump-to-ws').addEventListener('click', openCyberWs);
+
+  $('work-tabs').addEventListener('click', (e) => { const b = e.target.closest('.work-tab'); if (b && b.getAttribute('aria-disabled') === 'true') toast('this tab is not part of the Future Warfare replica', '#4a6888'); });
+  const clock = () => { $('clock').textContent = new Date().toTimeString().slice(0, 8); };
+  setInterval(clock, 1000); clock();
+  renderGrid(); renderStats();
+})();
+</script>
+</body>
+</html>
