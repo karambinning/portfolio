@@ -763,7 +763,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
   /* every channel is one full-screen page; a tall one scrolls inside, and only a swipe at its end changes channel */
   .scene:not(#timeline){padding:var(--top) 16px var(--bot);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-  .scene.chan{padding:var(--top) 0 var(--tabh)}
+  .scene.chan:not(#timeline){padding:var(--top) 0 var(--tabh)}
   .scene.chan .chan-app{height:100%}
   .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;font-size:14px;transition:background .12s,color .12s,transform .1s}
   .btn:active{transform:scale(.97);background:color-mix(in srgb,var(--phos) 22%,transparent)}
