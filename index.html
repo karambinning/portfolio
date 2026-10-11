@@ -1312,10 +1312,20 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   /* ---------- the hostile takeover into the dissertation (all fictional, a piece of theatre) ---------- */
   // send a deconstruct / reconstruct to a channel: embedded pages handle it themselves, others use our own text decay/decode
   function chanText(scene, mode, ms, color){
+    // resolves the moment the page has finished (embedded pages report back; a safety timeout covers a silent one)
     const fr = scene.querySelector('.chan-app');
-    if (fr && fr.contentWindow){ fr.contentWindow.postMessage(mode === 'out' ? { kbDecon: ms, color } : { kbRecon: ms, color }, '*'); return; }
-    if (window.KBDismantle) KBDismantle.run(scene, mode, ms, color);
+    if (fr && fr.contentWindow){
+      return new Promise(res => {
+        const on = e => { if (e.source === fr.contentWindow && e.data && e.data.kbDismantled === mode){ off(); res(); } };
+        const off = () => { removeEventListener('message', on); clearTimeout(tm); };
+        const tm = setTimeout(() => { off(); res(); }, ms + 900);
+        addEventListener('message', on);
+        fr.contentWindow.postMessage(mode === 'out' ? { kbDecon: ms, color } : { kbRecon: ms, color }, '*');
+      });
+    }
+    return window.KBDismantle ? KBDismantle.run(scene, mode, ms, color) : Promise.resolve();
   }
+
 
   // a staged red-team exercise: alert windows flood the screen, it turns from blue to red, then the dissertation broadcasts
   const ATK_MSG = ['RED TEAM ACTIVE', 'CHANNEL 08 BREACHED', 'DISPLAY CONTROL LOST', 'SIGNAL SEIZED', 'DEFENCES OFFLINE', 'ROUTING TO WAR.SYS', 'BLUE TEAM NOT RESPONDING', 'ALL CHANNELS RED'];
@@ -1556,15 +1566,14 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         await attackOut();
       }
       await atkSettle(col);                                         // the attack / defence clears completely: nothing covers what follows
-      chanText(a, 'out', 2600, col);                             // every element, timed to the scan line: exactly 2.6 s
-      await new Promise(r => setTimeout(r, 2650));
+      await chanText(a, 'out', 2600, col);                       // every element, timed to the scan line; the swap lands the moment it is gone
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
       const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
       b.style.visibility = 'hidden'; b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      chanText(b, 'in', 2800, col);                             // it starts blank, so show it only once the rebuild has begun
+      const built = chanText(b, 'in', 2800, col);                             // it starts blank, so show it only once the rebuild has begun
       setTimeout(() => { b.style.visibility = ''; }, 60);
-      await new Promise(r => setTimeout(r, 1200));
+      await built;
       busy = false; lockUntil = performance.now() + 300; return;
     }
     if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && b.dataset.warp === undefined && b.dataset.attack === undefined)){ // hologram projection: close to a line, then project open between two scan lines

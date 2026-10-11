@@ -48,11 +48,12 @@
     return t.map(x => Math.min(W, x));
   }
 
-  function beam(color, mode, ms){
+  function beam(color, mode, ms, from){
     const b = document.createElement('div'); b.dataset.kbBeam = '';
     b.style.cssText = `position:fixed;left:0;right:0;height:2px;z-index:2147483646;pointer-events:none;background:#fff;box-shadow:0 0 18px 5px ${color},0 0 60px 10px ${color};top:${mode === 'in' ? 0 : 100}%;opacity:.95`;
     document.body.appendChild(b);
-    b.animate([{ top: mode === 'in' ? '0%' : '100%' }, { top: mode === 'in' ? '100%' : '0%' }], { duration: ms, easing: 'linear', fill: 'forwards' })
+    const f = (from || 0) * 100;
+    b.animate([{ top: mode === 'in' ? f + '%' : (100 - f) + '%' }, { top: mode === 'in' ? '100%' : '0%' }], { duration: ms, easing: 'linear', fill: 'forwards' })
       .finished.then(() => b.animate([{ opacity: .95 }, { opacity: 0 }], { duration: 200, fill: 'forwards' }).finished).then(() => b.remove());
   }
 
@@ -62,7 +63,7 @@
     const st = { anims: [], texts: [], job: Math.random() }; state.set(root, st);
     const { els, texts, vh } = collect(root);
     const D = Math.max(260, Math.min(520, ms * .2)), W = Math.max(300, ms - D);
-    const T = schedule(els, vh, mode, W);
+    const T0s = schedule(els, vh, mode, W), m0 = T0s.length ? Math.min(...T0s) : 0, T = T0s.map(x => x - m0), Wr = W - m0;   // start at the content, not at the empty edge
     const wire = `1px solid ${color}`, clear = '1px solid transparent';
     els.forEach((e, i) => {
       const dx = (Math.random() * 2 - 1) * 9, tf = !e.inline;
@@ -88,9 +89,9 @@
     // the text: decays as its element is torn down, types back in once its element has formed
     texts.forEach(x => { x.t = T[x.owner] || 0; x.L = x.o.length; if (mode === 'in') x.n.nodeValue = ''; });
     st.texts = texts;
-    beam(color, mode, W);
+    beam(color, mode, Wr, m0 / W);
     const t0 = performance.now(), job = st.job;
-    const end = mode === 'out' ? W + D : W + D * .35 + 540;
+    const end = mode === 'out' ? Wr + D : Wr + D * .35 + 540;
     return new Promise(res => {
       (function f(now){
         if (state.get(root) !== st || st.job !== job) return res();

@@ -57,8 +57,9 @@
     const src = (document.currentScript && document.currentScript.src) || '';
     const sc = document.createElement('script'); sc.src = src.replace(/frame\.js(\?.*)?$/, 'dismantle.js$1'); document.head.appendChild(sc);
     addEventListener('message', e => { const m = e.data || {}, D = window.KBDismantle; if (!D) return;
-      if (m.kbDecon) D.run(document.body, 'out', m.kbDecon, m.color);
-      else if (m.kbRecon) D.run(document.body, 'in', m.kbRecon, m.color);
+      const done = mode => () => parent.postMessage({ kbDismantled: mode }, '*');   // tell the portfolio the moment it is finished
+      if (m.kbDecon) D.run(document.body, 'out', m.kbDecon, m.color).then(done('out'));
+      else if (m.kbRecon) D.run(document.body, 'in', m.kbRecon, m.color).then(done('in'));
       else if (m.kbRestore) D.restore(document.body); });
   })();
 
