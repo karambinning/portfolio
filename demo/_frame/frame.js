@@ -59,7 +59,11 @@
     addEventListener('message', e => { const m = e.data || {}, D = window.KBDismantle; if (!D) return;
       const done = mode => () => parent.postMessage({ kbDismantled: mode }, '*');   // tell the portfolio the moment it is finished
       if (m.kbDecon) D.run(document.body, 'out', m.kbDecon, m.color).then(done('out'));
-      else if (m.kbRecon) D.run(document.body, 'in', m.kbRecon, m.color).then(done('in'));
+      else if (m.kbRecon){
+        // the page has only just been shown: keep it hidden while its layout settles at the real size, then measure
+        const h = document.documentElement; h.style.visibility = 'hidden'; dispatchEvent(new Event('resize'));
+        requestAnimationFrame(() => requestAnimationFrame(() => { const r = D.run(document.body, 'in', m.kbRecon, m.color); h.style.visibility = ''; r.then(done('in')); }));
+      }
       else if (m.kbRestore) D.restore(document.body); });
   })();
 
