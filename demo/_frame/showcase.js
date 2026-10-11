@@ -19,8 +19,10 @@
 .kbs .c b{color:var(--k);font-size:1.25em}
 .kbs .m{height:.35em;background:rgba(255,255,255,.07);margin-top:.3em}.kbs .m i{display:block;height:100%;background:var(--k);transition:width .5s steps(5)}
 .kbs .log{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
-.kbs .log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kbs .log div{flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kbs .log time{color:var(--k);margin-right:.6em}
+@container (max-height:230px){.kbs .g + .g{display:none}}
+@container (max-height:150px){.kbs .g{display:none}}
 .kbs .k{color:var(--k)} .kbs .ok{color:#00ff88} .kbs .no{color:#ff3355} .kbs .y{color:#ffcc00} .kbs .d{color:#5d7486}
 .kbs .cur{color:var(--k);animation:kbsB 1s steps(1) infinite}
 .kbs .stamp{display:inline-block;animation:kbsS .22s steps(3) both}
@@ -101,7 +103,7 @@
   };
 
   function mount(host, kind){
-    const el = document.createElement('div'); el.className = 'kbs'; el.setAttribute('aria-hidden', 'true'); host.appendChild(el);
+    host.style.containerType = 'size'; const el = document.createElement('div'); el.className = 'kbs'; el.setAttribute('aria-hidden', 'true'); host.appendChild(el);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let iv = null; const every = (f, ms) => { f(); f(); f(); if (!reduce) iv = setInterval(() => el.isConnected ? f() : clearInterval(iv), ms); };
     KINDS[kind](el, every);

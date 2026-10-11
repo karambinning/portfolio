@@ -708,7 +708,7 @@ function fitProfile(){
   const fullW = scr.parentElement.getBoundingClientRect().width;            // visual px
   const ideal = isShow ? fullW / 1.7 : isLog ? Math.min(fullW / 1.6, scr.firstElementChild.getBoundingClientRect().height + 14 * k) : fullW * SCR_H / SCR_W;
   const r = room(), hVis = Math.max(SCR_MIN * k, Math.min(ideal, r)), wVis = isLog ? fullW : Math.min(fullW, hVis * SCR_W / SCR_H);
-  scr.style.height = (hVis / k) + 'px'; scr.style.width = (wVis / k) + 'px';
+  scr.style.height = (hVis / k) + 'px'; scr.style.width = isShow ? '100%' : (wVis / k) + 'px';
   scr.style.setProperty('--s', ((wVis / k) / SCR_W).toFixed(4));
 }
 new ResizeObserver(() => fitProfile()).observe(profile);
