@@ -806,7 +806,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
-<script src="demo/_frame/dismantle.js?v=10111850"></script>
+<script src="demo/_frame/dismantle.js?v=10112130"></script>
 </head>
 <body>
 
@@ -882,12 +882,10 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
       <div class="tl-step" data-i="1" data-term="apr">
     <div>
       <div class="date">Apr 2026</div>
-      <h3>A security scare, turned into a curriculum</h3>
-      <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
+      <h3>Teaching myself cybersecurity</h3>
+      <p class="copy">Running my own machines showed me how much there was to learn about defending them, so I wrote a structured cybersecurity curriculum, built it into my dashboard and practised it against my own machines. The same month I submitted my research design, built around KAM.</p>
     </div>
     <ul class="pts">
-      <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
-      <li>Learned to read the logs properly; the evidence showed a false alarm</li>
       <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
       <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
       <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
@@ -1146,7 +1144,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   const TERM = {
     signal:'> signal acquired · karam binning · final year, loughborough',
     mar:'> 2026-03-09 · first commit · kam baseline',
-    apr:'> false alarm · curriculum written · drills logged',
+    apr:'> curriculum written · drills logged',
     jun:'> semi-autonomous fleet · reviewer checks every task',
     now:'> estate online · vault mounted · final year',
     timeline:'> march to now · scroll to move along it',
@@ -1364,7 +1362,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
          apps:[['command','Command'],['vault','The vault']] },
     m3:{ kind:'MacBook Pro · daily machine', name:'M3', text:'Where I work. Runs the work app: job triage across tracks, a pipeline from found to offer, and an outreach drafter.',
          apps:[['work','Work app']] },
-    imac:{ kind:'iMac · collector', name:'iMac', text:'Runs the collector database the rest of the fleet queries for intelligence, and the morning system. After the April incident it served as the forensic honeypot; that evidence is checksummed into the vault. No app of its own.',
+    imac:{ kind:'iMac · collector', name:'iMac', text:'Runs the collector database the rest of the fleet queries for intelligence, and the morning system. It also keeps an off-site copy of the vault. No app of its own.',
          apps:[] },
     yerson:{ kind:'MacBook · intelligence engine', name:'YerSon', text:'The intelligence engine: collection cycles across open-source intelligence, news, geopolitics, academia, markets, law and jobs, classified by a local model and filed into the vault. It has its own Telegram agent.',
          apps:[['intel','Intel engine']] },
@@ -1657,15 +1655,16 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
 
 
-  /* ---------- hack to top: a quick fake intrusion in green, then straight back to channel 1 ---------- */
+  /* ---------- hack to top: a quick green terminal sequence, then straight back to channel 1 ---------- */
   // points visitors at the message terminal: it lights up and the cursor lands in the first field
   $('#hackInbox').addEventListener('click', () => {
     const t = $('#tx'); t.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
     t.classList.remove('ping'); void t.offsetWidth; t.classList.add('ping'); setTimeout(() => t.email.focus({ preventScroll: true }), 250);
   });
   $('#hackTop').addEventListener('click', () => {
-    SFX.hack();
     if (busy) return;
+    SFX.hack();
+    busy = true;   // a key, wheel or second click during the sequence would otherwise start a second change on top of it
     const box = $('#sshTerm'), out = box.querySelector('.ssh-body');
     out.innerHTML = ''; box.className = 'sshw green'; box.hidden = false;
     const lines = [['$ ', 'sudo ./hack --to-top', 'cmd'], ['', 'bypassing firewall … [██████████] 100%', 'dim'], ['', 'decrypting channel 01 … done', 'dim'], ['', 'ACCESS GRANTED', 'ok']];
@@ -1675,7 +1674,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
           const a = scenes[cur], b = scenes[0]; a.classList.remove('active'); restore(a);
           b.scrollTop = 0; b.classList.add('active'); cur = 0; update();
           box.classList.add('fade');
-          setTimeout(() => { box.hidden = true; box.className = 'sshw'; }, reduce ? 0 : 260);
+          setTimeout(() => { box.hidden = true; box.className = 'sshw'; busy = false; lockUntil = performance.now() + 250; }, reduce ? 0 : 260);
         }, reduce ? 0 : 340); }, reduce ? 0 : 200); return; }
       const [pr, txt, cls] = lines[i++], d = document.createElement('div');
       d.className = 'ssh-l ' + cls; d.innerHTML = `<span class="sp-pr">${pr}</span><span class="sp-tx"></span>`; out.appendChild(d);
@@ -1761,8 +1760,11 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (s.id === 'contact' && window.txBoot) setTimeout(window.txBoot, 500);   // the ssh login into the inbox
     scenes.forEach(x => x.classList.contains('chan') && chanRun(x));   // only the channel on screen runs
     const fr = s.querySelector('.chan-app'); if (fr && fr.contentWindow) fr.contentWindow.postMessage({ kbReset: 1 }, '*');
-    s.scrollTop = 0; s.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0 && !el.closest('.tl-step')) el.scrollTop = 0; });   // every channel starts at the top
+    s.scrollTop = 0; SCROLLED.forEach(el => { if (s.contains(el) && el.scrollTop > 0 && !el.closest('.tl-step')){ el.scrollTop = 0; SCROLLED.delete(el); } });   // every channel starts at the top
   }
+  // the elements that have scrolled (every scroll fires a scroll event): update() resets only these, never walks the page
+  const SCROLLED = new Set();
+  document.addEventListener('scroll', e => { if (e.target && e.target.nodeType === 1) SCROLLED.add(e.target); }, { capture: true, passive: true });
   /* ---------- the timeline as one continuous scroll: position p runs 0 → steps-1 along the rail ---------- */
   const TL = { p: 0, max: 3, over: 0, raf: 0, tween: null };
   const TL_G = 'ABCDEFGHKMNPRSTVWXYZ0123456789#/<>';
@@ -1962,12 +1964,12 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     const tick = () => { if (job !== termJob) return; term.textContent = text.slice(0, ++i); if (i % 2) SFX.tick(); if (i < text.length) setTimeout(tick, 18 + Math.random() * 40); };
     tick();
   }
-  if (!reduce) setInterval(() => { if (!busy && !dv.open) typeTerm(IDLE[Math.random() * IDLE.length | 0]); }, 7000);
+  if (!reduce) setInterval(() => { if (!busy && !dv.open && !document.hidden) typeTerm(IDLE[Math.random() * IDLE.length | 0]); }, 7000);
 
   /* ---------- ambient twitch: something on screen glitches every few seconds ---------- */
   if (!reduce) (function twitchLoop(){
     setTimeout(() => {
-      if (!busy && !dv.open){
+      if (!busy && !dv.open && !document.hidden){
         const pool = scenes[cur].querySelectorAll('.name span, .date, h2, h3, .num strong, .mail');
         const el = pool[Math.random() * pool.length | 0];
         if (el){ el.classList.add('twitch'); setTimeout(() => el.classList.remove('twitch'), 220); if (Math.random() < .5) burst(160); }
@@ -1978,7 +1980,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 
   /* ---------- timecode runs in real time, like a live feed ---------- */
   const tc = $('#tc'), t0 = performance.now(), pad = v => String(v | 0).padStart(2, '0');
-  setInterval(() => { const s = (performance.now() - t0) / 1000; tc.textContent = `${pad(s/3600)}:${pad(s/60%60)}:${pad(s%60)}:${pad(s*25%25)}`; }, 40);
+  setInterval(() => { if (document.hidden) return; const s = (performance.now() - t0) / 1000; tc.textContent = `${pad(s/3600)}:${pad(s/60%60)}:${pad(s%60)}:${pad(s*25%25)}`; }, 40);
 
   /* ---------- big screens: scale the composition to fill them ---------- */
   const Z = () => +getComputedStyle(document.documentElement).getPropertyValue('--z') || 1;

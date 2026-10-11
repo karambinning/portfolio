@@ -6,3 +6,10 @@ index.new.html
 demo/kam/
 .index.new.html.retired
 tools/
+
+# never publish test screenshots or scratch output from the repo root
+/*.png
+/*.jpg
+/mob/
+/fit-*
+/tl-*

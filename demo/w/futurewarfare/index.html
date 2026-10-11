@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Future Warfare — terminal</title>
-<link rel="stylesheet" href="../../_frame/frame.css?v=10111850">
+<link rel="stylesheet" href="../../_frame/frame.css?v=10112130">
 <style>
   body{transition:none}
   body[data-mode="blue"] .term{transition:background .4s}
@@ -203,8 +203,7 @@
           <div class="pane" id="p-origin">
             <div class="t-label">Where it came from</div>
             <ol class="tl">
-              <li><span class="k">APRIL 2026</span>A <b>suspected security incident</b> on my own machines. It turned out to be a <b>false alarm</b>.</li>
-              <li><span class="k">THE LESSON</span>Checking it properly showed me how little I knew about defending my own setup.</li>
+              <li><span class="k">APRIL 2026</span>Running my own machines showed me how much there was to learn about <b>defending them properly</b>.</li>
               <li><span class="k">THE RESPONSE</span>I wrote a <b>cybersecurity curriculum</b> and practised it against my own machines.</li>
               <li class="now"><span class="k">NOW</span>That grew into <b>Future Warfare</b>: a curriculum on modern conflict for civilians and students, taught through drills: a learning game in my Command dashboard’s academy.</li>
             </ol>
@@ -226,7 +225,7 @@
             <ul class="t-list">
               <li><b>D101 · Audit my own infrastructure</b> (NIST CSF Identify): every machine and server mapped. Found that a dormant server is more dangerous than one switched off, that stored keys plus shell history can be harvested in about a minute, and that one reused password opens several doors.</li>
               <li><b>D102 · Fleet check</b> (Identify and Detect): found the gap between design and reality: my private network had never been installed on the remote servers.</li>
-              <li><b>D103 · Intrusion log zero</b> (Detect): worked through spoofing and “living off the land” evasion, then designed a small security-operations setup and defence in depth.</li>
+              <li><b>D103 · Detection baseline</b> (Detect): worked through spoofing and “living off the land” evasion, then designed a small security-operations setup and defence in depth.</li>
               <li><b>Frameworks used:</b> NIST CSF 2.0, MITRE ATT&amp;CK (six tactics, from reconnaissance to defence evasion), MITRE D3FEND and the NCSC Cyber Assessment Framework.</li>
               <li><b>Outcome:</b> five real risks rated amber on my own setup, each with an action: credentials on servers, the missing private network, password logins to replace with keys, no intrusion detection, and an overdue server. That work led to Sentinel.</li>
             </ul>
@@ -263,7 +262,7 @@
   </div>
   <nav data-hub></nav>
 </div>
-<script src="../../_frame/frame.js?v=10111850"></script>
+<script src="../../_frame/frame.js?v=10112130"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
