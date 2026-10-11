@@ -1360,7 +1360,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
           const w = atkWin(layer, i); w.classList.add('blue');
           w.querySelector('.atkw-bar span').textContent = '~/blue-team/0' + ((i % 9) + 1);
           w.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> ' + DEF_MSG[i % DEF_MSG.length] + '<b>_</b>';
-          const r = reds[i]; if (r){ r.classList.add('quar'); r.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> quarantined ✓'; setTimeout(() => r.classList.add('close'), 140); }
+          const r = reds[i]; if (r){ r.classList.add('quar'); r.querySelector('.atkw-b').innerHTML = '<span class="pr">&gt;</span> quarantined ✓'; setTimeout(() => window.KBDismantle ? KBDismantle.run(r, 'out', 420, 'rgba(0,212,255,.9)').then(() => r.remove()) : r.classList.add('close'), 140); }
           i++; tint.style.background = `rgb(${Math.round(90 - 90 * i / total)},${Math.round(16 + 60 * i / total)},${Math.round(16 + 90 * i / total)})`;
           return setTimeout(spawn, Math.max(30, 100 - i * 5));
         }
@@ -1369,12 +1369,17 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     });
   }
   // after the attack or defence: the windows fold away and the light drops, so the page underneath can be seen coming apart
-  function atkSettle(){
+  function atkSettle(col){
+    // the windows themselves are taken apart detail by detail (bars, dots, labels, text, frames), and the tint drains away
     const layer = $('#atkLayer'), tint = $('#atkTint');
-    layer.querySelectorAll('.atkw').forEach((w, k) => setTimeout(() => w.classList.add('close'), k * 14));
-    tint.classList.remove('full', 'strobe'); tint.style.transition = 'opacity .4s'; tint.style.opacity = '0';
-    return new Promise(r => setTimeout(() => { layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.transition = ''; tint.style.background = ''; r(); }, 460));
+    layer.querySelectorAll('.atkw').forEach(w => { if (w.classList.contains('close')) w.remove(); else w.style.animation = 'none'; });
+    const run = window.KBDismantle ? KBDismantle.run(layer, 'out', 1000, col) : Promise.resolve();
+    tint.classList.remove('full', 'strobe'); tint.style.transition = 'opacity 1s'; tint.style.opacity = '0';
+    return Promise.all([run, new Promise(r => setTimeout(r, 1050))]).then(() => {
+      window.KBDismantle && KBDismantle.restore(layer);
+      layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.transition = ''; tint.style.background = ''; });
   }
+
 
 
 
@@ -1550,7 +1555,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
         tint.className = 'atk-tint full'; tint.style.opacity = '';
         await attackOut();
       }
-      await atkSettle();                                         // the attack / defence clears completely: nothing covers what follows
+      await atkSettle(col);                                         // the attack / defence clears completely: nothing covers what follows
       await (window.KBDismantle ? Promise.all([new Promise(r => setTimeout(r, 1900)), Promise.resolve(chanText(a, 'out', 1800, col))]) : 0);
       // the single swap point: the old slide is fully dismantled, so the change itself is invisible
       a.classList.remove('active'); if (window.KBDismantle) KBDismantle.restore(a);
