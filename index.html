@@ -601,6 +601,8 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 @keyframes tlArw{50%{transform:translateY(3px)}}
 @media (max-width:900px){ .tl-stop .tl-ttl{display:none} #timeline .tl-rail{height:54px} }
 @media (prefers-reduced-motion:reduce){ #timeline .tl-step.arrive .pts li,.tl-hint .arw{animation:none} }
+/* short laptop screens: tighten so the longest moment still fits without scrolling */
+@media (min-width:901px) and (max-height:780px){ #timeline .tl-rail{height:62px} .tl-stop .tl-ttl{font-size:10.5px} #timeline .tl-step .date{font-size:clamp(52px,min(7vw,11vh),120px)} #timeline .tl-step .pts li{padding:6px 0 6px 22px;font-size:13px;line-height:1.45} #timeline .tl-wrap{gap:10px} #timeline .tl-step .copy{font-size:13.5px;line-height:1.55} }
 .tl-stop .yr{font-style:normal}
 /* phones: each moment fits the screen; its list scrolls inside its own panel */
 @media (max-width:600px){
