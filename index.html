@@ -61,6 +61,9 @@ body{animation:flicker 5s steps(1) infinite}
 /* big screens: the composition is designed at about 1280x800; above that it scales up as a whole to fill the screen
    (--z is 1 at or below 1280x800, so half-screen windows and phones are untouched) */
 html.zfit body{width:calc(100vw / var(--z));height:calc(100vh / var(--z));transform:scale(var(--z));transform-origin:0 0;overflow:hidden}
+/* while scaled, the page is laid out at 1280x800 design size; vw/vh would measure the real screen, so pin the big type */
+html.zfit .name{font-size:min(19vw / var(--z),22vh / var(--z),240px)}
+html.zfit .scene{padding-top:calc(76px);padding-bottom:calc(64px)}
 .ch-id{display:block;font:500 12px/1 var(--mono);color:var(--phos);letter-spacing:.1em;margin-bottom:20px}
 h2.big{font:400 clamp(52px,9vw,124px)/.88 var(--display);margin-bottom:26px}
 /* Get in touch: the K·A·M title treatment (wide tracking, glow, blinking cursor), kept white */
