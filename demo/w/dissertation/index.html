@@ -68,11 +68,71 @@
   .tk-t{font:400 clamp(22px,4.6vw,56px)/1 'JetBrains Mono',ui-monospace,monospace;color:#ff3030;text-align:center;text-shadow:3px 0 #600,-3px 0 #ff9090}
   .tk-s{font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.24em;color:var(--lab)}
   .tk.out{animation:tko .3s ease-in forwards} @keyframes tko{to{transform:scaleY(.004);filter:brightness(5);opacity:0}}
+  /* ---- RUN EXPERIMENT: the chip under the globe, and the console it opens (all synthetic) ---- */
+  .mid{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+  .mid .stage{max-height:calc(82vh - 34px)}
+  .xbtn{font:600 10.5px/1.35 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.22em;color:#140003;background:#ff3030;padding:5px 8px;border:0;border-radius:0;cursor:pointer;white-space:nowrap}
+  .xbtn:hover{background:#ff5050;box-shadow:0 0 14px rgba(255,48,48,.55)}
+  .xbtn:disabled{background:#5a0000;color:#2a0000;cursor:not-allowed;box-shadow:none}
+  .tag.br{display:none} body.xmode .tag.br{display:block}
+  body.xmode .xp{display:none}
+  .xc{display:flex;flex-direction:column;gap:7px;min-width:0;border:1px solid #5a0000;background:rgba(22,0,0,.88);padding:9px 11px 10px;box-shadow:0 0 30px rgba(255,26,26,.12) inset;max-height:calc(100vh - 2 * clamp(14px,3vh,26px));overflow:hidden}
+  .xc-h{display:flex;align-items:center;gap:8px}
+  .xc-h .t{font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:#ff5050}
+  .xc-h .x{margin-left:auto;background:none;border:1px solid #5a0000;color:#ff5050;font:700 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;padding:4px 6px;cursor:pointer}
+  .xc-h .x:hover{border-color:#ff3030;color:#fff}
+  .xwarn{font:700 9px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:#ffcc00;border:1px dashed #6a5400;padding:4px 6px;text-align:center}
+  .xs-t{display:flex;gap:8px;font:700 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:#c01010;margin-bottom:5px}
+  .xs-t b{color:#ff3030}
+  .xs-t em{font-style:normal;margin-left:auto;color:#7a3030;letter-spacing:.08em}
+  .xs.off{opacity:.38;pointer-events:none}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .opts.one{grid-template-columns:1fr}
+  .opt{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid #3a0000;background:rgba(40,0,0,.35);padding:4px 6px;font:500 9.5px/1.3 'JetBrains Mono',ui-monospace,monospace;color:#f4cccc;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt b{font-weight:700;color:#ff3030;margin-right:5px}
+  .opt s{text-decoration:none;color:#c01010;margin-left:5px}
+  .opt:hover{border-color:#ff3030}
+  .opt:focus-visible{outline:2px solid #ff3030;outline-offset:1px}
+  .opt[aria-pressed="true"]{background:#ff3030;color:#140003;border-color:#ff3030}
+  .opt[aria-pressed="true"] b,.opt[aria-pressed="true"] s{color:#140003}
+  .cond{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center}
+  .cond > span{font:500 9.5px/1.2 'JetBrains Mono',ui-monospace,monospace;color:#f4cccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cond > span i{font-style:normal;color:#7a3030;margin-left:4px}
+  .seg{display:flex}
+  .seg .opt{padding:3px 6px;font-weight:700;letter-spacing:.06em;margin-left:-1px}
+  .xgo{align-self:flex-start}
+  .xsum{font:500 9.5px/1.45 'JetBrains Mono',ui-monospace,monospace;color:#f4cccc;border-left:2px solid #b00000;padding-left:8px}
+  .xsum b{color:#ff3030}
+  .xlog{list-style:none;font:500 10px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#f4cccc;height:126px;overflow:hidden;border:1px solid #2a0000;background:rgba(0,0,0,.35);padding:4px 6px;display:flex;flex-direction:column;justify-content:flex-end}
+  .xlog li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .xlog li::before{content:"> ";color:#c01010}
+  .xlog li.ok::after{content:" OK";color:#ff5050;font-weight:700}
+  .xlog li.y{color:#ffcc00}
+  .xlog li.cur::after{content:"_";animation:c 1.05s steps(1) infinite}
+  .xr{border:1px solid #ff3030;background:rgba(40,0,0,.55);padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+  .xr-t{display:flex;align-items:baseline;gap:10px}
+  .xr-t .w8{font:400 34px/.9 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em;text-shadow:0 0 18px rgba(255,48,48,.45)}
+  .xr-t .segs{font:400 13px/1 monospace;letter-spacing:1px}
+  .xr-t .sc{margin-left:auto;text-align:right;font:700 8.5px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#c01010}
+  .xr-t .sc b{display:block}
+  .xr .mets{grid-template-columns:repeat(4,1fr)}
+  .xr .mets .led.sm{font-size:13px}
+  .xr .why{font:500 9px/1.45 'JetBrains Mono',ui-monospace,monospace;color:#c08080}
+  .xacts{display:flex;gap:8px;flex-wrap:wrap}
+  .xacts .ghost{background:none;color:#ff3030;box-shadow:inset 0 0 0 1px #ff3030}
+  .xacts .ghost:hover{background:#ff3030;color:#140003}
+  @media (min-width:901px){
+    body.xmode .page{grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,.92fr)}
+  }
   @media (max-width:900px){
     .page{grid-template-columns:1fr;align-items:start;overflow:auto;height:100%}
     .stage{max-width:420px;max-height:none}
+    .mid .stage{max-height:none}
+    .xc{position:fixed;left:0;right:0;bottom:0;z-index:15;max-height:54vh;overflow:auto;border-width:1px 0 0;padding:8px 12px 12px;background:rgba(14,0,0,.96)}
+    body.xmode .page{padding-bottom:56vh}
+    .xlog{height:96px}
   }
-  @media (prefers-reduced-motion:reduce){ h1 .cur,.split .sweep{animation:none} .tk{display:none} }
+  @media (prefers-reduced-motion:reduce){ h1 .cur,.split .sweep,.xlog li.cur::after{animation:none} .tk{display:none} }
 </style>
 </head>
 <body data-channel data-mock="none">
@@ -89,10 +149,14 @@
     <p>Every result reports base rate, AUROC, AUPR and Brier score together, against honest baselines. It incorporates its own forecasting software, the lab, built for this dissertation.</p>
     <div class="next">NEXT YEAR ▸ A MASTER'S IN INTERNATIONAL SECURITY</div>
   </section>
+  <div class="mid">
   <section class="stage" id="stage" aria-label="A rotating globe with synthetic activity">
     <span class="tag tl">THEATRE · MOCK ASSET</span>
     <canvas id="globe" tabindex="0" role="img" aria-label="A rotating wireframe globe with synthetic pulses and arcs between pairs of states. Mock data; drag or use the arrow keys to turn it."></canvas>
+    <span class="tag br">SIMULATION · SYNTHETIC</span>
   </section>
+  <button type="button" class="xbtn" id="xOpen" aria-expanded="false" aria-controls="xc">[ RUN EXPERIMENT ]</button>
+  </div>
   <aside class="xp" aria-hidden="true">
     <div class="lab">
       <div class="lab-h"><span>RUN</span><b class="led" id="run">0009</b><span class="st" id="labStage">TRAINING</span></div>
@@ -115,6 +179,38 @@
       <div><span>BRIER</span><b class="led sm" id="m3">.000</b></div>
     </div>
   </aside>
+  <section class="xc" id="xc" role="dialog" aria-modal="false" aria-labelledby="xcT" hidden>
+    <div class="xc-h"><span class="t" id="xcT">EXPERIMENT CONSOLE</span><b class="led sm" id="xRun">SIM-0000</b><button type="button" class="x" id="xClose" aria-label="Close the experiment console">[ × ]</button></div>
+    <div class="xwarn">SIMULATION · SYNTHETIC · NOT A RESEARCH RESULT</div>
+    <div id="xSetup">
+      <div class="xs" id="xs1"><div class="xs-t"><b>01</b>PICK A HOTSPOT<em>LIST OR GLOBE</em></div><div class="opts" id="xHs"></div></div>
+      <div class="xs off" id="xs2" style="margin-top:8px"><div class="xs-t"><b>02</b>PICK A DYAD<em>SYNTHETIC STATES</em></div><div class="opts one" id="xDy"></div></div>
+      <div class="xs off" id="xs3" style="margin-top:8px"><div class="xs-t"><b>03</b>SET CONDITIONS<em>VARIABLE FAMILIES</em></div><div class="cond" id="xCo"></div></div>
+      <div style="margin-top:9px;display:flex;align-items:center;gap:10px"><button type="button" class="xbtn xgo" id="xGo" disabled>[ 04 · RUN ]</button><span class="xs-t" style="margin:0" id="xHint">PICK A HOTSPOT</span></div>
+    </div>
+    <div id="xRunV" hidden style="display:flex;flex-direction:column;gap:7px">
+      <div class="xsum" id="xSum"></div>
+      <div>
+        <div class="pg"><span>LOAD</span><i><b id="xb0"></b></i></div>
+        <div class="pg"><span>FIT</span><i><b id="xb1"></b></i></div>
+        <div class="pg"><span>TUNE</span><i><b id="xb2"></b></i></div>
+        <div class="pg"><span>TEST</span><i><b id="xb3"></b></i></div>
+      </div>
+      <ul class="xlog" id="xLog" aria-live="polite"></ul>
+      <div class="xr" id="xRes" hidden>
+        <div class="xr-t"><span class="w8" id="xTier">—</span><span class="segs" id="xSegs"></span><span class="sc">SYNTHETIC SCORE<b class="led sm" id="xP">.000</b></span></div>
+        <div class="mets">
+          <div><span>BASE</span><b class="led sm" id="xm0">.0000</b></div>
+          <div><span>AUROC</span><b class="led sm" id="xm1">.000</b></div>
+          <div><span>AUPR</span><b class="led sm" id="xm2">.000</b></div>
+          <div><span>BRIER</span><b class="led sm" id="xm3">.0000</b></div>
+        </div>
+        <div class="why" id="xWhy"></div>
+        <div class="xwarn">SIMULATION · SYNTHETIC · NOT A RESEARCH RESULT</div>
+      </div>
+      <div class="xacts" id="xActs" hidden><button type="button" class="xbtn" id="xAgain">[ RUN AGAIN ]</button><button type="button" class="xbtn ghost" id="xReset">[ RESET ]</button></div>
+    </div>
+  </section>
 </main>
 <script src="../../_frame/frame.js"></script>
 <script src="assets/d3.v7.9.0.min.js"></script>
@@ -124,7 +220,7 @@
 <script>
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  WarGlobe({ canvas: document.getElementById('globe'), stage: document.getElementById('stage'), feed: document.getElementById('feed'), onCount: null, reduce });
+  window.theatre = WarGlobe({ canvas: document.getElementById('globe'), stage: document.getElementById('stage'), feed: document.getElementById('feed'), onCount: null, reduce });
   /* the lab, whirring: decorative activity in the lab's style */
   const $ = id => document.getElementById(id);
   let run = 9, ep = 0, phase = 0, prog = [0, 0, 0];
@@ -171,6 +267,167 @@
       : target.slice(0, k) + target.slice(k).replace(/\S/g, () => GL[(Math.random() * GL.length) | 0]);
     if (p < 1) requestAnimationFrame(scramble); else setTimeout(end, 250);
   })(t0);
+})();
+</script>
+<script>
+/* RUN EXPERIMENT — a mock experiment console. SIMULATION · SYNTHETIC · NOT A RESEARCH RESULT.
+   The regions are broad invented "types", the states are invented (SYN-####), and the result comes from a
+   small deterministic toy formula written for this page. Nothing here comes from the lab's model or data. */
+(() => {
+  const G = window.theatre && window.theatre.exp; if (!G) return;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+  const pad = (n, w) => String(n).padStart(w, '0');
+  const hash = s => { let h = 2166136261; for (const ch of s){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const syn = s => 'SYN-' + (1000 + hash(s) % 9000);
+  const dec = (x, n) => x.toFixed(n).replace(/^0/, '');
+  const wait = ms => reduce ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
+
+  const HS = [
+    { k: 'A', name: 'EASTERN EUROPE-TYPE', p: [31, 50], bias: .15 },
+    { k: 'B', name: 'MIDDLE EAST-TYPE', p: [45, 31], bias: .2 },
+    { k: 'C', name: 'SOUTH ASIA-TYPE', p: [76, 26], bias: .1 },
+    { k: 'D', name: 'EAST ASIA MARITIME-TYPE', p: [124, 31], bias: .05 },
+    { k: 'E', name: 'SAHEL-TYPE', p: [4, 15], bias: 0 },
+    { k: 'F', name: 'ANDEAN-TYPE', p: [-68, -14], bias: -.1 },
+  ];
+  const OFF = [[[-8, 4], [7, -3]], [[-4, -6], [9, 3]], [[5, 7], [-7, -4]]];
+  HS.forEach(h => {
+    h.id = syn('hot' + h.k);
+    h.dy = OFF.map((o, i) => {
+      const a = syn(h.k + i + 'a'), b = syn(h.k + i + 'b');
+      return { a, b, pa: [h.p[0] + o[0][0], h.p[1] + o[0][1]], pb: [h.p[0] + o[1][0], h.p[1] + o[1][1]], j: (hash(a + b) % 9) / 100 };
+    });
+  });
+  // four of the dissertation's variable families; weights are invented for the toy formula
+  const CV = [
+    { k: 'par', name: 'CAPABILITY PARITY', fam: 'POWER', w: .55 },
+    { k: 'pri', name: 'PRIOR DISPUTES', fam: 'HISTORY', w: .7 },
+    { k: 'dem', name: 'JOINT DEMOCRACY', fam: 'REGIME', w: -.5 },
+    { k: 'eco', name: 'ECON. INTERDEPENDENCE', fam: 'TRADE', w: -.35 },
+  ];
+  const LV = ['LOW', 'MED', 'HIGH'];
+  const TIER = [['LOW', '#c41414'], ['MODERATE', '#e82020'], ['ELEVATED', '#ff3030'], ['HIGH', '#ffa08a'], ['VERY HIGH', '#ffffff']];
+
+  let hs = null, dy = null, cond = { par: 1, pri: 1, dem: 1, eco: 1 }, runN = 9, token = 0, open = false;
+
+  // ---- the toy formula: deterministic, synthetic, illustrative only ----
+  function score(){
+    const z = -1.25 + CV.reduce((s, c) => s + c.w * cond[c.k], 0) + hs.bias + dy.j;
+    const p = 1 / (1 + Math.exp(-z));
+    const t = p < .2 ? 0 : p < .35 ? 1 : p < .5 ? 2 : p < .65 ? 3 : 4;
+    const base = .004 + .0015 * cond.pri + .001 * cond.par + .004 * Math.max(0, hs.bias);
+    const auroc = .71 + .025 * cond.pri + .015 * cond.par - .01 * cond.eco + dy.j * .2;
+    const aupr = base * (3.5 + 1.6 * cond.pri + .8 * cond.par + dy.j * 5);
+    const brier = base * (1 - base) * .97;
+    return { p, t, base, auroc, aupr, brier };
+  }
+
+  // ---- build the pickers ----
+  const opt = (html, on, attrs = '') => `<button type="button" class="opt" aria-pressed="${on}" ${attrs}>${html}</button>`;
+  function renderHs(){
+    $('xHs').innerHTML = HS.map(h => opt(`<b>${h.k}</b>${h.name}`, hs === h, `data-h="${h.k}" title="Hotspot ${h.k} · ${h.name} · ${h.id} (synthetic)"`)).join('');
+    G.marks(HS.map(h => ({ k: h.k, p: h.p, label: h.k + ' · ' + h.id, sel: hs === h })), pickHs);
+  }
+  function renderDy(){
+    $('xDy').innerHTML = hs ? hs.dy.map((d, i) => opt(`<b>D${i + 1}</b>${d.a} ⇄ ${d.b}<s>· SYNTHETIC</s>`, dy === d, `data-d="${i}"`)).join('') : '';
+  }
+  function renderCo(){
+    $('xCo').innerHTML = CV.map(c => `<span>${c.name}<i>${c.fam}</i></span><div class="seg" role="group" aria-label="${c.name}">${LV.map((l, i) => opt(l, cond[c.k] === i, `data-c="${c.k}" data-v="${i}"`)).join('')}</div>`).join('');
+  }
+  function sync(){
+    $('xs2').classList.toggle('off', !hs); $('xs3').classList.toggle('off', !dy);
+    $('xGo').disabled = !(hs && dy);
+    $('xHint').textContent = !hs ? 'PICK A HOTSPOT' : !dy ? 'PICK A DYAD' : 'READY · SYNTHETIC';
+  }
+  function pickHs(k){
+    if (!open || !$('xRunV').hidden) return;
+    hs = HS.find(h => h.k === k); dy = null;
+    renderHs(); renderDy(); sync(); G.dyad(null); G.focus(hs.p);
+  }
+  $('xHs').addEventListener('click', e => { const b = e.target.closest('[data-h]'); b && pickHs(b.dataset.h); });
+  $('xDy').addEventListener('click', e => {
+    const b = e.target.closest('[data-d]'); if (!b) return;
+    dy = hs.dy[+b.dataset.d]; renderDy(); sync(); G.dyad(dy);
+  });
+  $('xCo').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    cond[b.dataset.c] = +b.dataset.v; renderCo();
+  });
+
+  // ---- the run ----
+  const bars = [0, 1, 2, 3].map(i => $('xb' + i));
+  function bar(i, ms, my){
+    if (reduce){ bars[i].style.width = '100%'; return Promise.resolve(); }
+    return new Promise(res => { const t0 = performance.now();
+      (function f(now){ if (my !== token) return res();
+        const k = Math.min(1, (now - t0) / ms); bars[i].style.width = (k * 100).toFixed(1) + '%';
+        k < 1 ? requestAnimationFrame(f) : res(); })(t0); });
+  }
+  function line(text, cls = ''){
+    const log = $('xLog'); log.querySelector('.cur')?.classList.remove('cur');
+    const li = document.createElement('li'); li.textContent = text; li.className = cls + ' cur'; log.append(li);
+    while (log.children.length > 12) log.firstChild.remove();
+    return li;
+  }
+  function countUp(el, to, n, ms, my){
+    if (reduce){ el.textContent = dec(to, n); return; }
+    const t0 = performance.now();
+    (function f(now){ if (my !== token) return; const k = Math.min(1, (now - t0) / ms);
+      el.textContent = dec(to * (1 - Math.pow(1 - k, 3)), n); if (k < 1) requestAnimationFrame(f); })(t0);
+  }
+  async function run(){
+    const my = ++token; runN++;
+    const r = score(), T = TIER[r.t], cs = CV.map(c => `${c.name.split(' ')[0].slice(0, 4)} <b>${LV[cond[c.k]]}</b>`).join(' · ');
+    $('xRun').textContent = 'SIM-' + pad(runN, 4);
+    $('xSetup').hidden = true; $('xRunV').hidden = false; $('xRes').hidden = true; $('xActs').hidden = true;
+    $('xSum').innerHTML = `<b>${hs.k}</b> ${hs.name} · ${hs.id}<br><b>DYAD</b> ${dy.a} ⇄ ${dy.b}<br>${cs}`;
+    bars.forEach(b => b.style.width = '0'); $('xLog').innerHTML = '';
+    G.dim(true); G.focus(hs.p, 1200); G.dyad(dy); G.state('live');
+    const n = 40000 + hash(dy.a + dy.b) % 3000;
+    let li;
+    line('SIM-' + pad(runN, 4) + ' · SIMULATION · SYNTHETIC', 'y'); await wait(350); if (my !== token) return;
+    li = line('rotating theatre to hotspot ' + hs.k + '…'); await wait(900); if (my !== token) return; li.classList.add('ok');
+    li = line('loading dyad-years 1816–1989…'); await bar(0, 900, my); if (my !== token) return; li.classList.add('ok');
+    line('n = ' + n.toLocaleString('en-GB') + ' synthetic dyad-years · onset ' + dec(r.base, 4)); await wait(350); if (my !== token) return;
+    li = line('fitting logistic baseline…'); await wait(500); if (my !== token) return; li.classList.add('ok');
+    li = line('fitting boosted trees · 400 rounds…'); await bar(1, 1400, my); if (my !== token) return; li.classList.add('ok');
+    li = line('tuning on 1975–1989 (inner time split)…'); await bar(2, 900, my); if (my !== token) return; li.classList.add('ok');
+    li = line('testing on 1990–2014 (time split)…'); await bar(3, 1200, my); if (my !== token) return; li.classList.add('ok');
+    li = line('scoring ' + dy.a + ' ⇄ ' + dy.b + '…'); await wait(600); if (my !== token) return; li.classList.add('ok');
+    line('logged · synthetic · not a research result', 'y');
+    // the result card
+    G.state('done', T[1]);
+    $('xTier').textContent = T[0]; $('xTier').style.color = T[1];
+    $('xSegs').textContent = '▮'.repeat(r.t + 1) + '▯'.repeat(4 - r.t); $('xSegs').style.color = T[1];
+    countUp($('xP'), r.p, 3, 700, my); countUp($('xm0'), r.base, 4, 700, my); countUp($('xm1'), r.auroc, 3, 900, my);
+    countUp($('xm2'), r.aupr, 3, 900, my); countUp($('xm3'), r.brier, 4, 900, my);
+    $('xWhy').textContent = 'Tier from a toy formula over the four conditions you set, not from a fitted model. A real dyadic result would be read against its base rate and honest baselines.';
+    $('xRes').hidden = false; $('xActs').hidden = false;
+  }
+  function reset(){
+    token++; hs = null; dy = null; cond = { par: 1, pri: 1, dem: 1, eco: 1 };
+    $('xSetup').hidden = false; $('xRunV').hidden = true;
+    G.dyad(null); G.dim(false); renderHs(); renderDy(); renderCo(); sync();
+  }
+  $('xGo').addEventListener('click', () => { if (hs && dy) run(); });
+  $('xAgain').addEventListener('click', run);
+  $('xReset').addEventListener('click', reset);
+
+  // ---- open / close ----
+  const btn = $('xOpen'), xc = $('xc');
+  function setOpen(on){
+    open = on; xc.hidden = !on; document.body.classList.toggle('xmode', on);
+    btn.setAttribute('aria-expanded', on); btn.textContent = on ? '[ CLOSE EXPERIMENT ]' : '[ RUN EXPERIMENT ]';
+    if (on){
+      reset();
+      if (matchMedia('(max-width:900px)').matches) $('stage').scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+      xc.querySelector('.opt')?.focus({ preventScroll: true });
+    } else { token++; G.release(); btn.focus({ preventScroll: true }); }
+  }
+  btn.addEventListener('click', () => setOpen(!open));
+  $('xClose').addEventListener('click', () => setOpen(false));
+  addEventListener('keydown', e => { if (open && e.key === 'Escape') setOpen(false); });
 })();
 </script>
 </body>

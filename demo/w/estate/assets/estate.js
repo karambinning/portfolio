@@ -17,7 +17,7 @@ const profile = $('#profile'), pSsh = $('#pSsh'), pBody = $('#pBody'), pTag = $(
 
 /* ---------- the machines (real) ---------- */
 const M = {
-  m1: { name:'M1', c:'#3d8bff', k:'THE HUB', s:'HOLDS THE VAULT', ndc:[-1, 1], where:'Always-on at home',
+  m1: { app:{ src:'../../command/', label:'Command, live · demo data', aria:'the Command dashboard demo' }, name:'M1', c:'#3d8bff', k:'THE HUB', s:'HOLDS THE VAULT', ndc:[-1, 1], where:'Always-on at home',
     specs:[['Machine','MacBook Pro 13"'],['Chip','Apple M1'],['Memory','8 GB'],['Storage','256 GB + the 12 TB vault drive'],['System','macOS 26']],
     role:'The always-on hub. It holds the canonical vault on its 12 TB drive and serves it to the other three machines. It is the one writer the rest of the estate depends on.',
     runs:[['Command','the dashboard I run the estate from: machines, agents and jobs on one screen. This brain is its centrepiece.'],
@@ -26,7 +26,7 @@ const M = {
           ['THEMIS','a legal-research agent that would rather refuse than guess.'],
           ['Career-node server','the back end the Work app on the M3 talks to.'],
           ['Local models','small language models that run on the machine itself.']] },
-  m3: { name:'M3', c:'#ff7a00', k:'THE CAREER NODE', s:'DAILY MACHINE', ndc:[1, 1], where:'With me, where I study',
+  m3: { app:{ src:'../../work/', label:'The Work app, live · demo data · Mission OS inside', aria:'the Work app demo' }, name:'M3', c:'#ff7a00', k:'THE CAREER NODE', s:'DAILY MACHINE', ndc:[1, 1], where:'With me, where I study',
     specs:[['Machine','MacBook Pro 14"'],['Chip','Apple M3 Pro'],['Memory','18 GB'],['System','macOS 15']],
     role:'My daily machine, and the career node. It is where I study, write and run my working life. It reads and writes the vault through the M1.',
     runs:[['The Work app','job triage, a pipeline from first find to offer, and an outreach drafter.'],
@@ -34,14 +34,14 @@ const M = {
           ['Morning brief','a short summary of the day, ready when I wake.'],
           ['K·A·M Notch','a music app that lives in the MacBook’s notch.'],
           ['Local models','for drafting and sorting without leaving the machine.']] },
-  imac: { name:'iMac', c:'#ff3355', k:'THE LAB', s:'BUILDS OVERNIGHT', ndc:[-1, -1], where:'Where I study',
+  imac: { app:{ log:true, label:'The Builder on KAM, overnight · mock log' }, name:'iMac', c:'#ff3355', k:'THE LAB', s:'BUILDS OVERNIGHT', ndc:[-1, -1], where:'Where I study',
     specs:[['Machine','iMac 24"'],['Chip','Apple M1'],['Memory','8 GB'],['Storage','512 GB'],['System','macOS 15']],
     role:'The lab. It does the long, unattended work overnight, and keeps an off-site copy of the vault in case the hub is ever lost.',
     runs:[['The Builder','an overnight agent that works on KAM while I sleep and leaves a night report in the vault.'],
           ['KAM development server','where the private beta of KAM is built and tested.'],
           ['Intelligence collector database','the store the rest of the fleet queries for collected data.'],
           ['Vault mirror','an off-site backup copy. A mirror, never a second vault.']] },
-  yerson: { name:'YerSon', c:'#00ff88', k:'THE INTEL ENGINE', s:'COLLECTING', ndc:[1, -1], where:'Always-on at home',
+  yerson: { app:{ src:'../../intel/', label:'The intel engine, live · demo data', aria:'the YerSon intelligence engine demo' }, name:'YerSon', c:'#00ff88', k:'THE INTEL ENGINE', s:'COLLECTING', ndc:[1, -1], where:'Always-on at home',
     specs:[['Machine','MacBook 12"'],['Chip','Intel Core m3'],['Memory','8 GB'],['System','macOS 13']],
     role:'The intelligence engine. An older, fanless 12-inch MacBook given one job: watch the world and file what it finds.',
     runs:[['Collection cycles','news, geopolitics, research, markets, law and jobs, gathered on a schedule.'],
@@ -688,13 +688,30 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
-/* a live screen inside a profile: the real page at a fixed 1280×800, scaled down to the profile's width */
-const SCR_W = 1280, SCR_H = 800;
-function fitScreen(){
-  const el = pBody.querySelector('.p-screen'); if (!el) return;
-  const f = () => el.style.setProperty('--s', (el.clientWidth / SCR_W).toFixed(4));
-  f(); new ResizeObserver(f).observe(el);
+/* a live screen inside a profile: the real page at a fixed 1280×800, scaled to whatever room the profile has left.
+   The profile never scrolls on desktop: the screen takes the remaining height, and the text zooms down slightly if it must. */
+const SCR_W = 1280, SCR_H = 800, SCR_MIN = 104;
+const pScroll = document.querySelector('#profile .p-scroll');
+function fitProfile(){
+  if (!profile.classList.contains('open')) return;
+  const scr = pBody.querySelector('.p-screen'), isLog = scr && scr.classList.contains('p-log');
+  pBody.style.zoom = ''; if (scr){ scr.style.height = '0px'; scr.style.width = ''; }
+  const padB = 12, top = pScroll.getBoundingClientRect().top;
+  const contentBottom = () => pBody.getBoundingClientRect().bottom - top + pScroll.scrollTop + padB;
+  const room = () => pScroll.clientHeight - contentBottom() - 2;
+  let k = 1;
+  if (room() < SCR_MIN){                                   // not enough room even for a small screen: zoom the text down
+    k = Math.max(narrow() ? .86 : .7, Math.min(1, (pScroll.clientHeight - 2) / (contentBottom() + SCR_MIN)));
+    pBody.style.zoom = k;
+  }
+  if (!scr) return;
+  const fullW = scr.parentElement.getBoundingClientRect().width;            // visual px
+  const ideal = isLog ? Math.min(fullW / 1.6, scr.firstElementChild.getBoundingClientRect().height + 14 * k) : fullW * SCR_H / SCR_W;
+  const r = room(), hVis = Math.max(SCR_MIN * k, Math.min(ideal, r)), wVis = isLog ? fullW : Math.min(fullW, hVis * SCR_W / SCR_H);
+  scr.style.height = (hVis / k) + 'px'; scr.style.width = (wVis / k) + 'px';
+  scr.style.setProperty('--s', ((wVis / k) / SCR_W).toFixed(4));
 }
+new ResizeObserver(() => fitProfile()).observe(profile);
 
 /* ---------- SSH in / out ---------- */
 let seq = 0;
@@ -708,10 +725,11 @@ function go(id){
   tip.style.display = 'none'; marker.visible = false;
   hTop.textContent = `SSH · ${m.name}`; hTop.style.color = m.c; hTail.textContent = '· tunnel open';
   if (!narrow()) showCallouts(false);
-  profile.style.top = narrow() ? Math.round(document.querySelector('.term > header').getBoundingClientRect().bottom) + 'px' : '';   // phone: sit flush under the header
+  // phone: flush under the header (the frame's .term is the containing block for the fixed profile)
+  profile.style.top = narrow() ? Math.round(document.querySelector('.term > header').getBoundingClientRect().bottom - termEl.getBoundingClientRect().top) + 'px' : '';   // phone: sit flush under the header
   profile.style.setProperty('--c', m.c); profile.classList.add('open'); profile.setAttribute('aria-hidden', 'false');
   pTag.textContent = `INTELLIGENCE PROFILE · ${m.name.toUpperCase()}`;
-  pBody.classList.remove('in'); pBody.innerHTML = render(m); fitScreen();
+  pBody.classList.remove('in'); pBody.innerHTML = render(m); requestAnimationFrame(fitProfile);
   pSsh.innerHTML = '<div><span class="pr">visitor@estate ~ %</span> <span class="cmd"></span></div><div class="l1"></div><div class="l2 ok"></div>';
   KB.beep(520, 50); KB.twitch(profile);
   log('SSH', ` connecting to ${m.name}…`, m.c);
@@ -737,21 +755,32 @@ function home(){
   KB.beep(330, 50); nodeBtns[was].focus({ preventScroll: true });
   dirty = true;
 }
+const BUILD_LOG = [
+  ['01:02', 'builder · wake · branch night/2026-10-11'], ['01:03', 'read plan · 3 tasks from the KAM backlog'],
+  ['01:20', 'task 1 · globe layer legend · tests 41/41', 'ok'], ['02:11', 'task 2 · news region filter · tests 38/38', 'ok'],
+  ['03:05', 'task 3 · empty-state copy · 1 test failing', 'bad'], ['03:22', 'fix · rerun · tests 39/39', 'ok'],
+  ['04:10', 'lint · build · bundle checked', 'ok'], ['04:12', 'no merge · waits for my review'],
+  ['04:13', 'night report → 10-kam/agent/2026-10-11/builder.md'], ['04:13', 'sleep'],
+];
+function appBlock(m){
+  const a = m.app; if (!a) return '';
+  if (a.log) return `<div class="p-sec p-app"><div class="t-label p-scr-head"><span>${a.label}</span></div>
+    <div class="p-screen p-log" role="img" aria-label="A mock overnight build log"><div class="p-log-in">${BUILD_LOG.map(([t, x, k]) =>
+      `<div><time>${t}</time> ${x}${k === 'ok' ? ' <em>✓</em>' : k === 'bad' ? ' <em class="bad">✗</em>' : ''}</div>`).join('')}<div class="cur">_</div></div></div></div>`;
+  return `<div class="p-sec p-app"><div class="t-label p-scr-head"><span>${a.label}</span>
+      <a class="p-open" href="${a.src}" target="_blank" rel="noopener">[ OPEN FULL ↗ ]</a></div>
+    <a class="p-screen" href="${a.src}" target="_blank" rel="noopener" aria-label="Open ${a.aria} full size">
+      <iframe src="${a.src}" title="${m.name}: ${a.aria}" tabindex="-1"></iframe></a></div>`;
+}
 function render(m){
   const load = 3 + ((m.name.length * 7) % 6);   // illustrative only
-  return `<div class="p-name"><b>${m.name}</b><span>${m.k}</span></div>
-    <div><span class="p-where">${m.where}</span></div>
-    <div class="p-sec"><div class="t-label">Role</div><p class="t-p">${m.role}</p></div>
-    <div class="p-sec"><div class="t-label">Specs</div><dl class="specs">${m.specs.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>
+  return `<div class="p-name"><b>${m.name}</b><span>${m.k}</span><span class="p-where">${m.where}</span></div>
+    <p class="t-p p-role">${m.role}</p>
+    <div class="p-specs">${m.specs.map(([k, v]) => `<span><i>${k}</i> ${v}</span>`).join('')}</div>
     <div class="p-sec"><div class="t-label">What runs on it</div><ul class="runs">${m.runs.map(([k, v]) => `<li><b>${k}</b>: ${v}</li>`).join('')}</ul></div>
-    ${m === M.yerson ? `<div class="p-sec"><div class="t-label p-scr-head"><span>The intel engine, live · demo data</span>
-      <a class="p-open" href="../../intel/" target="_blank" rel="noopener">[ OPEN FULL ↗ ]</a></div>
-      <a class="p-screen" href="../../intel/" target="_blank" rel="noopener" aria-label="Open the YerSon intelligence engine demo full size">
-        <iframe src="../../intel/" title="YerSon intelligence engine, demo data" tabindex="-1" loading="lazy"></iframe></a></div>` : ''}
-    <div class="p-sec"><div class="t-label">Status</div>
-      <div class="stat-row"><span>STATE <em>● ONLINE</em></span><span>SENTINEL <em>BASELINE HOLDING</em></span></div>
-      <div class="stat-row" style="margin-top:8px"><span>LOAD</span>${KB.meter(10, load)}<span style="color:var(--dim);font-size:9.5px">ILLUSTRATIVE</span></div>
-    </div>`;
+    ${appBlock(m)}
+    <div class="stat-row"><span>STATE <em>● ONLINE</em></span><span>SENTINEL <em>BASELINE HOLDING</em></span>
+      <span class="ld">LOAD ${KB.meter(10, load)}<small>ILLUSTRATIVE</small></span></div>`;
 }
 
 $('#pBack').addEventListener('click', home);

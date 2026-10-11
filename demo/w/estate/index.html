@@ -123,7 +123,7 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
   .mnode.pre{opacity:0}
 
   /* intelligence profile */
-  .profile{position:absolute;top:58px;right:0;bottom:50px;width:min(408px,40%);z-index:10;display:flex;flex-direction:column;
+  .profile{position:absolute;top:58px;right:0;bottom:50px;width:min(470px,42%);z-index:10;display:flex;flex-direction:column;
     background:color-mix(in srgb,var(--screen) 93%,var(--c));border-left:1px solid var(--c);
     box-shadow:-18px 0 40px rgba(0,0,0,.45);transform:translateX(104%);transition:transform .38s cubic-bezier(.2,.8,.2,1);visibility:hidden}
   .profile.open{transform:none;visibility:visible}
@@ -133,20 +133,29 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
   .p-top .sp{flex:1}
   .p-top .tag{font:700 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--c)}
   .p-scroll{flex:1;min-height:0;overflow:auto;padding:10px 14px 14px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-  .p-ssh{font:600 11px/1.6 var(--mono);color:var(--body);white-space:pre-wrap;min-height:72px}
+  .p-ssh{font:600 10.5px/1.5 var(--mono);color:var(--body);white-space:pre-wrap;min-height:48px}
   .p-ssh .pr{color:var(--c)} .p-ssh .ok{color:var(--c)}
-  .p-body{opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s;display:flex;flex-direction:column;gap:11px;margin-top:6px}
+  .p-body{opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s;display:flex;flex-direction:column;gap:9px;margin-top:4px}
   .p-body.in{opacity:1;transform:none}
   .p-name{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  .p-name b{font:400 54px/.85 var(--display);color:var(--c);letter-spacing:.05em;text-shadow:0 0 22px color-mix(in srgb,var(--c) 55%,transparent)}
+  .p-name{row-gap:4px} .p-name .p-where{margin-left:auto}
+  .p-name b{font:400 44px/.85 var(--display);color:var(--c);letter-spacing:.05em;text-shadow:0 0 22px color-mix(in srgb,var(--c) 55%,transparent)}
   .p-name span{font:800 12px/1.2 var(--mono);letter-spacing:.14em;color:var(--text)}
   .p-sec .t-label{color:var(--c);opacity:.85;margin-bottom:4px}
   .p-sec .t-p{font-size:12.5px;line-height:1.5}
+  .p-role{font-size:12px;line-height:1.5}
+  .p-specs{display:flex;flex-wrap:wrap;gap:2px 14px;font:600 11.5px/1.5 var(--mono);color:var(--text)}
+  .p-specs i{font-style:normal;color:var(--dim);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-right:3px}
+  .stat-row .ld{display:inline-flex;align-items:center;gap:8px} .stat-row small{color:var(--dim);font-size:9px}
+  .p-screen.p-log{background:#03070d;padding:6px 8px;display:flex;flex-direction:column;justify-content:flex-end}
+  .p-log-in{font:600 10px/1.55 var(--mono);color:var(--body);white-space:nowrap}
+  .p-log-in time{color:var(--c)} .p-log-in em{font-style:normal;color:#00ff88} .p-log-in em.bad{color:#ff3355}
+  .p-log-in .cur{color:var(--c);animation:t-blink 1s steps(1) infinite}
   .specs{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px}
   .specs dt{color:var(--dim);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px;padding-top:1px}
   .specs dd{color:var(--text)}
-  .runs{list-style:none;display:flex;flex-direction:column;gap:5px}
-  .runs li{font-size:12px;color:var(--body);line-height:1.45;padding-left:14px;position:relative}
+  .runs{list-style:none;display:flex;flex-direction:column;gap:3px}
+  .runs li{font-size:11.5px;color:var(--body);line-height:1.42;padding-left:14px;position:relative}
   .runs li::before{content:"›";position:absolute;left:0;color:var(--c)}
   .runs li b{color:var(--text)}
   .stat-row{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font:700 11px/1 var(--mono);letter-spacing:.08em;color:var(--body)}
@@ -185,12 +194,13 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
     .mnode .k{font-size:8.5px;letter-spacing:.1em}
     .ticker{font-size:9.5px} .ticker div:nth-child(1){display:none}
     .float{font-size:8.5px}
-    .profile{position:fixed;inset:70px 7px 7px 7px;width:auto;border-left:0;border-top:2px solid var(--c);z-index:25}
+    .profile{position:fixed;inset:70px 0 0 0;width:auto;border-left:0;border-top:2px solid var(--c);z-index:25}
     body.ssh .t-ctl{display:none}
 
     .t-ctl .note{display:none}
   }
   @media (prefers-reduced-motion:reduce){
+    .p-log-in .cur{animation:none}
     .mnode::before{animation:none;display:none}
     .profile,.p-body,.co{transition:none}
     .flash.go{animation:none}

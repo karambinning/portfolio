@@ -60,6 +60,8 @@ window.WarGlobe = (opts) => {
   // ---- view state ----
   let rot = [-20, -18, 0], size = 0, R = 0, cx = 0, cy = 0, dpr = 1, running = !reduce, drag = null, lastUser = 0, raf = 0, lastT = performance.now();
   let showArcs = true, showHot = true;
+  // experiment layer (driven by the page's RUN EXPERIMENT console): synthetic markers, a turn to one, one lit dyad
+  let xMarks = [], xHits = [], xOnPick = null, xDyad = null, xFocus = null, xHold = false, mockA = 1;
 
   function resize(){
     const r = stage.getBoundingClientRect();
@@ -132,7 +134,7 @@ window.WarGlobe = (opts) => {
     if (showArcs) arcs.forEach(arc => {
       const age = now - arc.born, t = TIER[arc.tier];
       const grow = Math.min(1, age / 900), fade = Math.min(1, (arc.life - age) / 700);
-      const alpha = Math.max(0, Math.min(1, fade));
+      const alpha = mockA * Math.max(0, Math.min(1, fade));
       const n = Math.max(2, Math.ceil(arc.pts.length * grow));
       const P = arc.pts.slice(0, n).map(([p, k]) => proj(p, k));
       // hidden runs on the far plane at 20%, visible runs on the surface
@@ -158,7 +160,7 @@ window.WarGlobe = (opts) => {
     if (showHot) hot.forEach(h => {
       if (!visible(h.p)) return;
       const [x, y] = proj(h.p, 1), t = TIER[h.tier];
-      const age = now - h.born, a = Math.max(0, Math.min(1, age / 600, (h.life - age) / 600));
+      const age = now - h.born, a = mockA * Math.max(0, Math.min(1, age / 600, (h.life - age) / 600));
       ctx.globalAlpha = a;
       if (!reduce){
         for (let k = 0; k < 2; k++){
@@ -175,16 +177,71 @@ window.WarGlobe = (opts) => {
       ctx.globalAlpha = 1;
     });
 
+    drawExp(now);
+
     // crosshair at the sub-observer point
     ctx.strokeStyle = 'rgba(255,48,48,.5)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx - 3, cy); ctx.moveTo(cx + 3, cy); ctx.lineTo(cx + 8, cy);
     ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy - 3); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx, cy + 8); ctx.stroke();
   }
 
+  // ---- experiment layer: drawn on top, all synthetic ----
+  function liftPts(a, b){
+    const dist = d3.geoDistance(a, b), interp = d3.geoInterpolate(a, b), h = 0.05 + 0.3 * dist / Math.PI;
+    return d3.range(0, 1.0001, 1 / 48).map(t => [interp(t), 1 + h * Math.sin(Math.PI * t)]);
+  }
+  function drawExp(now){
+    xHits = [];
+    ctx.font = '700 9px ui-monospace,Menlo,monospace';
+    xMarks.forEach(m => {
+      if (!visible(m.p)) return;
+      const [x, y] = proj(m.p, 1), on = m.sel, c = on ? '#ffffff' : '#ffcc00';
+      xHits.push({ k: m.k, x, y });
+      ctx.globalAlpha = 1; ctx.strokeStyle = c; ctx.lineWidth = on ? 1.6 : 1;
+      if (on){ ctx.shadowColor = '#ff1a1a'; ctx.shadowBlur = 10; }
+      // a diamond inside corner brackets
+      ctx.beginPath(); ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y); ctx.lineTo(x, y + 6); ctx.lineTo(x - 6, y); ctx.closePath(); ctx.stroke();
+      ctx.shadowBlur = 0;
+      const s = on ? 13 : 10;
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([i, j]) => { ctx.beginPath(); ctx.moveTo(x + i * s, y + j * (s - 4)); ctx.lineTo(x + i * s, y + j * s); ctx.lineTo(x + i * (s - 4), y + j * s); ctx.stroke(); });
+      if (!reduce && on){ const f = (now / 1300) % 1; ctx.globalAlpha = 1 - f; ctx.beginPath(); ctx.arc(x, y, 8 + f * 22, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+      ctx.fillStyle = c; ctx.fillText(m.label, x + s + 4, y + 3);
+    });
+    if (!xDyad) return;
+    const d = xDyad, P = d.pts.map(([p, k]) => proj(p, k));
+    const live = d.state === 'live', done = d.state === 'done';
+    const c = done ? d.c : live ? '#ffe6e6' : '#ff8080';
+    const grow = live && !reduce ? Math.min(1, (now - d.born) / 800) : 1, n = Math.max(2, Math.ceil(P.length * grow));
+    for (const hidden of [true, false]){
+      ctx.globalAlpha = hidden ? .25 : (d.state === 'idle' ? .8 : 1);
+      ctx.strokeStyle = c; ctx.lineWidth = done ? 2.6 : live ? 2 : 1.3; ctx.setLineDash(hidden ? [2, 3] : d.state === 'idle' ? [4, 3] : []);
+      if (!hidden && d.state !== 'idle'){ ctx.shadowColor = '#ff1a1a'; ctx.shadowBlur = done ? 12 : 8; }
+      ctx.beginPath(); let pen = false;
+      P.slice(0, n).forEach(([x, y, h]) => { if (h === hidden){ pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y); pen = true; } else pen = false; });
+      ctx.stroke(); ctx.shadowBlur = 0;
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    if (live && !reduce) for (let i = 0; i < 3; i++){
+      const f = ((now - d.born) / 1100 + i / 3) % 1, q = P[Math.floor(f * (P.length - 1))];
+      if (q && !q[2]){ ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(q[0], q[1], 2.2, 0, Math.PI * 2); ctx.fill(); }
+    }
+    [[P[0], d.a, -1], [P[P.length - 1], d.b, 1]].forEach(([q, label, side]) => {
+      if (!q || q[2]) return;
+      ctx.fillStyle = c; ctx.fillRect(q[0] - 2.5, q[1] - 2.5, 5, 5);
+      ctx.fillStyle = done ? c : '#ffd0d0'; ctx.textAlign = side < 0 ? 'right' : 'left';
+      ctx.fillText(label, q[0] + side * 8, q[1] + (side < 0 ? -6 : 12)); ctx.textAlign = 'left';
+    });
+  }
+  const redraw = () => { if (!raf) draw(performance.now()); };
+
   // ---- life cycle of the mock activity ----
   function tick(now){
     const dt = Math.min(64, now - lastT); lastT = now;
-    if (!drag && now - lastUser > 1600) rot[0] += dt * 0.006;
+    if (xFocus){
+      const k = Math.min(1, (now - xFocus.t0) / xFocus.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      rot = [xFocus.from[0] + xFocus.d[0] * e, xFocus.from[1] + xFocus.d[1] * e, 0];
+      if (k >= 1) xFocus = null;
+    } else if (!drag && !xHold && now - lastUser > 1600) rot[0] += dt * 0.006;
     for (let i = 0; i < arcs.length; i++) if (now - arcs[i].born > arcs[i].life) arcs[i] = newArc(now);
     for (let i = 0; i < hot.length; i++) if (now - hot[i].born > hot[i].life) hot[i] = newHot();
     onCount && onCount(arcs.length, hot.filter(h => visible(h.p)).length, rot);
@@ -199,7 +256,15 @@ window.WarGlobe = (opts) => {
     rot = [drag[2] + (e.clientX - drag[0]) * 0.35, Math.max(-80, Math.min(80, drag[3] - (e.clientY - drag[1]) * 0.35)), 0];
     lastUser = performance.now(); if (!running) draw(lastUser);
   });
-  const end = () => { drag = null; lastUser = performance.now(); };
+  const end = e => {
+    // a click without a drag picks an experiment marker, if one is under the pointer
+    if (drag && e && e.type === 'pointerup' && xOnPick && Math.hypot(e.clientX - drag[0], e.clientY - drag[1]) < 5){
+      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+      const hit = xHits.find(h => Math.hypot(h.x - px, h.y - py) < 16);
+      if (hit) xOnPick(hit.k);
+    }
+    drag = null; lastUser = performance.now();
+  };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('keydown', e => {
     const k = { ArrowLeft: [-8, 0], ArrowRight: [8, 0], ArrowUp: [0, 6], ArrowDown: [0, -6] }[e.key];
@@ -218,5 +283,20 @@ window.WarGlobe = (opts) => {
     arcs(on){ showArcs = on; draw(performance.now()); },
     hot(on){ showHot = on; draw(performance.now()); },
     get running(){ return running; },
+    // the experiment console's hooks; everything it passes in is synthetic
+    exp: {
+      marks(list, onPick){ xMarks = list || []; xOnPick = onPick || null; redraw(); },
+      focus(p, ms = 1400){
+        xHold = true;
+        const to = [-p[0], Math.max(-60, Math.min(60, -p[1]))];
+        if (reduce || !raf){ xFocus = null; rot = [to[0], to[1], 0]; redraw(); return; }
+        const d0 = ((to[0] - rot[0]) % 360 + 540) % 360 - 180;
+        xFocus = { from: [rot[0], rot[1]], d: [d0, to[1] - rot[1]], t0: performance.now(), ms };
+      },
+      dyad(d){ xDyad = d ? { ...d, state: 'idle', born: performance.now(), pts: liftPts(d.pa, d.pb) } : null; redraw(); },
+      state(s, c){ if (xDyad){ xDyad.state = s; xDyad.c = c || xDyad.c; xDyad.born = performance.now(); } redraw(); },
+      dim(on){ mockA = on ? .3 : 1; redraw(); },
+      release(){ xMarks = []; xOnPick = null; xDyad = null; xFocus = null; xHold = false; mockA = 1; lastUser = performance.now(); redraw(); },
+    },
   };
 };

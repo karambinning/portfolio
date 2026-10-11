@@ -7,7 +7,7 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const WINDOWS = [
     ['icarus','ICARUS','#ff8a3d'], ['kam','K·A·M','#00d4ff'], ['themis','THEMIS','#ffcc00'],
-    ['quant','QUANT','#ff3355'], ['declaration','DECLARATION','#c084fc'], ['notch','NOTCH','#ff66cc'],
+    ['quant','QUANT TRADING','#ff3355'], ['declaration','DECLARATION','#c084fc'], ['notch','NOTCH','#ff66cc'],
     ['ride','RIDE','#ffe400'], ['futurewarfare','FUTURE WARFARE','#ff4444'],
   ];
 
