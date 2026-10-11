@@ -97,7 +97,13 @@
         { ...T0, opacity: O(1), outline: clear, clipPath: C('inset(0 0 0 0)'), ...M(0, 1) }
       ];
       if (!e.vis) return;   // a plain wrapper: its contents do the work
-      try { st.anims.push(e.el.animate(kf, { duration: D, delay: T[i], easing: 'steps(6,end)', fill: mode === 'out' ? 'forwards' : 'both' })); } catch (_){}
+      try {
+        const an = e.el.animate(kf, { duration: D, delay: T[i], easing: 'steps(6,end)', fill: mode === 'out' ? 'forwards' : 'both' });
+        st.anims.push(an);
+        // building: each piece lets go of its wireframe the moment it has formed, so the page settles piece by piece
+        // instead of every outline vanishing at once at the end
+        if (mode === 'in') an.finished.then(() => an.cancel(), () => {});
+      } catch (_){}
       // infection: before a piece is torn down, the opposing colour spreads into it (text, borders, fills, the globe),
       // running a little ahead of the destruction so the colour visibly travels through the page
       if (mode === 'out' && infect){
