@@ -468,7 +468,7 @@
          ['Not allowed','Contact anyone or send anything. It answers; I act.'],
          ['Status','On demand: it runs when I ask it something.']] },
 
-    { id:'moltimus', name:'MOLTIMUS', c:'#ff66aa', tier:'live', cls:'core', role:'Social reconnaissance', tag:'LIVE · SCHEDULED', sim:'moltimus',
+    { id:'moltimus', name:'MOLTIMUS', c:'#ff66aa', tier:'live', cls:'core', role:'Social agent', tag:'LIVE · SCHEDULED', sim:'moltimus',
       f:[['Lives on','<b>M3</b>, the career node.'],
          ['Runs as','A <b>scheduled job</b>, every few hours.'],
          ['Does','Reads a social network, notes what is new and relevant, and drafts replies or posts for me to look at.'],
@@ -551,7 +551,7 @@
     warden:   [['Jun','Deterministic watchdog on the server'],['Jul–Sep','Replaced by fleet-guard + agent-health on M1']],
     builder:  [['Sep','Overnight builder on KAM, branch-only, relayed by M1']],
     krabs:    [['Mar–Apr','War Room: paper, then small live tests'],['Jun','World Cup in-play model, 26 matches'],['25 Jun','Server lost · archived']],
-    moltimus: [['Jul','v3 recon agent'],['Now','Scheduled, with a digest']],
+    moltimus: [['Jul','v3 social agent'],['Now','Scheduled, with a digest']],
     scout:    [['Jul','Defined'],['11 Oct','Switched on']],
     analyst:  [['Jul','Defined'],['11 Oct','Switched on']],
     archivist:[['Jul','Defined'],['11 Oct','Switched on']],
@@ -705,7 +705,7 @@
     },
 
     moltimus(b){
-      $('simt').textContent = 'RECONNAISSANCE · EVERY FEW HOURS';
+      $('simt').textContent = 'SOCIAL · EVERY FEW HOURS';
       b.innerHTML = `<div class="sweep"><div class="radar" aria-hidden="true"></div><div><div class="lbl">Sweep</div>
           <div class="k-t" id="ms">reading the network…</div><div class="note" id="mn">next sweep in 3h 58m</div></div></div>
         <div class="log" id="ml"></div><div class="draft" id="md" hidden></div>`;
