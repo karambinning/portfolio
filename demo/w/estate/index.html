@@ -205,7 +205,7 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
   @media (max-width:600px){
     .t-body.est{overscroll-behavior:contain;scroll-behavior:smooth}
     /* the brain takes the whole window; the first callout title peeks in below it as the cue to scroll */
-    .stage{height:calc(100% - 38px);min-height:340px}
+    .stage{height:calc(100% - 38px);min-height:250px}
     .host{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     .hud{top:6px;width:calc(100% - 24px);white-space:normal;font-size:12px;letter-spacing:.06em;line-height:1.35}
     .hud .big{font-size:30px;letter-spacing:.14em}
@@ -215,10 +215,13 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
     .mnode b{font-size:22px}
     .mnode .k{font-size:12px;letter-spacing:.04em}
     .mnode:active{background:color-mix(in srgb,var(--c) 34%,var(--screen))}
-    .dock{bottom:4px;gap:2px;width:calc(100% - 20px)}
-    .zoom{width:100%;gap:6px;font-size:12px;letter-spacing:.06em}
-    .zoom span{flex:1;margin-right:0;min-width:0}
-    .zoom button{width:44px;height:44px;font:800 18px/44px var(--mono);-webkit-tap-highlight-color:transparent}
+    /* the dock: zoom buttons stacked at the right edge, the hint and the activity line along the bottom; it lets drags through to the brain */
+    .dock{bottom:4px;width:calc(100% - 20px);display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:6px 8px;align-items:end;pointer-events:none}
+    .zoom{display:contents;font-size:12px;letter-spacing:.06em}
+    .zoom span{grid-column:1;grid-row:3;margin-right:0;min-width:0;align-self:end}
+    #zIn{grid-column:2;grid-row:1} #zOut{grid-column:2;grid-row:2} #zReset{grid-column:2;grid-row:3}
+    .ticker{grid-column:1 / -1;grid-row:4}
+    .zoom button{pointer-events:auto;width:44px;height:44px;font:800 18px/44px var(--mono);-webkit-tap-highlight-color:transparent}
     .zoom button:active{background:color-mix(in srgb,var(--a) 30%,var(--screen))}
     .ticker{font-size:12px}
     .ticker b{min-width:0;margin-right:6px}
@@ -267,7 +270,13 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
     .p-screen .kbs .c b{font-size:14px}
     .t-unit{font-size:12px}
     .bf-bar{font-size:12px;letter-spacing:.04em}
+    .bf-bar span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .blog{font-size:12px}
+  }
+  @media (max-width:600px) and (max-height:480px){
+    .hud .big{font-size:24px}
+    .zoom button{width:44px;height:44px}
+    .dock{gap:4px 8px}
   }
   @media (max-width:360px){
     .term>.t-ctl{padding:2px 4px calc(4px + env(safe-area-inset-bottom) * .5)}
