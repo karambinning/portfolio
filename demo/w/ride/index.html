@@ -10,7 +10,7 @@
   @font-face{font-family:"PS2P";src:url("assets/fonts/press_start_2p.ttf") format("truetype");font-display:block}
   @font-face{font-family:"Silk";src:url("assets/fonts/silkscreen.ttf") format("truetype");font-display:block}
 
-  .ride{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;flex:1;min-height:0}
+  .ride{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;flex:1;min-height:0}
   .console{display:flex;flex-direction:column;gap:8px;min-height:0}
   .shell{position:relative;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:#000;padding:8px 10px 10px;
     box-shadow:0 0 28px color-mix(in srgb,var(--a) 10%,transparent),inset 0 0 0 3px #0b0b0b}
@@ -53,7 +53,8 @@
     .t-ctl{gap:8px 12px} .t-ctl .t-btn{font-size:12.5px}
     #scr{max-height:none}
   }
-  .notapp{border:1px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);padding:9px 11px;font:600 12.5px/1.5 var(--mono);color:var(--text);margin:10px 0 4px}
+  .notapp{border:1px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);padding:9px 11px;font:600 12.5px/1.5 var(--mono);color:var(--text);margin:2px 0 0}
+  .info .t-p{font-size:12.5px;line-height:1.5}
   .notapp b{color:var(--a);display:block;letter-spacing:.06em;margin-bottom:2px}
 </style>
 </head>
@@ -74,6 +75,7 @@
           <span class="padhint">◀ ▶ SPEED · STEER<br>A START · JUMP · PEDAL</span>
           <button class="pk a" data-k="A" aria-label="A: start, jump, pedal">A</button>
         </div>
+        <div class="notapp"><b>THE GAME ABOVE IS NOT THE APP.</b> It is a small arcade game I made for this page from the app's sprites and rules. The real app is a bike computer, described alongside.</div>
         <div class="sr" id="sr" aria-live="polite"></div>
       </section>
 
@@ -84,7 +86,6 @@
           <div class="t-sub2">Offline · built for my own rides</div>
         </div>
 
-        <div class="notapp"><b>THE GAME ON THE LEFT IS NOT THE APP.</b> It is a small arcade game I made for this page from the app's sprites and rules. The real app is a bike computer, described below.</div>
         <div class="pane on" id="p-app">
           <div class="t-label">What the app actually is</div>
           <p class="t-p">K·A·M RIDE is the bike computer I ride with. It is an <b>Android app</b>, written in <b>Kotlin with Jetpack Compose</b>, that records rides from the phone's GPS and exports them as <b>GPX and TCX</b> files, so a ride opens in any training app.</p>

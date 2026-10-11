@@ -46,6 +46,8 @@
 .readout .cred a{color:var(--b)}
 #note{min-height:1.4em;color:var(--b);font:700 11px/1.4 var(--mono);text-transform:uppercase}
 @media (max-width:860px){ .nb{grid-template-columns:1fr} .side{overflow:visible} .stagecol #lap{flex:none} }
+/* the laptop base is 5% wider than the screen each side; on a phone that would push the page sideways */
+#lap.narrow:not(.zoom){overflow-x:clip}
 #lap.zoom{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 #lap.zoom #bezel{left:0;transform:none}
 .zoomb{display:none}

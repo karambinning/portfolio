@@ -103,7 +103,7 @@
   function mount(host, kind){
     const el = document.createElement('div'); el.className = 'kbs'; el.setAttribute('aria-hidden', 'true'); host.appendChild(el);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let iv = null; const every = (f, ms) => { f(); f(); f(); if (!reduce) iv = setInterval(f, ms); };
+    let iv = null; const every = (f, ms) => { f(); f(); f(); if (!reduce) iv = setInterval(() => el.isConnected ? f() : clearInterval(iv), ms); };
     KINDS[kind](el, every);
     return () => { clearInterval(iv); el.remove(); };
   }

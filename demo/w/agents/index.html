@@ -315,6 +315,7 @@
   <nav data-hub></nav>
 </div>
 <script src="../../_frame/frame.js"></script>
+<script src="../../_frame/showcase.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -604,14 +605,9 @@
     },
 
     yerson(b, a){
-      $('simt').textContent = 'INTEL ENGINE · DEMO DASHBOARD';
-      b.classList.add('embed');
-      b.innerHTML = `<div class="emb"><iframe src="../../intel/" title="YerSon intelligence engine, demo dashboard" loading="lazy" tabindex="-1"></iframe></div>
-        <a class="t-btn openfull" href="../../intel/" target="_blank" rel="noopener"><span>OPEN FULL ↗</span></a>`;
-      const emb = b.querySelector('.emb');
-      const fit = () => { const s = b.clientWidth / 960, h = Math.max(600, b.clientHeight / s); emb.style.transform = `scale(${s})`; emb.style.height = emb.firstChild.style.height = h + 'px'; emb.style.left = emb.style.top = '0px'; };
-      fit(); requestAnimationFrame(fit);
-      (window._fitters = window._fitters || []).push(fit);
+      $('simt').textContent = 'INTEL ENGINE · SHOWCASE';
+      b.innerHTML = '<div style="position:relative;height:100%;min-height:220px"></div>';
+      window.KBShow && KBShow.mount(b.firstChild, 'intel');
     },
 
     moltimus(b){
