@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../../_frame/frame.css">
 <style>
   :root{--ok:#00ff88;--abs:#ff8a3d;--ref:#ff3355}
-  .th{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;flex:1;min-height:0}
+  .th{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:20px;flex:1;min-height:0}
   .left{display:flex;flex-direction:column;gap:12px;min-height:0}
   .pane{display:none} .pane.on{display:block}
   .pane .t-p{font-size:12.8px}
@@ -36,10 +36,12 @@
 
   /* right: the query terminal */
   .right{display:flex;flex-direction:column;gap:10px;min-height:0}
-  .tally{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .tally .t-stat{border:1px solid var(--line);padding:6px 10px 5px;flex-direction:row;align-items:baseline;gap:10px}
-  .tally .t-stat strong{font-size:30px;color:var(--c)}
-  .tally .t-stat span{color:var(--c)}
+  /* the tally doubles as the colour legend: one line along the top of the console */
+  .tally{display:flex;flex-wrap:wrap;gap:4px 18px;padding:7px 12px 6px;border-bottom:1px solid var(--line)}
+  .tally .t-stat{flex-direction:row;align-items:baseline;gap:7px}
+  .tally .t-stat strong{font-size:22px;color:var(--c)}
+  .tally .t-stat span{color:var(--c);font-size:11px}
+  .tally .t-stat em{font-style:normal;color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
   .con{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:rgba(0,0,0,.35);
     box-shadow:inset 0 0 30px color-mix(in srgb,var(--a) 6%,transparent)}
   .log{flex:1;min-height:0;overflow:auto;padding:10px 12px;font:500 12.5px/1.5 var(--mono);color:var(--body);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
@@ -51,6 +53,8 @@
   .res .tag{font:800 11px/1 var(--mono);letter-spacing:.14em;color:var(--c)}
   .res .tag i{display:inline-block;width:8px;height:8px;background:var(--c);margin-right:7px;box-shadow:0 0 8px var(--c)}
   .res .why{font-size:11px;color:var(--dim);margin-top:3px}
+  .res .head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px} .res .head .conf{flex:1;min-width:220px;margin:0}
+  .log .step.sum{white-space:normal}
   .conf{display:flex;align-items:center;gap:8px;margin:7px 0 2px;font:700 11px/1 var(--mono);color:var(--violet)}
   .conf .fill{position:relative;flex:1;height:12px;background:repeating-linear-gradient(90deg,var(--line) 0 5px,transparent 5px 8px)}
   .conf .fill i{position:absolute;inset:0;width:var(--p);background:var(--c);box-shadow:0 0 8px color-mix(in srgb,var(--c) 50%,transparent)}
@@ -82,7 +86,7 @@
     .th{grid-template-columns:1fr;flex:none}
     .right{order:-1}
     .con{min-height:430px}
-    .tally .t-stat{padding:5px 7px;gap:6px} .tally .t-stat strong{font-size:24px} .tally .t-stat span{font-size:9.5px}
+    .tally{gap:2px 12px;padding:6px 10px} .tally .t-stat{gap:5px} .tally .t-stat strong{font-size:20px} .tally .t-stat span,.tally .t-stat em{font-size:10px}
     .stg{grid-template-columns:18px 80px minmax(0,1fr)} .stg .r{grid-column:2/-1}
   }
 </style>
@@ -132,17 +136,16 @@
         </div>
       </div>
       <div class="right">
-        <div class="tally" aria-live="polite">
-          <div class="t-stat" style="--c:var(--ok)"><strong id="n-ok">0</strong><span>answered</span></div>
-          <div class="t-stat" style="--c:var(--abs)"><strong id="n-abs">0</strong><span>abstained</span></div>
-          <div class="t-stat" style="--c:var(--ref)"><strong id="n-ref">0</strong><span>refused</span></div>
-        </div>
         <div class="con">
+          <div class="tally" aria-live="polite">
+            <div class="t-stat" style="--c:var(--ok)"><strong id="n-ok">0</strong><span>answered</span><em>· quoted</em></div>
+            <div class="t-stat" style="--c:var(--abs)"><strong id="n-abs">0</strong><span>abstained</span><em>· weak evidence</em></div>
+            <div class="t-stat" style="--c:var(--ref)"><strong id="n-ref">0</strong><span>refused</span><em>· advice</em></div>
+          </div>
           <div class="log" id="log" aria-live="polite"></div>
           <div class="presets" id="presets" aria-label="Example questions"></div>
           <form class="ask" id="ask"><label for="q">&gt;</label><input id="q" autocomplete="off" spellcheck="false" placeholder="ask about the Mental Capacity Act…" maxlength="200"></form>
         </div>
-        <div class="legend"><span><i style="background:var(--ok)"></i>ANSWERED · QUOTED</span><span><i style="background:var(--abs)"></i>ABSTAINED · WEAK EVIDENCE</span><span><i style="background:var(--ref)"></i>REFUSED · ADVICE</span></div>
       </div>
     </div>
   </main>
@@ -250,6 +253,7 @@
     q = (q || '').trim(); if (!q || busy) return;
     busy = true; input.value = ''; resetPipe();
     const key = route(q), ans = A[key], [tag, c] = KIND[ans.kind];
+    log.innerHTML = '';   // one exchange at a time, so the answer always fits the console
     line('q', esc(q)); KB.beep(660, 30);
     const light = (i, col) => { stg[i].classList.add('lit'); stg[i].style.setProperty('--c', col || 'var(--a)'); };
     const stopAt = (i, col) => { stg[i].classList.add('lit', 'stop'); stg[i].style.setProperty('--c', col); stg.slice(i + 1).forEach(s => s.classList.add('off')); };
@@ -264,10 +268,14 @@
       else { s.classList.add('ok'); light(3); await wait(160); light(4); await wait(160); light(5); stg.forEach(x => x.style.setProperty('--c', c)); }
     }
     await wait(160);
+    const steps = [...log.querySelectorAll('.step')];
+    if (steps.length > 1){
+      const sum = steps.map(x => x.textContent.split(' · ')[0] + (x.classList.contains('ok') ? ' ✓' : '')).join(' · ');
+      steps.slice(1).forEach(x => x.remove()); steps[0].className = 'step sum'; steps[0].textContent = sum;
+    }
     // result
-    let h = `<div class="tag"><i></i>${tag}</div>`;
+    let h = `<div class="head"><div class="tag"><i></i>${tag}</div>${ans.conf != null ? confBar(ans.conf, c) : ''}</div>`;
     if (ans.why) h += `<div class="why">${ans.why}</div>`;
-    if (ans.conf != null) h += confBar(ans.conf, c);
     (ans.sources || []).forEach(x => { h += `<div class="quote"><span class="ref">[${x.n}] ${esc(x.ref)} <em>· ${esc(x.url)}</em></span>“${esc(x.quote)}”</div>`; });
     h += `<div class="ans">${ans.body}</div>`;
     h += `<div class="decl"><b>DECLARATION</b> · not legal advice · qualified review required · audit themis-demo-${hex(6)}${ans.sources ? ` · ${ans.sources.length} cited` : ''}</div>`;

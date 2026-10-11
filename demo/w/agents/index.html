@@ -228,6 +228,29 @@
   .hl.t{animation:hlT .62s cubic-bezier(.2,.8,.2,1) both} .hl.b{animation:hlB .62s cubic-bezier(.2,.8,.2,1) both}
   @keyframes hlT{0%{top:50%}85%{opacity:1}100%{top:0;opacity:0}} @keyframes hlB{0%{top:50%}85%{opacity:1}100%{top:100%;opacity:0}}
   @media (prefers-reduced-motion:reduce){ .scr.holo,.hl{animation:none} .hl{display:none} }
+
+  /* ---------- holograms: every agent is projected, like a suit gallery ---------- */
+  .card{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 14%,transparent),color-mix(in srgb,var(--c) 4%,transparent) 75%,transparent);
+    border-color:color-mix(in srgb,var(--c) 30%,transparent);backdrop-filter:none}
+  .card::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--c) 18%,transparent) 0 1px,transparent 1px 4px);mix-blend-mode:screen;opacity:.55}
+  .card::after{content:"";position:absolute;left:12%;right:12%;bottom:-38px;height:38px;pointer-events:none;
+    background:linear-gradient(0deg,color-mix(in srgb,var(--c) 0%,transparent),color-mix(in srgb,var(--c) 22%,transparent));
+    clip-path:polygon(20% 100%,80% 100%,100% 0,0 0);filter:blur(2px);opacity:.6}
+  .card .bot{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c) 70%,transparent));opacity:.88;animation:holoFlick 4.2s steps(1) infinite}
+  .card .cn{text-shadow:0 0 14px color-mix(in srgb,var(--c) 60%,transparent)}
+  @keyframes holoFlick{0%,100%{opacity:.88}37%{opacity:.6}38%{opacity:.92}71%{opacity:.75}72%{opacity:.9}}
+  .card.on::before{opacity:.75;animation:holoDrift 3s linear infinite}
+  @keyframes holoDrift{to{background-position:0 40px}}
+  .card.on::after{opacity:1;bottom:-64px;height:64px}
+  /* switching: a scan line sweeps the centre agent and materialises it */
+  .card.scan{animation:holoScan .55s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes holoScan{0%{clip-path:inset(0 0 100% 0);filter:brightness(2) saturate(.6)}100%{clip-path:inset(0 0 0 0);filter:none}}
+  .card .sweep{position:absolute;left:-6px;right:-6px;height:3px;top:0;pointer-events:none;background:#eaffff;
+    box-shadow:0 0 14px 4px color-mix(in srgb,var(--c) 80%,transparent);opacity:0}
+  .card.scan .sweep{animation:holoSweep .55s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes holoSweep{0%{top:0;opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .card .bot,.card.on::before,.card.scan,.card.scan .sweep{animation:none} }
 </style>
 </head>
 <body data-channel data-self="agents" data-brand="[K·B AGENTS]" data-unit="K·B AGENT FLEET · SMALL-SCALE · SEMI-AUTONOMOUS" data-status="FLEET" data-status-tail="LIVE"
@@ -751,6 +774,9 @@
     const a = BY[WHEEL[sel]];
     document.body.style.setProperty('--a', a.c);
     cards.forEach((c, i) => c.classList.toggle('on', i === sel));
+    // project the newly selected agent: a scan line sweeps it into existence
+    const c = cards[sel]; if (c && !KB.reduce){ if (!c.querySelector('.sweep')){ const sw = document.createElement('span'); sw.className = 'sweep'; c.appendChild(sw); }
+      c.classList.remove('scan'); void c.offsetWidth; c.classList.add('scan'); }
     $('bname').textContent = a.name;
     $('bsub').innerHTML = `<span class="bcls">${CLASS[a.cls][1]}</span><br>${esc(a.role)} · <b>${a.tag}</b> · ${esc(HOME[a.id])}`;
     KB.twitch($('bname'));
