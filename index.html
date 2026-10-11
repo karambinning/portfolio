@@ -613,7 +613,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
 <div id="atkLayer" hidden aria-hidden="true"></div>
 <div class="atk-fx" id="atkFx" hidden aria-hidden="true"><div class="atk-tears"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="atk-edge"></div></div>
 <div class="def-fx" id="defFx" hidden aria-hidden="true"><div class="def-hex"></div><div class="def-beam"></div><div class="def-ring"></div></div>
-<div class="atk-big" id="atkBig" aria-hidden="true">SYSTEM COMPROMISED</div>
+<div class="atk-big" id="atkBig" aria-hidden="true"></div>
 <div class="atk-shut" id="atkShut" hidden aria-hidden="true"></div>
 <div class="sshw" id="sshTerm" hidden aria-hidden="true"><div class="ssh-bar"><i></i><i></i><i></i><span>visitor@portfolio — ssh — 80×20</span></div><div class="ssh-body"></div></div>
 
@@ -1339,17 +1339,17 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
           if (i === 8) fx.classList.add('hard'); if (i === 15) fx.classList.add('max');
           return setTimeout(spawn, Math.max(28, 110 - i * 5));
         }
-        tint.classList.add('full', 'strobe'); big.classList.add('on'); burst(500);
+        tint.classList.add('full', 'strobe'); burst(500);
         setTimeout(() => { document.body.classList.remove('under-attack'); fx.hidden = true; res(); }, 420);
       })();
     });
   }
   // leaving the dissertation: the blue team recovers, windows close one by one, red fades back to blue
   const DEF_MSG = ['blue team online', 'threat isolated', 'channel 08 recovered', 'display control restored', 'signal secured', 'defences back up', 'routing restored', 'all channels blue'];
-  function attackOut(onSwap){
-    // mirror of the attack: blue-team windows spread, each quarantining a red one; red turns to blue; one phrase; shutters open
+  function attackOut(){
+    // mirror of the attack: blue-team windows spread, each quarantining a red one; red turns to blue. No words.
     return new Promise(res => {
-      const layer = $('#atkLayer'), tint = $('#atkTint'), big = $('#atkBig');
+      const layer = $('#atkLayer'), tint = $('#atkTint');
       if (reduce || layer.hidden){ layer.hidden = true; return res(); }
       const reds = [...layer.querySelectorAll('.atkw')];
       document.body.classList.add('under-defence');
@@ -1363,22 +1363,30 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
           i++; tint.style.background = `rgb(${Math.round(90 - 90 * i / total)},${Math.round(16 + 60 * i / total)},${Math.round(16 + 90 * i / total)})`;
           return setTimeout(spawn, Math.max(30, 100 - i * 5));
         }
-        big.textContent = 'THREAT CONTAINED'; big.className = 'atk-big blue on';
-        setTimeout(() => {
-          // cyan shutters rip apart, carrying the phrase, and reveal the next channel
-          const sh = $('#atkShut'), N = 12; sh.innerHTML = ''; sh.classList.add('blue');
-          for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
-            d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28).toFixed(0) + 'ms';
-            d.innerHTML = `<span style="top:${(-k * 100).toFixed(2)}%"><em style="color:#00d4ff;font-style:normal">[&nbsp;</em>THREAT CONTAINED<em style="color:#00d4ff;font-style:normal">&nbsp;]_</em></span>`; sh.appendChild(d); }
-          sh.hidden = false; onSwap && onSwap(); sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
-          big.className = 'atk-big'; big.textContent = 'SYSTEM COMPROMISED';
-          layer.hidden = true; layer.innerHTML = ''; tint.className = 'atk-tint'; tint.style.opacity = '0'; tint.style.background = '';
-          document.body.classList.remove('under-defence');
-          setTimeout(() => { sh.hidden = true; sh.innerHTML = ''; sh.classList.remove('blue'); res(); }, 900);
-        }, 380);
+        document.body.classList.remove('under-defence'); setTimeout(res, 240);
       })();
     });
   }
+  // after the attack or defence: the windows fold away and the light drops, so the page underneath can be seen coming apart
+  function atkSettle(){
+    const layer = $('#atkLayer'), tint = $('#atkTint');
+    layer.querySelectorAll('.atkw').forEach((w, k) => setTimeout(() => w.classList.add('close'), k * 12));
+    tint.classList.remove('full', 'strobe'); tint.style.transition = 'opacity .35s'; tint.style.opacity = '.42';
+    setTimeout(() => { layer.hidden = true; layer.innerHTML = ''; }, 420);
+  }
+  // the single swap point: plain shutters (no words) cover the screen, the slide changes underneath, then they rip open
+  function atkShutters(blue, onSwap){
+    return new Promise(res => {
+      const sh = $('#atkShut'), N = 12; sh.innerHTML = ''; sh.classList.toggle('blue', !!blue);
+      for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
+        d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28).toFixed(0) + 'ms'; sh.appendChild(d); }
+      sh.hidden = false; onSwap(); sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
+      const tint = $('#atkTint'); tint.style.transition = 'opacity .9s'; tint.style.opacity = '0';
+      setTimeout(() => { sh.hidden = true; sh.innerHTML = ''; sh.classList.remove('blue', 'go');
+        tint.className = 'atk-tint'; tint.style.transition = ''; tint.style.opacity = '0'; tint.style.background = ''; res(); }, 900);
+    });
+  }
+
 
 
   /* ---------- hack to top: a quick fake intrusion in green, then straight back to channel 1 ---------- */
@@ -1540,38 +1548,29 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     const a = scenes[cur], b = scenes[n];
     if (reduce){ a.classList.remove('active'); b.classList.add('active'); b.scrollTop = 0; cur = n; update(); busy = false; return; }
     // "Also built" is a quick glance: a clean cyan CRT scan, no glitch either side
-    if (b.dataset.attack !== undefined){ // into the dissertation: blue to red
-      chanText(a, 'out', 1500, 'rgba(255,48,72,.9)');            // the old page falls apart under the attack
-      await attackIn();
-      // the single swap point: the screen is fully red here
-      a.classList.remove('active'); restore(a); const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
-      b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-      chanText(b, 'in', 1100, 'rgba(255,48,72,.9)');             // the dissertation builds itself back as the shutters open
-      // the arrival: red shutter slices rip apart, carrying the title with them, and reveal the dissertation booting in red
-      const sh = $('#atkShut'), N = 12; sh.innerHTML = '';
-      for (let k = 0; k < N; k++){ const d = document.createElement('i'); d.style.top = (k / N * 100) + '%'; d.style.height = (100 / N + .2) + '%';
-        d.style.setProperty('--dir', k % 2 ? '1' : '-1'); d.style.animationDelay = (Math.abs(k - N / 2) * 28 + Math.random() * 30).toFixed(0) + 'ms';
-        d.innerHTML = `<span style="top:${(-k / N * 100 * N).toFixed(2)}%"><em style="color:#ff3355;font-style:normal">[&nbsp;</em>SYSTEM COMPROMISED<em style="color:#ff3355;font-style:normal">&nbsp;]_</em></span>`; sh.appendChild(d); }
-      sh.hidden = false; sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go');
-      $('#atkBig').classList.remove('on'); $('#atkLayer').hidden = true; $('#atkLayer').innerHTML = '';
-      $('#atkTint').className = 'atk-tint'; $('#atkTint').style.opacity = '0';
-      b.classList.add('redboot'); burst(400);
-      setTimeout(() => { sh.hidden = true; sh.innerHTML = ''; b.classList.remove('redboot'); }, 900);
-      busy = false; lockUntil = performance.now() + 300; return;
-    }
-    if (a.dataset.attack !== undefined){ // leaving the dissertation: red to blue
-      const layer = $('#atkLayer'), tint = $('#atkTint');
-      layer.innerHTML = ''; layer.hidden = false; for (let k = 0; k < 12; k++) atkWin(layer, k);
-      tint.className = 'atk-tint full'; tint.style.opacity = '';
-      chanText(a, 'out', 1300, 'rgba(0,212,255,.9)');            // the dissertation falls apart under the defence
-      await attackOut(() => {                                    // the single swap point: fully covered, shutters about to open
-        a.classList.remove('active'); const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
+    if (b.dataset.attack !== undefined || a.dataset.attack !== undefined){
+      // dissertation, both ways: 1) the attack (in, blue to red) or the defence (out, red to blue) plays out;
+      // 2) the old slide is taken apart line by line; 3) shutters swap it; 4) the new slide types and scans itself back. No words.
+      const into = b.dataset.attack !== undefined, col = into ? 'rgba(255,48,72,.9)' : 'rgba(0,212,255,.9)';
+      if (into) await attackIn();
+      else {
+        const layer = $('#atkLayer'), tint = $('#atkTint');
+        layer.innerHTML = ''; layer.hidden = false; for (let k = 0; k < 12; k++) atkWin(layer, k);
+        tint.className = 'atk-tint full'; tint.style.opacity = '';
+        await attackOut();
+      }
+      atkSettle();
+      chanText(a, 'out', 1300, col);
+      await new Promise(r => setTimeout(r, 1400));
+      await atkShutters(!into, () => {
+        a.classList.remove('active'); restore(a); const fa = a.querySelector('.chan-app'); fa && fa.contentWindow && fa.contentWindow.postMessage({ kbRestore: 1 }, '*');
         b.scrollTop = 0; b.classList.add('active'); cur = n; update();
-        chanText(b, 'in', 1000, 'rgba(0,212,255,.9)');
+        chanText(b, 'in', 1300, col);
+        if (into){ b.classList.add('redboot'); setTimeout(() => b.classList.remove('redboot'), 900); }
       });
       busy = false; lockUntil = performance.now() + 300; return;
     }
-    if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && !b.dataset.warp && !b.dataset.attack)){ // hologram projection: close to a line, then project open between two scan lines
+    if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && b.dataset.warp === undefined && b.dataset.attack === undefined)){ // hologram projection: close to a line, then project open between two scan lines
       const hl = $('#holoLines');
       a.classList.add('holo-close'); hl.hidden = false; hl.className = 'holo-lines closing';
       await new Promise(r => setTimeout(r, reduce ? 0 : 320));
