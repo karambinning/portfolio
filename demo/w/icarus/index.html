@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ICARUS — terminal</title>
-<link rel="stylesheet" href="../../_frame/frame.css?v=10111700">
+<link rel="stylesheet" href="../../_frame/frame.css?v=10111730">
 <style>
   .ica{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:20px;flex:1;min-height:0}
   .left{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:4px}
@@ -67,6 +67,60 @@
   }
   @media (max-width:640px){ .t-ctl{gap:8px 12px} .t-ctl .t-btn{font-size:12.5px} }
   @media (max-height:600px) and (min-width:761px){ .t-sub2{display:none} }
+
+  /* ---------- phones (≤ 600px): one tab per screen, the simulation is its own tab ---------- */
+  @media (max-width:600px){
+    /* the pane buttons become a segmented control: one row, the current pane lit, every segment ≥ 44px */
+    .t-ctl{flex-wrap:nowrap;gap:0;padding:6px 12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+    .t-ctl::-webkit-scrollbar{display:none}
+    .t-ctl .sp{display:none}
+    .t-ctl .t-btn{box-sizing:border-box;min-height:46px;justify-content:center;text-align:center;font-size:12px;line-height:1.15;letter-spacing:.04em;white-space:normal}
+    .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+    .t-ctl [data-pane]{flex:1 1 0;padding:0 8px;border:1px solid var(--line);margin-left:-1px;position:relative;transition:background .18s,box-shadow .18s}
+    .t-ctl [data-pane]:first-child{margin-left:0}
+    .t-ctl [data-pane][aria-pressed="true"]{z-index:1;border-color:color-mix(in srgb,var(--b) 70%,transparent);background:color-mix(in srgb,var(--b) 13%,var(--screen));box-shadow:inset 0 -3px 0 var(--b)}
+    .t-ctl #demo{flex:none;margin-left:8px;padding:0 10px;border:1px solid color-mix(in srgb,var(--a) 60%,transparent);background:color-mix(in srgb,var(--a) 9%,transparent)}
+    .t-ctl .t-btn:active{transform:none;opacity:1;background:color-mix(in srgb,var(--a) 22%,var(--screen))}
+
+    .t-sub2{font-size:12.5px}
+    .ica{gap:12px}
+    .t-p{font-size:13.5px}
+    .t-list li{font-size:13px;padding:6px 0 6px 18px}
+    .st{font-size:12px;padding:2px 5px;letter-spacing:.04em}
+    .rule b{font-size:12px} .rule span{font-size:12.5px}
+    .tests{font-size:12px;gap:8px 14px}
+    .crash .k{font-size:12px} .crash p{font-size:13px}
+    .slot .wait{font-size:13px} .slot .wait small,.slot .rec{font-size:12px;letter-spacing:.06em}
+    .keys{font-size:12.5px}
+    .log{font-size:12px;height:170px}
+
+    /* the simulation shows on the SIM tab, above its notes and flight log */
+    .sim{display:none;padding:8px;gap:8px}
+    .ica:has(#p-sim.on) .sim{display:flex;order:-1}
+    .srow{gap:6px}
+    .srow .t-label{flex-basis:100%;font-size:12px}
+    .srow .sp{display:none}
+    .sb{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 6px;font-size:12.5px;
+      border:1px solid var(--line);background:color-mix(in srgb,var(--screen) 70%,transparent);flex:1 1 auto;-webkit-user-select:none;user-select:none}
+    .sb::before,.sb::after{content:none}
+    .sb:active{background:color-mix(in srgb,var(--a) 22%,var(--screen))}
+    .sb.stop{border-color:color-mix(in srgb,#ff3355 55%,transparent)}
+    .srow:has(#altDn){display:grid;grid-template-columns:repeat(10,minmax(0,1fr))}
+    .srow:has(#altDn) > *{grid-column:span 2}
+    #altDn,#altUp{grid-column:span 3}
+    .alt{grid-column:span 4;font-size:13px;align-self:center}
+    .alt small{font-size:12px}
+    .cv{flex:none;height:clamp(250px,86vw,370px);touch-action:manipulation}
+    .verdict{font-size:12.5px;min-height:44px}
+    .verdict .sb{display:flex;width:100%;margin-top:6px}
+    .verdict .sb[hidden]{display:none}
+    .tele{font-size:12px;gap:4px 12px}
+  }
+  @media (max-width:374px){
+    .t-ctl [data-pane]{padding:0 5px}
+    .t-ctl #demo{width:44px;padding:0;margin-left:6px}
+    .t-ctl #demo span{display:block;width:1.1ch;overflow:hidden;white-space:nowrap}
+  }
 </style>
 </head>
 <body data-self="icarus" data-brand="[ICARUS]" data-icons="◬ ◎ ⟲" data-unit="ICARUS · AUTONOMOUS FLIGHT TERMINAL · UNIT 03"
@@ -180,8 +234,24 @@
   </div>
   <nav data-hub></nav>
 </div>
-<script src="../../_frame/frame.js?v=10111700"></script>
+<script src="../../_frame/frame.js?v=10111730"></script>
 <script src="assets/icarus-core.js"></script>
 <script src="assets/sim.js"></script>
+<script>
+/* phones only (≤ 600px): switching tab brings its content into view; DEMO opens the SIM tab. Nothing here runs on a desktop. */
+(() => {
+  const PH = matchMedia('(max-width:600px)'), body = document.querySelector('.t-body'), ica = document.querySelector('.ica'), ctl = document.querySelector('.t-ctl');
+  const go = top => body.scrollTo({ top: Math.max(0, top), behavior: KB.reduce ? 'auto' : 'smooth' });
+  document.querySelectorAll('[data-pane]').forEach(b => b.addEventListener('click', () => {
+    if (!PH.matches) return;
+    go(b.dataset.pane === 'sim' ? ica.offsetTop - 6 : Math.min(body.scrollTop, ica.offsetTop - 6));
+    ctl.scrollTo({ left: b.offsetLeft - (ctl.clientWidth - b.offsetWidth) / 2, behavior: KB.reduce ? 'auto' : 'smooth' });
+  }));
+  document.getElementById('demo').addEventListener('click', e => {
+    if (!PH.matches || !/STOP/.test(e.currentTarget.textContent)) return;
+    const s = document.querySelector('[data-pane="sim"]'); if (s.getAttribute('aria-pressed') !== 'true') s.click();
+  });
+})();
+</script>
 </body>
 </html>

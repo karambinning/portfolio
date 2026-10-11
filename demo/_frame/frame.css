@@ -159,7 +159,7 @@ body{animation:t-flicker 6s steps(1) infinite}
   .t-btn{display:inline-flex;align-items:center;min-height:44px;font-size:14px}
   .t-btn:active{opacity:.7;transform:scale(.96)}
   /* the hub bar: one row you can swipe through */
-  .t-hub{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;gap:0 16px;padding:0 14px calc(env(safe-area-inset-bottom) * .5);font-size:13px}
+  .t-hub{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding:0 14px;scrollbar-width:none;gap:0 16px;padding:0 14px calc(env(safe-area-inset-bottom) * .5);font-size:13px}
   .t-hub::-webkit-scrollbar{display:none}
   .t-hub button{display:inline-flex;align-items:center;min-height:44px;scroll-snap-align:start;flex:none}
   .t-hub button:active{opacity:.7}
