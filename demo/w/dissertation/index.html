@@ -173,6 +173,7 @@
     body.xmode #xOpen{display:none}
     body.xmode .stage{width:min(100%,46vh)}
     .xc{max-height:52vh;padding:8px 14px 34px;gap:8px;overscroll-behavior:contain}
+    .xc > *{flex:none}
     body.xmode .page{padding-bottom:54vh}
     .xc-h .t{font-size:12px;letter-spacing:.1em}
     .xc-h .x{min-width:44px;min-height:44px;font-size:12px;margin:-6px -6px -6px auto}
@@ -524,10 +525,11 @@
   const xc = $('xc');
   const show = el => { if (PH.matches && el && !xc.hidden) xc.scrollTo({ top: Math.max(0, el.offsetTop - 44), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
   const after = f => requestAnimationFrame(() => requestAnimationFrame(f));
-  xc.addEventListener('click', e => {
-    if (e.target.closest('#xHs')) after(() => show($('xs2')));
-    else if (e.target.closest('#xDy')) after(() => show($('xs3')));
-    else if (e.target.closest('#xGo,#xAgain,#xReset')) after(() => show(xc.firstElementChild));
+  xc.addEventListener('click', e => {      // (the pickers re-render on click, so test the path, not the detached target)
+    const on = id => e.composedPath().includes($(id));
+    if (on('xHs')) after(() => show($('xs2')));
+    else if (on('xDy')) after(() => show($('xs3')));
+    else if (on('xGo') || on('xAgain') || on('xReset')) after(() => show(xc.firstElementChild));
   });
   const picked = () => $('xHs').querySelector('[aria-pressed="true"]')?.dataset.h;
   let was = null; $('globe').addEventListener('pointerdown', () => { was = picked(); });

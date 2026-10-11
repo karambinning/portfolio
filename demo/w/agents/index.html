@@ -260,17 +260,21 @@
     .scr{gap:8px}
     .tline{flex-wrap:nowrap;align-items:center;gap:8px;padding-right:0}
     /* the wheel: centre card, one neighbour peeking each side, swiped by touch, picked by tap */
-    .stage{flex:1 1 auto;min-height:236px;--cw:min(156px,44vw);-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+    .stage{flex:none;min-height:236px;--cw:min(156px,44vw);-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
     .stage::after{bottom:4%;width:min(240px,64%);height:22px}
     .arrow{display:none}
-    .hint{top:6px;font-size:0;letter-spacing:0}
+    .hint{top:auto;bottom:5px;font-size:0;letter-spacing:0}
     .hint::after{content:"◂ SWIPE · TAP THE CENTRE TO PICK ▸";font:700 12px/1 var(--mono);letter-spacing:.08em}
-    .card{top:52%;padding:8px 6px 9px;gap:4px;-webkit-tap-highlight-color:transparent}
+    .card{top:47%;padding:8px 6px 9px;gap:4px;-webkit-tap-highlight-color:transparent}
+    /* the neighbours are previews: sprite and name only, so nothing is shrunk below a readable size */
+    .card.side .ccls,.card.side .bdg,.card.side .cr{visibility:hidden}
+    .card .press{font-size:0}
+    .card .press::after{content:"TAP ▸ PICK";font-size:12px}
     .card .ccls{font-size:12px;letter-spacing:.04em;line-height:1.2}
     .card .bdg{font-size:12px;letter-spacing:.08em;padding:3px 6px}
     .card .cn{font-size:24px;letter-spacing:.08em}
     .card .cr{font-size:12px;letter-spacing:.02em;min-height:0;line-height:1.25}
-    .card .press{font-size:12px;letter-spacing:.08em}
+    .card .press::after{letter-spacing:.08em}
     .card:active{filter:brightness(1.25)}
     .card::after{bottom:-26px;height:26px} .card.on::after{bottom:-34px;height:34px}
     /* the selected agent's name and line; PICK lives in the control row */
@@ -830,7 +834,7 @@
     return `<button class="card ${a.off ? 'dim' : ''}" data-i="${i}" style="--c:${a.c}" aria-label="${a.name}, ${CLASS[a.cls][1]}, ${a.role}, ${bt}">
       <span class="ccls">${CLASS[a.cls][0]}</span><span class="bdg ${bc}">${bt}</span><span class="spr"></span><span class="cn">${a.name}</span><span class="cr">${a.role}</span><span class="press">PRESS ▸ PICK</span></button>`; }).join('');
   const cards = [...wheel.children];
-  const drawSprites = () => { const s = PHONE() ? 2.2 : small() ? 3 : 4; cards.forEach((c, i) => { c.querySelector('.spr').innerHTML = bot(BY[WHEEL[i]].c, s); }); };
+  const drawSprites = () => { const s = PHONE() ? 2.4 : small() ? 3 : 4; cards.forEach((c, i) => { c.querySelector('.spr').innerHTML = bot(BY[WHEEL[i]].c, s); }); };
   drawSprites();
 
   let pos = 0, sel = 0;
@@ -841,13 +845,22 @@
     cards.forEach((c, i) => {
       const o = wrap(i - pos), ao = Math.abs(o), oc = Math.max(-1.6, Math.min(1.6, o));
       const x = oc * W * .33, z = -Math.min(ao, 1.6) * 80, ry = Math.max(-34, Math.min(34, -o * 30));
-      const sc = ao < 1 ? 1.04 - ao * .32 : .72;
+      const sc = ao < 1 ? 1.04 - ao * .24 : .8;
       c.style.transform = `translate(-50%,-50%) translate3d(${x}px,0,${z}px) rotateY(${ry}deg) scale(${sc})`;
       c.style.opacity = ao <= 1 ? 1 - ao * .15 : Math.max(0, .85 - (ao - 1) * 2.2);
       c.style.zIndex = 100 - Math.round(ao * 10);
       c.style.pointerEvents = ao > 1.4 ? 'none' : '';
       c.tabIndex = Math.round(wrap(i - pos)) === 0 ? 0 : -1;
+      c.classList.toggle('side', ao >= .5);
     });
+  }
+  // phone: the wheel takes the room the screen has, above the selected agent's name; the fleet rules sit below the fold
+  function fitStage(){
+    if (!PHONE() || mode !== 'select') return;
+    const tb = document.querySelector('.t-body'), tr = tb.getBoundingClientRect(), cs = getComputedStyle(tb);
+    const top = stage.getBoundingClientRect().top - tr.top + tb.scrollTop;
+    const avail = tb.clientHeight - parseFloat(cs.paddingBottom) - top - document.querySelector('#sScr .banner').offsetHeight - 10;
+    stage.style.height = Math.max(236, Math.round(avail)) + 'px';
   }
   function layout(){
     if (PHONE()){ layoutPhone(); return; }
@@ -979,7 +992,7 @@
     $('pScr').classList.remove('on'); $('sScr').classList.add('on'); holo($('sScr'));
     $('ctlP').hidden = true; $('ctlS').hidden = false;
     const i = WHEEL.indexOf(curId); if (i >= 0 && i !== sel) go(i, false);
-    banner(); layout(); KB.beep(330, 60);
+    banner(); fitStage(); layout(); KB.beep(330, 60);
     if (!TOUCH()) cards[sel].focus({ preventScroll: true });
   }
   function show(d){
@@ -1003,8 +1016,9 @@
       else if (e.key === 'ArrowRight'){ e.preventDefault(); show(1); }
     }
   });
-  addEventListener('resize', () => { drawSprites(); layout(); (window._fitters || []).forEach(f => f()); });
+  addEventListener('resize', () => { drawSprites(); fitStage(); layout(); (window._fitters || []).forEach(f => f()); });
   banner(); layout();
+  if (PHONE()){ fitStage(); layout(); setTimeout(() => { fitStage(); layout(); }, 400); if (document.fonts) document.fonts.ready.then(() => { fitStage(); layout(); }); }
 })();
 </script>
 </body>
