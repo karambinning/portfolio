@@ -71,12 +71,12 @@
     <div>
       <div class="t-title">Quantitative trading research</div>
       <div class="t-sub">Two market experiments, checked against the real market</div>
-      <div class="t-sub2">War Room · crypto markets, Mar–Apr 2026 &nbsp;/&nbsp; Krabs · World Cup, Jun 2026 &nbsp;·&nbsp; built with Claude Code</div>
+      <div class="t-sub2">Both run by my agent Krabs &nbsp;·&nbsp; War Room · crypto markets, Mar–Apr 2026 &nbsp;/&nbsp; World Cup, Jun 2026 &nbsp;·&nbsp; built with Claude Code</div>
     </div>
     <div class="q">
       <!-- ============ WAR ROOM ============ -->
       <section class="half" aria-labelledby="wr-h">
-        <div class="hd"><b id="wr-h">WAR ROOM</b><span class="k">POLYMARKET · 5-MIN CRYPTO · MAR–APR</span><span class="paper">PAPER + LIVE</span></div>
+        <div class="hd"><b id="wr-h">WAR ROOM</b><span class="k">RUN BY KRABS · 5-MIN CRYPTO · MAR–APR</span><span class="paper">PAPER + LIVE</span></div>
         <p class="t-p">A self-tuning bot that bet on whether SOL, ETH, XRP, BTC or DOGE would be <b>up or down five minutes later</b>. Its best paper run turned <b>$50 into $106.56</b> over 289 trades, but its simulator priced every entry at $0.52 and capped every loss.</p>
         <div class="viz eq"><canvas id="eq" role="img" aria-label="Equity curve of the v91_final paper run, 30 to 31 March: $50 to $106.56 over 289 trades in about ten hours. Marked invalid: it ran on simulated prices, with every entry at $0.52 and losing exits capped."></canvas></div>
         <div class="viz grid"><canvas id="fill" role="img" aria-label="Fill check on 2 April: the $0.52 entry rule assumed all 304 orders filled; checked against the live order book, 2 of 304 could."></canvas></div>
@@ -91,7 +91,7 @@
       </section>
       <!-- ============ KRABS ============ -->
       <section class="half" aria-labelledby="kr-h">
-        <div class="hd"><b id="kr-h">WORLD CUP</b><span class="k">KRABS · IN-PLAY AGENT · JUN</span><span class="paper">PAPER ONLY</span></div>
+        <div class="hd"><b id="kr-h">WORLD CUP</b><span class="k">RUN BY KRABS · IN-PLAY · JUN</span><span class="paper">PAPER ONLY</span></div>
         <p class="t-p">My agent Krabs priced every market of <b>26 World Cup matches</b> live from the match stats (a goal-rate model, not machine learning) and paper-traded where it disagreed, at real bid and ask prices. It never used real money.</p>
         <div class="viz br"><canvas id="brier" role="img" aria-label="Cumulative Brier score over 26 World Cup matches and 58 settled bets: Krabs 0.106 against 0.136 for the market price it paid. It started at 0.24 after the first match. 0.25 is a coin flip; lower is better."></canvas></div>
         <div class="clv">

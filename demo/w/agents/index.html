@@ -421,10 +421,10 @@
          ['Not allowed','Fix the work it is checking. It judges; a fix goes back to whoever did the work.'],
          ['Status','Live: it runs before YerDad reports any non-trivial work as done (the rule began on 11 October 2026).']] },
 
-    { id:'krabs', name:'KRABS', c:'#ff8a3d', tier:'archived', cls:'archived', role:'World Cup in-play trading agent', tag:'ARCHIVED · FOR NOW', off:1, sim:'krabs',
-      f:[['Lived on','A remote server, now gone.'],['Ran as','An in-play agent for the 2026 World Cup, built with Claude in June: a <b>goal-rate model</b> that read live match stats and priced each game.'],
-         ['Did','Paper-traded <b>26 matches</b> at real bid and ask prices, $10 a match, and was scored against the market: Brier 0.106 against 0.136 for the price it paid, over 58 settled bets.'],
-         ['Not allowed','Real money. Claude refused to connect it to my wallet, so it only ever paper-traded. (The earlier War Room bot, which did test small live stakes, was separate.)'],
+    { id:'krabs', name:'KRABS', c:'#ff8a3d', tier:'archived', cls:'archived', role:'Markets and trading agent', tag:'ARCHIVED · FOR NOW', off:1, sim:'krabs',
+      f:[['Lived on','A remote server, now gone.'],['Ran as','The agent behind all of my <b>quantitative work</b>: the War Room on five-minute crypto prediction markets (Mar–Apr), and the World Cup in-play model (Jun).'],
+         ['Did','War Room: paper runs, then small live tests with about $55 that showed no edge survived real fills, a small loss. World Cup: a goal-rate model that paper-traded <b>26 matches</b> and was scored against the market (Brier 0.106 vs 0.136).'],
+         ['Not allowed','Decide stakes on its own. I made every live-money call; for the World Cup, Claude refused to connect it to my wallet, so it stayed on paper.'],
          ['Status','Archived: it stopped on 25 June 2026 when its server was lost. It is the agent I would bring back first for any markets work.']] },
   ];
   const BY = Object.fromEntries(A.map(a => [a.id, a]));
@@ -445,7 +445,7 @@
     archivist:[[1,'Read-only; reports'],[2,'When useful'],'Claude Code subagent'],
     verifier: [[1,'Judges; does not edit'],[4,'Every "done"'],'Independent AI check'],
     warden:   [[1,'Checks and flags'],[4,'Scheduled'],'Deterministic code'],
-    krabs:    [[1,'Paper only'],[0,'Archived for now'],'Trading models'],
+    krabs:    [[1,'Mostly paper'],[0,'Archived for now'],'Trading models'],
   };
   const HOME = { fleet:'Every machine', yerdad:'M1', builder:'iMac · the lab', sentinel:'M1 + every Mac', yerson:'Intel MacBook', mission:'M3 · Mission OS',
     moltimus:'M3', themis:'M1', scout:'M1 · spawned by YerDad', analyst:'M1 · spawned by YerDad', archivist:'M1 · spawned by YerDad', verifier:'M1 · spawned by YerDad', warden:'M1', krabs:'Decommissioned' };
@@ -457,7 +457,7 @@
     sentinel: [['Apr','Born from the security scare: decoys, tamper-evident log'],['Jun','First version on a remote server'],['15 Sep','Phase 1 on every Mac: baseline, compare, alert'],['24 Sep','Decoys retired']],
     warden:   [['Jun','Deterministic watchdog on the server'],['Jul–Sep','Replaced by fleet-guard + agent-health on M1']],
     builder:  [['Sep','Overnight builder on KAM, branch-only, relayed by M1']],
-    krabs:    [['Jun','World Cup in-play model'],['26 matches','Paper-traded, scored vs the market'],['25 Jun','Server lost · archived']],
+    krabs:    [['Mar–Apr','War Room: paper, then small live tests'],['Jun','World Cup in-play model, 26 matches'],['25 Jun','Server lost · archived']],
     moltimus: [['Jul','v3 recon agent'],['Now','Scheduled, with a digest']],
     scout:    [['Jul','Defined'],['11 Oct','Switched on']],
     analyst:  [['Jul','Defined'],['11 Oct','Switched on']],
