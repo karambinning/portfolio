@@ -31,7 +31,7 @@
         const r = c.getBoundingClientRect();
         const on = r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw && cs.display !== 'contents';
         let me = parentIdx;
-        if (on && els.length < 1400){ me = els.length; els.push({ el: c, r, parent: parentIdx, depth, vis: draws(c, cs), inline: cs.display.startsWith('inline') && c.tagName !== 'IMG' && c.tagName !== 'CANVAS' && c.tagName !== 'svg' }); idx.set(c, me); }
+        if (on && els.length < 1400){ me = els.length; els.push({ el: c, r, parent: parentIdx, depth, vis: draws(c, cs), tf0: cs.transform, op0: cs.opacity, clip0: cs.clipPath, inline: cs.display.startsWith('inline') && c.tagName !== 'IMG' && c.tagName !== 'CANVAS' && c.tagName !== 'svg' }); idx.set(c, me); }
         if (c.tagName.toLowerCase() !== 'svg' && c.tagName !== 'CANVAS') walk(c, me, depth + 1);
       }
     };
@@ -78,20 +78,25 @@
     els.forEach((e, i) => {
       const dx = (Math.random() * 2 - 1) * 9, tf = !e.inline;
       const T0 = { outlineOffset: '-1px' };
+      // build on the element's own placement and look, never replace it: a centred globe stays centred, a faint word stays faint
+      const own = e.tf0 && e.tf0 !== 'none' ? e.tf0 : '';
+      const X = v => tf ? (v === 'none' ? (own || 'none') : (own ? own + ' ' : '') + v) : undefined;
+      const O = k => +(e.op0 || 1) * k;
+      const C = v => e.clip0 && e.clip0 !== 'none' ? e.clip0 : v;
       const kf = mode === 'out' ? [
-        { ...T0, opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined },
-        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? `translateX(${dx}px)` : undefined, offset: .18 },
-        { ...T0, opacity: 1, outline: wire, clipPath: `inset(${(5 + Math.random() * 20) | 0}% 0 ${(40 + Math.random() * 20) | 0}% 0)`, transform: tf ? `translateX(${-dx}px) skewX(${dx}deg)` : undefined, offset: .38 },
-        { ...T0, opacity: 1, outline: wire, clipPath: `inset(${(45 + Math.random() * 20) | 0}% 0 ${(5 + Math.random() * 15) | 0}% 0)`, transform: tf ? `translateX(${dx * 1.5}px)` : undefined, offset: .56 },
-        { ...T0, opacity: .9, outline: wire, clipPath: 'inset(48% 0 48% 0)', transform: tf ? 'scaleY(.1)' : undefined, offset: .78 },
-        { ...T0, opacity: 0, outline: clear, clipPath: 'inset(50% 0 50% 0)', transform: tf ? 'scaleY(0)' : undefined }
+        { ...T0, opacity: O(1), outline: clear, clipPath: C('inset(0 0 0 0)'), transform: X('none') },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C('inset(0 0 0 0)'), transform: X(`translateX(${dx}px)`), offset: .18 },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C(`inset(${(5 + Math.random() * 20) | 0}% 0 ${(40 + Math.random() * 20) | 0}% 0)`), transform: X(`translateX(${-dx}px) skewX(${dx}deg)`), offset: .38 },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C(`inset(${(45 + Math.random() * 20) | 0}% 0 ${(5 + Math.random() * 15) | 0}% 0)`), transform: X(`translateX(${dx * 1.5}px)`), offset: .56 },
+        { ...T0, opacity: O(.9), outline: wire, clipPath: C('inset(48% 0 48% 0)'), transform: X('scaleY(.1)'), offset: .78 },
+        { ...T0, opacity: 0, outline: clear, clipPath: C('inset(50% 0 50% 0)'), transform: X('scaleY(0)') }
       ] : [
-        { ...T0, opacity: 0, outline: wire, clipPath: 'inset(0 100% 0 0)', transform: tf ? 'none' : undefined },
-        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 100% 0 0)', transform: tf ? 'none' : undefined, offset: .01 },
-        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined, offset: .35 },
-        { ...T0, opacity: 1, outline: wire, clipPath: `inset(0 0 ${(30 + Math.random() * 30) | 0}% 0)`, transform: tf ? `translateX(${dx}px)` : undefined, offset: .5 },
-        { ...T0, opacity: 1, outline: wire, clipPath: 'inset(0 0 0 0)', transform: tf ? `translateX(${-dx / 2}px)` : undefined, offset: .66 },
-        { ...T0, opacity: 1, outline: clear, clipPath: 'inset(0 0 0 0)', transform: tf ? 'none' : undefined }
+        { ...T0, opacity: 0, outline: wire, clipPath: C('inset(0 100% 0 0)'), transform: X('none') },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C('inset(0 100% 0 0)'), transform: X('none'), offset: .01 },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C('inset(0 0 0 0)'), transform: X('none'), offset: .35 },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C(`inset(0 0 ${(30 + Math.random() * 30) | 0}% 0)`), transform: X(`translateX(${dx}px)`), offset: .5 },
+        { ...T0, opacity: O(1), outline: wire, clipPath: C('inset(0 0 0 0)'), transform: X(`translateX(${-dx / 2}px)`), offset: .66 },
+        { ...T0, opacity: O(1), outline: clear, clipPath: C('inset(0 0 0 0)'), transform: X('none') }
       ];
       kf.forEach(k => { if (k.transform === undefined) delete k.transform; });
       if (!e.vis) return;   // a plain wrapper: its contents do the work
