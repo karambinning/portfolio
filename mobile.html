@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Karam Binning — Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Karam Binning</title>
 <meta name="description" content="Karam Binning — final-year History & Politics at Loughborough, and a self-taught builder of working AI systems. Open to internships for winter 2026/27 and summer 2027.">
 <meta name="theme-color" content="#02060c">
 <meta name="color-scheme" content="dark">
@@ -11,700 +11,1094 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="K·B">
+<meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/app/kb-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/app/kb-192.png">
 <link rel="canonical" href="https://karambinning.github.io/portfolio/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Phone app version of the portfolio: the KAM CRT tokens and type from index.html, in an app shell. */
+/* K·B phone: the portfolio as a phone. Home screen of apps, stories for the timeline, one mini-app per project.
+   KAM CRT identity (void, phosphor cyan, Bebas + Plex Mono, scanlines), behaving like iOS. */
 :root{
-  --void:#04080f; --shell:#02060c; --glass:#070e1c; --rule:#142338; --dim:#5f7d99; --text:#d8ecff;
-  --body:#b4cbe2; --phos:#00d4ff; --amber:#f5c518; --red:#ff3355;
-  --display:'Bebas Neue',Impact,sans-serif; --mono:'IBM Plex Mono','SF Mono',Menlo,monospace;
-  --gx:max(16px,env(safe-area-inset-left)); --gxr:max(16px,env(safe-area-inset-right));
+  --bg:#02060c; --bg2:#050d18; --card:#0a1524; --card2:#0e1c2f; --line:#1b2d45;
+  --text:#eaf5ff; --body:#c9dbee; --dim:#9db4cc; --phos:#00d4ff; --green:#00ff88; --amber:#f5c518; --red:#ff3355;
+  --display:'Bebas Neue',Impact,'Arial Narrow',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+  --sl:env(safe-area-inset-left,0px); --sr:env(safe-area-inset-right,0px);
+  --gx:max(18px,var(--sl)); --gxr:max(18px,var(--sr));
+  --ease:cubic-bezier(.2,.9,.25,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{height:100%;overflow:hidden;background:var(--shell);-webkit-text-size-adjust:100%}
-body{position:fixed;inset:0;overflow:hidden;overscroll-behavior:none;background:var(--void);color:var(--text);font:400 15px/1.65 var(--mono);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-a{color:inherit}
-button{font:inherit;color:inherit}
-::selection{background:var(--phos);color:var(--void)}
-:focus-visible{outline:2px solid var(--phos);outline-offset:2px}
-@keyframes kbcur{0%,49%{opacity:1}50%,100%{opacity:0}}
-@keyframes blink{50%{opacity:.2}}
+html{height:100%;overflow:hidden;background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{position:fixed;inset:0;overflow:hidden;overscroll-behavior:none;background:var(--bg);color:var(--text);
+  font:400 15px/1.5 var(--mono);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+a{color:inherit;text-decoration:none}
+button{all:unset;box-sizing:border-box;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,textarea{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
+img{display:block;max-width:100%}
+:focus{outline:none} @media (hover:hover){:focus-visible{outline:2px solid var(--phos);outline-offset:3px}}
+.sel{-webkit-user-select:text;user-select:text}
+.tap{transition:transform .16s var(--ease),opacity .16s,filter .16s}
+.tap:active{transform:scale(.96);filter:brightness(1.15)}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes pulse{50%{opacity:.35}}
 
-/* ---------- the shell ---------- */
-.app{position:fixed;inset:0;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--void)}
-.scan{position:absolute;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+/* faint CRT scanlines over everything */
+.scan{position:fixed;inset:0;z-index:100;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
 
-.top{position:relative;z-index:30;display:flex;align-items:center;gap:6px;min-height:calc(52px + env(safe-area-inset-top));padding:env(safe-area-inset-top) var(--gxr) 0 calc(var(--gx) - 12px);
-  background:var(--shell);border-bottom:1px solid var(--rule)}
-.top .mark,.top .back{display:flex;align-items:center;justify-content:center;min-width:48px;height:48px;padding:0 12px;text-decoration:none;background:none;border:0;cursor:pointer}
-.top .mark{font:400 23px/1 var(--display);letter-spacing:.14em;color:var(--text)}
-.top .back{font:500 22px/1 var(--mono);color:var(--phos)}
-.top .back[hidden],.top .mark[hidden]{display:none}
-.top .now{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim);white-space:nowrap;overflow:hidden}
-.top .now b{color:var(--phos);font-weight:500}
-.top .now span{overflow:hidden;text-overflow:ellipsis}
-.rec{flex:none;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.6s steps(1) infinite}
-
-.view{position:relative;overflow:hidden;touch-action:pan-y}
-.screen{position:absolute;inset:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-  padding:22px var(--gxr) 40px var(--gx);visibility:hidden;background:var(--void)}
-.screen.on{visibility:visible}
-.sweep{position:absolute;left:0;right:0;top:0;height:18%;z-index:40;pointer-events:none;opacity:0;
-  background:linear-gradient(180deg,transparent,rgba(0,212,255,.16) 45%,rgba(216,246,255,.35) 50%,rgba(0,212,255,.16) 55%,transparent)}
-
-.tabs{position:relative;z-index:30;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:0 calc(var(--gxr) - 12px) env(safe-area-inset-bottom) calc(var(--gx) - 12px);
-  background:var(--shell);border-top:1px solid var(--rule)}
-.tabs a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;padding:6px 0 5px;text-decoration:none;color:var(--dim);
-  font:500 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
-.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.tabs a[aria-current="page"]{color:var(--phos);text-shadow:0 0 10px rgba(0,212,255,.6)}
-.tabs a[aria-current="page"] svg{filter:drop-shadow(0 0 5px rgba(0,212,255,.7))}
-.tabs a[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:2px;background:var(--phos);box-shadow:0 0 10px var(--phos)}
-body.typing .tabs{display:none}
-
-/* ---------- shared type ---------- */
-.ch-id{display:block;font:500 11px/1.4 var(--mono);color:var(--phos);letter-spacing:.12em;margin-bottom:14px;text-transform:uppercase}
-h2.mid{font:400 clamp(46px,14vw,64px)/.9 var(--display);margin-bottom:16px}
-.copy{color:var(--body);font-size:14.5px}
-.copy + .copy{margin-top:12px}
-.q{font:400 clamp(24px,7vw,30px)/1.12 var(--display);letter-spacing:.02em;color:var(--phos);margin:0 0 16px}
-.pts{list-style:none;border-top:1px solid var(--rule);margin-top:18px}
-.pts li{padding:11px 0 11px 22px;border-bottom:1px solid var(--rule);position:relative;color:var(--body);font-size:14px;line-height:1.55}
-.pts li::before{content:"›";position:absolute;left:4px;color:var(--phos)}
-.pts li.minor{color:var(--dim);font-size:13px}
-.pts b{color:var(--text);font-weight:500}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.btn{display:inline-flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:50px;padding:12px 18px;border:1px solid var(--phos);color:var(--phos);background:transparent;letter-spacing:.06em;font:400 14px/1.2 var(--mono);text-decoration:none;cursor:pointer;text-align:center}
-.btn:active{background:var(--phos);color:var(--void)}
-.btn.quiet{border-color:var(--rule);color:var(--text)}
-.btn.quiet:active{background:transparent;border-color:var(--text)}
-.btn.solid{background:var(--phos);color:#02060c;font-weight:700;letter-spacing:.1em;box-shadow:0 0 22px rgba(0,212,255,.3)}
-.cta{position:sticky;bottom:-40px;margin:26px calc(-1 * var(--gxr)) -40px calc(-1 * var(--gx));padding:12px var(--gxr) 16px var(--gx);background:linear-gradient(180deg,rgba(4,8,15,0),var(--void) 30%)}
-.cta .btn{width:100%}
-
-/* list rows: the app's tappable cards */
-.rows{display:grid;gap:10px}
-.row{position:relative;display:block;padding:14px 44px 14px 14px;border:1px solid var(--rule);background:var(--glass);text-decoration:none;min-height:64px}
-.row::after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-50%);font:400 26px/1 var(--mono);color:var(--phos)}
-.row:active{border-color:var(--phos);background:#0a1628}
-.row .k{display:block;font:500 10.5px/1.3 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
-.row .t{display:block;font:400 30px/1 var(--display);letter-spacing:.03em;color:var(--text);margin-top:6px}
-.row .d{display:block;font-size:13px;color:var(--body);line-height:1.5;margin-top:6px}
-.sub-h{display:block;font:600 11px/1 var(--mono);letter-spacing:.14em;color:var(--phos);margin:30px 0 10px;text-transform:uppercase}
+/* ---------- screens ---------- */
+.screen{position:fixed;inset:0;height:100vh;height:100dvh;overflow:hidden}
+.scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:none;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
 
 /* ---------- home ---------- */
-.kb-logo{border-left:3px solid var(--phos);padding-left:14px;margin:4px 0 20px}
-.name{font:400 clamp(68px,22vw,104px)/.84 var(--display);letter-spacing:.09em;color:var(--phos);text-shadow:0 0 34px rgba(0,212,255,.45);margin-bottom:12px}
-.name span{display:block}
-.name .cur{font-weight:400;animation:kbcur 1.05s steps(1) infinite;color:var(--phos)}
-.kb-sub{font:500 10px/1.5 var(--mono);color:#3a6080;letter-spacing:.26em}
-.kb-net{display:flex;align-items:center;gap:10px;margin-top:10px;font:500 10px/1.4 var(--mono);letter-spacing:.2em;color:#2a7050}
-.kb-net i{flex:none;width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:blink 1.8s steps(1) infinite}
-.kb-status{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #0d1e35;margin-bottom:20px}
-.kb-status div{padding:10px 12px;border-bottom:1px solid #0d1e35;display:flex;flex-direction:column;gap:4px}
-.kb-status div:nth-child(odd){border-right:1px solid #0d1e35;padding-left:0}
-.kb-status span{font:500 9px/1 var(--mono);letter-spacing:.2em;color:#2a4a6a}
-.kb-status b{font:500 12px/1.3 var(--mono);color:var(--text);letter-spacing:.06em}
-.kb-status b.g{color:#00ff88}
-.lede{color:var(--body);font-size:15px}
-.chans .row{padding-top:12px;padding-bottom:12px;min-height:56px}
-.chans .row .t{font-size:24px;margin-top:4px}
+#home{background:
+  radial-gradient(120% 55% at 50% -8%,rgba(0,212,255,.20),transparent 60%),
+  radial-gradient(90% 50% at 100% 105%,rgba(139,123,255,.16),transparent 60%),
+  radial-gradient(80% 40% at 0% 70%,rgba(0,255,136,.07),transparent 60%),var(--bg);
+  transition:transform .42s var(--ease),filter .42s,opacity .42s;transform-origin:50% 40%}
+#home.behind{transform:scale(.93);filter:brightness(.45) blur(2px)}
+.home-in{padding:calc(var(--st) + 22px) var(--gxr) calc(var(--sb) + 118px) var(--gx);min-height:100%}
+.who{text-align:left}
+.who-k{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.who-k .mark{flex:none;width:46px;height:46px;border-radius:13px;font-size:17px;letter-spacing:.02em;margin-top:4px}
+.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;border:1px solid rgba(0,212,255,.55);color:var(--phos);font:400 17px/1 var(--display);letter-spacing:.06em;box-shadow:0 0 16px rgba(0,212,255,.25),inset 0 0 10px rgba(0,212,255,.15)}
+.who-k span{font:500 12px/1 var(--mono);letter-spacing:.16em;color:var(--dim)}
+.who h1{font:400 clamp(46px,14vw,58px)/.84 var(--display);letter-spacing:.05em;color:var(--phos);text-shadow:0 0 26px rgba(0,212,255,.45)}
+.who h1 b{font-weight:400;animation:cur 1.05s steps(1) infinite}
+.who p{margin-top:10px;font:500 12.5px/1.35 var(--mono);color:var(--body);letter-spacing:.01em}
+.pill{display:inline-flex;align-items:flex-start;gap:8px;margin-top:12px;padding:7px 12px 7px 10px;border-radius:14px;
+  background:rgba(0,255,136,.10);border:1px solid rgba(0,255,136,.38);color:#7dffbf;font:500 12px/1.35 var(--mono)}
+.pill i{flex:none;width:7px;height:7px;margin-top:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.8s ease-in-out infinite}
 
-/* ---------- timeline ---------- */
-.rail{position:sticky;top:-22px;z-index:5;display:flex;gap:6px;margin:-22px calc(-1 * var(--gxr)) 8px calc(-1 * var(--gx));padding:10px var(--gxr) 10px var(--gx);
-  overflow-x:auto;scrollbar-width:none;touch-action:pan-x;background:rgba(4,8,15,.96);border-bottom:1px solid var(--rule)}
-.rail::-webkit-scrollbar{display:none}
-.rail a{flex:none;display:flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--rule);font:400 20px/1 var(--display);letter-spacing:.06em;color:var(--dim);text-decoration:none}
-.rail a.on{border-color:var(--phos);color:var(--phos);box-shadow:0 0 14px rgba(0,212,255,.2)}
-.moment{margin-top:16px;padding:18px 14px 6px;border:1px solid var(--rule);background:var(--glass);scroll-margin-top:72px}
-.date{font:400 clamp(54px,17vw,76px)/.82 var(--display);color:var(--phos);margin-bottom:12px;text-shadow:0 0 30px rgba(0,212,255,.25)}
-.moment h3{font:500 17px/1.35 var(--mono);margin-bottom:10px;color:var(--text)}
-.moment .pts{margin-top:14px;border-top:1px solid var(--rule)}
-.moment .pts li:last-child{border-bottom:0}
+.stories{display:flex;gap:6px;justify-content:space-between;margin:18px -4px 2px}
+.ring{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.ring .o{position:relative;width:min(62px,18vw);aspect-ratio:1;border-radius:50%;padding:3px;
+  background:conic-gradient(from 200deg,var(--phos),#8b7bff,var(--green),var(--phos))}
+.ring.seen .o{background:#2b3c52}
+.ring .o svg{width:42%;height:42%;fill:var(--k);filter:drop-shadow(0 0 5px var(--k))}
+.ring.seen .o svg{fill:#9db4cc;filter:none}
+.ring .o span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--bg);border:2.5px solid var(--bg);
+  font:400 clamp(17px,5vw,21px)/1 var(--display);letter-spacing:.04em;color:var(--text);text-align:center;
+  background:radial-gradient(circle at 50% 30%,rgba(0,212,255,.22),var(--bg2) 70%)}
+.ring em{font:500 12px/1 var(--mono);font-style:normal;color:var(--body);white-space:nowrap}
+.ring.seen em{color:var(--dim)}
 
-/* ---------- work ---------- */
-.wk-chip{display:inline-block;font:600 10px/1.3 var(--mono);letter-spacing:.18em;color:#001018;background:var(--phos);padding:5px 8px}
-.wk-title{font:800 clamp(28px,9vw,40px)/1 var(--mono);color:#fff;letter-spacing:-.01em;margin:12px 0 6px;text-shadow:0 0 18px rgba(0,212,255,.7),0 0 2px #00d4ff}
-.wk-title .br,.wk-title .cur{color:var(--phos)}
-.wk-title .cur{animation:blink 1.05s steps(1) infinite}
-.wk-hint{display:block;font:500 12px/1.4 var(--mono);color:var(--dim);letter-spacing:.04em;margin-bottom:18px}
-.proj{position:relative;display:block;text-decoration:none;background:#03070d;border:1px solid color-mix(in srgb,var(--acc) 34%,#0d1e35);overflow:hidden}
-.proj:active{border-color:var(--acc);box-shadow:0 0 22px color-mix(in srgb,var(--acc) 30%,transparent)}
-.wt-bar{display:flex;align-items:center;gap:5px;padding:7px 10px;border-bottom:1px solid color-mix(in srgb,var(--acc) 25%,#0d1e35);font:500 10px/1 var(--mono);color:#3a6080;letter-spacing:.04em}
-.wt-bar i{flex:none;width:7px;height:7px;border-radius:50%;background:#1e3a5f}
-.wt-bar i:first-child{background:var(--acc)}
-.wt-bar span:first-of-type{margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.wt-u{margin-left:auto;flex:none;color:var(--acc);opacity:.75}
-.wt-body{display:block;padding:12px 44px 14px 14px;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 3px)}
-.proj .wt-body::after{content:"›";position:absolute;right:16px;bottom:22px;font:400 26px/1 var(--mono);color:var(--acc)}
-.kind{display:block;font-size:11px;color:var(--dim);letter-spacing:.06em}
-.flag{color:var(--amber)}
-.proj h3{font:700 18px/1.2 var(--mono);color:var(--acc);margin:8px 0 6px;letter-spacing:.01em;text-shadow:0 0 14px color-mix(in srgb,var(--acc) 40%,transparent);text-transform:uppercase}
-.wt-p{color:#6c5cff}
-.proj p{font-size:13.5px;color:#b9cfe4;line-height:1.5}
-.also ul{list-style:none;border-top:1px solid var(--rule)}
-.also li{padding:12px 0;border-bottom:1px solid var(--rule)}
-.also li b{display:block;font:700 12.5px/1.3 var(--mono);color:var(--c);letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px}
-.also li span{display:block;font-size:13.5px;color:var(--body);line-height:1.55}
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin:16px 2px 12px;font:600 12px/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));row-gap:18px;column-gap:6px}
+.ico{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.tile{position:relative;width:min(64px,100%);aspect-ratio:1;border-radius:22.5%;overflow:hidden;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--c) 62%,#000) 0%,color-mix(in srgb,var(--c) 22%,#02060c) 72%);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.22),0 6px 18px -6px color-mix(in srgb,var(--c) 55%,transparent)}
+.tile::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px);pointer-events:none}
+.tile svg{position:absolute;inset:22%;width:56%;height:56%;fill:color-mix(in srgb,var(--c) 30%,#fff);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--c) 80%,transparent))}
+.tile .mono{position:absolute;inset:0;display:grid;place-items:center;font:400 26px/1 var(--display);letter-spacing:.04em;color:color-mix(in srgb,var(--c) 25%,#fff);text-shadow:0 0 8px var(--c)}
+.ico b{font:400 15px/1 var(--display);letter-spacing:.06em;color:var(--text);white-space:nowrap;text-shadow:0 1px 3px #000;max-width:calc(100% + 8px);overflow:hidden;text-overflow:ellipsis}
+.folder .tile{background:rgba(160,190,230,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(200,225,255,.22)}
+.folder .tile::after{display:none}
+.folder .mini{position:absolute;inset:14%;display:grid;grid-template-columns:repeat(3,1fr);gap:9%}
+.folder .mini i{border-radius:26%;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 75%,#000),color-mix(in srgb,var(--c) 30%,#02060c))}
 
-/* project detail */
-.pd-head{border:1px solid color-mix(in srgb,var(--acc) 40%,#0d1e35);background:#03070d;margin-bottom:18px}
-.pd-head .wt-body{padding:14px}
-.pd-head h2{font:700 clamp(24px,7.5vw,32px)/1.1 var(--mono);color:var(--acc);text-transform:uppercase;margin:8px 0 0;text-shadow:0 0 16px color-mix(in srgb,var(--acc) 45%,transparent);overflow-wrap:anywhere}
-.pd-head h2 .cur{animation:blink 1.05s steps(1) infinite}
-.pd-line{font-size:16px;line-height:1.55;color:var(--text);margin-bottom:14px}
-.pd .pts li::before{color:var(--acc)}
-.proof{margin-top:16px;padding:10px 12px;border-left:2px solid var(--acc);background:rgba(255,255,255,.02);font-size:12.5px;color:var(--dim);line-height:1.5}
-.pd .btn{border-color:var(--acc);color:var(--acc)}
-.pd .btn.solid{background:var(--acc);color:#02060c;box-shadow:0 0 22px color-mix(in srgb,var(--acc) 35%,transparent)}
+.widget{grid-column:1/-1;margin-top:4px;padding:14px 16px;border-radius:22px;background:rgba(14,28,47,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(0,212,255,.18)}
+.widget h2{display:flex;justify-content:space-between;font:600 12px/1 var(--mono);letter-spacing:.14em;color:var(--phos);margin-bottom:10px}
+.widget h2 span{color:var(--dim);letter-spacing:.06em}
+.widget p{font-size:14px;line-height:1.5;color:var(--body)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:12px}
+.stats div{display:flex;flex-direction:column;gap:3px}
+.stats span{font:500 12px/1 var(--mono);letter-spacing:.1em;color:var(--dim)}
+.stats b{font:400 20px/1 var(--display);letter-spacing:.06em;color:var(--text)}
+.stats b.g{color:var(--green)}
+.foot{margin-top:18px;text-align:center;font-size:12px;color:var(--dim)}
+.foot a{color:var(--body);text-decoration:underline;text-decoration-color:rgba(157,180,204,.4);text-underline-offset:3px}
 
-/* ---------- estate / dissertation ---------- */
-.data{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:20px}
-.data div{background:var(--void);padding:12px}
-.data strong{display:block;font:400 32px/1 var(--display);color:var(--phos);letter-spacing:.02em}
-.data span{font-size:11.5px;color:var(--dim);line-height:1.4}
-.lab{margin-top:20px;border:1px solid var(--rule);background:var(--glass)}
-.lab-bar{padding:8px 12px;border-bottom:1px solid var(--rule);font:500 11px/1 var(--mono);letter-spacing:.12em;color:var(--phos);text-transform:uppercase}
-.lab img{display:block;width:100%;height:auto;background:#03070d}
-.lab-note{padding:10px 12px;font-size:12px;color:var(--dim);line-height:1.5}
+/* dock */
+.dock{position:fixed;z-index:5;left:max(10px,var(--sl));right:max(10px,var(--sr));bottom:calc(var(--sb) + 10px);height:84px;padding:0 10px;
+  display:grid;grid-template-columns:repeat(3,1fr);align-items:center;border-radius:30px;
+  background:rgba(15,28,46,.93);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);border:1px solid rgba(200,225,255,.12);box-shadow:0 -6px 30px rgba(2,6,12,.8)}
+.dock .ico{gap:5px}
+.dock .tile{width:52px}
+.dock b{font-size:14px}
 
-/* ---------- contact ---------- */
-h2.kamh{font:400 clamp(44px,14vw,64px)/.9 var(--display);text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:16px;
-  text-shadow:0 0 30px rgba(255,255,255,.32),0 0 2px rgba(255,255,255,.6)}
-h2.kamh .cur{font-weight:400;color:#fff;animation:kbcur 1.05s steps(1) infinite}
-.mail{display:inline-flex;align-items:center;min-height:44px;margin-top:14px;font:400 clamp(20px,6.4vw,28px)/1.15 var(--display);letter-spacing:.02em;text-decoration:none;border-bottom:2px solid var(--phos);overflow-wrap:anywhere}
-.tx{margin-top:24px;border:1px solid color-mix(in srgb,var(--phos) 40%,var(--rule));background:#03070d;box-shadow:0 0 30px rgba(0,212,255,.08)}
-.tx-bar{display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(#0b1828,#071120);border-bottom:1px solid color-mix(in srgb,var(--phos) 40%,var(--rule));font-size:11px;letter-spacing:.08em;color:var(--dim)}
-.tx-dots{display:flex;gap:6px;flex:none}.tx-dots i{width:9px;height:9px;border-radius:50%;background:#16273a}.tx-dots i:first-child{background:#ff3355}.tx-dots i:nth-child(2){background:#ffcc00}.tx-dots i:nth-child(3){background:#00ff88}
-.tx-title{flex:1;min-width:0;text-align:center;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tx-live{color:#00ff88;white-space:nowrap;flex:none} .tx-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;margin-right:5px;animation:blink 1.6s steps(1) infinite}
-.tx-body{padding:12px 12px 14px}
-.tx-boot{color:var(--phos);font-size:12px;margin-bottom:6px}
-.tx-lead{margin:2px 0 10px;color:var(--text);font-size:13px;line-height:1.5}
-.tx-f{display:flex;flex-direction:column;gap:4px;padding:6px 0}
-.tx-f span{color:var(--phos);font-size:11.5px;letter-spacing:.06em}
-/* 16px inputs: iOS zooms the page on focus for anything smaller */
-.tx-f input,.tx-f textarea{width:100%;min-height:48px;background:rgba(0,212,255,.04);border:1px solid var(--rule);border-radius:0;color:#fff;font:400 16px/1.4 var(--mono);padding:11px 10px;caret-color:var(--phos);resize:none;-webkit-appearance:none;appearance:none}
-.tx-f textarea{min-height:130px}
-.tx-f input::placeholder,.tx-f textarea::placeholder{color:#3b5568}
-.tx-f input:focus,.tx-f textarea:focus{outline:none;border-color:var(--phos);box-shadow:0 0 0 1px var(--phos),0 0 14px rgba(0,212,255,.2)}
-.tx-hp{position:absolute;left:-9999px}
-.tx-ctl{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-.tx-btn{min-height:50px;cursor:pointer;font:700 12px/1 var(--mono);letter-spacing:.12em;padding:0 16px;border:1px solid var(--rule);background:transparent;color:var(--dim);border-radius:0;-webkit-appearance:none;appearance:none}
-.tx-btn.go{flex:1;border-color:var(--phos);background:var(--phos);color:#02060c;box-shadow:0 0 18px rgba(0,212,255,.3)}
-.tx-btn.go:active{background:#fff;border-color:#fff}
-.tx-count{width:100%;font-size:11px;color:var(--dim);letter-spacing:.08em;text-align:right}
-.tx-out{min-height:1.6em;margin-top:10px;color:var(--dim);white-space:pre-wrap;font-size:13px;overflow-wrap:anywhere}
-.tx-out .ok{color:#00ff88} .tx-out .err{color:var(--red)} .tx-out .k{color:var(--phos)}
-.sh{margin-top:24px;border:1px solid var(--rule);padding:12px}
-.sh-h{display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;font-size:10.5px;letter-spacing:.14em;color:var(--phos);margin-bottom:8px}
-.sh-hint{color:#2a4a6a;letter-spacing:.08em}
-.sh-link{display:flex;align-items:center;gap:8px;border-bottom:1px dashed #1e3a5f;margin-bottom:4px}
-.sh-link span{color:var(--phos)}
-.sh-link input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);font:400 16px/1 var(--mono);min-height:44px}
-.sh-link input:focus{outline:none}
-.sh-row{display:flex;flex-wrap:wrap;gap:0 16px}
-.sh-b{display:inline-flex;align-items:center;min-height:44px;background:none;border:0;cursor:pointer;color:var(--c);font:500 13px/1 var(--mono);letter-spacing:.06em;white-space:nowrap;text-decoration:none;padding:0}
-.sh-b:focus-visible{outline:1px dashed var(--c);outline-offset:3px}
-.sh-qr{display:flex;align-items:center;gap:14px;margin-top:10px;font-size:11px;color:var(--dim)}
-.sh-qr[hidden]{display:none}
-.sh-qr #shQrBox{flex:none;border:1px solid var(--phos);line-height:0;box-shadow:0 0 18px rgba(0,212,255,.35)}
-.sh-out{min-height:1.4em;margin-top:6px;font-size:11px;color:#00ff88}
-.foot{margin-top:26px;display:flex;flex-direction:column}
-.foot a{display:inline-flex;align-items:center;min-height:44px;color:var(--dim);text-decoration:none;font-size:12px;letter-spacing:.06em}
+/* ---------- app (opened from an icon) ---------- */
+#app{z-index:20;background:var(--bg);transform-origin:0 0;will-change:transform}
+#app[hidden]{display:none}
+.splash{position:absolute;inset:0;z-index:4;pointer-events:none;display:grid;place-items:center;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--c) 62%,#000) 0%,color-mix(in srgb,var(--c) 22%,#02060c) 72%)}
+.splash svg{width:50vw;max-width:220px;aspect-ratio:1;fill:color-mix(in srgb,var(--c) 30%,#fff)}
+.splash .mono{font:400 38vw/1 var(--display);color:color-mix(in srgb,var(--c) 25%,#fff)}
+.a-top{position:absolute;z-index:3;left:0;right:0;top:0;height:calc(var(--st) + 52px);touch-action:none;pointer-events:none}
+.a-top .grab{position:absolute;left:50%;top:calc(var(--st) + 8px);width:40px;height:5px;margin-left:-20px;border-radius:3px;background:rgba(255,255,255,.45)}
+.a-top .drag{position:absolute;left:0;right:64px;top:0;bottom:0;pointer-events:auto}
+.x{position:absolute;right:var(--gxr);top:calc(var(--st) + 14px);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;pointer-events:auto;
+  background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);color:#fff;font:500 16px/1 var(--mono)}
+.a-body{background:var(--bg)}
+.a-nav{position:absolute;z-index:2;left:0;right:0;top:0;height:calc(var(--st) + 58px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;
+  background:rgba(4,10,19,.94);border-bottom:1px solid rgba(200,225,255,.10);opacity:0;transition:opacity .2s;pointer-events:none}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.a-nav{background:rgba(4,10,19,.86);-webkit-backdrop-filter:blur(20px) saturate(1.5);backdrop-filter:blur(20px) saturate(1.5)}}
+.a-nav.on{opacity:1}
+.a-nav span{font:400 22px/1 var(--display);letter-spacing:.08em;color:#fff;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero{position:relative;padding:calc(var(--st) + 58px) var(--gxr) 20px var(--gx);overflow:hidden;
+  background:linear-gradient(170deg,color-mix(in srgb,var(--c) 46%,#02060c) 0%,color-mix(in srgb,var(--c) 14%,#02060c) 62%,var(--bg) 100%)}
+.hero::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);pointer-events:none}
+.hero .hk{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.hero .tile{width:48px;flex:none}
+.hero .kind{font:600 12px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 35%,#fff)}
+.hero .flag{position:relative;z-index:1;display:inline-block;margin-top:12px;padding:3px 7px;border-radius:6px;font:600 12px/1 var(--mono);color:#1a1200;background:var(--amber)}
+.hero h2{position:relative;z-index:1;font:400 clamp(38px,11vw,48px)/.9 var(--display);letter-spacing:.04em;color:#fff;text-shadow:0 0 24px color-mix(in srgb,var(--c) 70%,transparent)}
+.hero p{position:relative;z-index:1;margin-top:12px;font:500 15px/1.45 var(--mono);color:#f2f8ff;max-width:36ch}
+.hero .kind{margin-top:4px}
 
-@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+.cards{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  padding:6px var(--gxr) 4px var(--gx);scroll-padding:0 var(--gx);scrollbar-width:none;touch-action:pan-x pan-y}
+.cards::-webkit-scrollbar{display:none}
+.card{flex:0 0 calc(100% - 34px);scroll-snap-align:start;scroll-snap-stop:always;padding:18px 18px 20px;border-radius:22px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 9%,var(--card)),var(--card));border:1px solid color-mix(in srgb,var(--c) 26%,var(--line))}
+.card.solo{flex-basis:100%}
+.card .ck{display:flex;align-items:center;gap:8px;font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 45%,#fff);margin-bottom:12px}
+.card .ck i{font-style:normal;color:var(--dim);margin-left:auto;letter-spacing:.04em}
+.card p{font-size:15px;line-height:1.55;color:var(--body)}
+.card p+p{margin-top:10px}
+.card p b,.card li b{color:#fff;font-weight:600}
+.card ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.card li{position:relative;padding-left:18px;font-size:15px;line-height:1.45;color:var(--body)}
+.card li::before{content:"›";position:absolute;left:2px;color:var(--c)}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.nums div{display:flex;flex-direction:column;gap:4px}
+.nums strong{font:400 34px/.95 var(--display);letter-spacing:.03em;color:color-mix(in srgb,var(--c) 30%,#fff)}
+.nums span{font-size:13px;line-height:1.35;color:var(--body)}
+.nums .w{grid-column:1/-1}
+.dots{display:flex;justify-content:center;gap:7px;margin:12px 0 4px}
+.dots i{width:7px;height:7px;border-radius:50%;background:#33475f;transition:background .2s,width .2s}
+.dots i.on{width:18px;border-radius:4px;background:var(--c)}
+.blk{margin:18px var(--gxr) 0 var(--gx)}
+.blk-h{font:600 12px/1 var(--mono);letter-spacing:.14em;color:var(--dim);margin:0 2px 10px;text-transform:uppercase}
+.panel{padding:16px;border-radius:22px;background:var(--card);border:1px solid var(--line)}
+.full{display:block;margin:26px var(--gxr) 0 var(--gx);padding:14px 0 calc(var(--sb) + 52px);text-align:center;font:500 13px/1.4 var(--mono);color:var(--dim)}
+.full span{border-bottom:1px solid rgba(157,180,204,.35);padding-bottom:2px}
+.spacer{height:calc(var(--sb) + 52px)}
+.homebar{position:absolute;z-index:3;left:50%;bottom:calc(var(--sb) + 6px);width:150px;height:24px;margin-left:-75px;display:grid;place-items:center;touch-action:none}
+.homebar::before{content:"";width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.75);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 18px;border-radius:14px;background:var(--c);color:#04080f;font:700 15px/1 var(--mono);letter-spacing:.02em;text-align:center}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.seg{display:flex;padding:3px;border-radius:12px;background:#0f1d30;border:1px solid var(--line);margin-bottom:12px}
+.seg button{flex:1;text-align:center;padding:9px 4px;border-radius:9px;font:600 13px/1 var(--mono);color:var(--body)}
+.seg button[aria-selected=true]{background:color-mix(in srgb,var(--c) 85%,#000);color:#04080f}
+.shot{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#000}
+.shot img{width:100%;height:auto;transition:opacity .25s}
+.note{margin-top:10px;font-size:13px;line-height:1.45;color:var(--dim)}
+
+/* app-specific bits */
+.st-run{display:flex;align-items:center;gap:14px}
+.st-n{font:400 56px/.9 var(--display);color:#fff;font-variant-numeric:tabular-nums;min-width:3.2ch}
+.st-n small{display:block;font:500 13px/1.2 var(--mono);color:var(--dim);margin-top:4px}
+.suites{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:14px}
+.suites span{font:500 13px/1.3 var(--mono);color:#56708c;transition:color .2s}
+.suites span::before{content:"○ ";}
+.suites span.ok{color:#7dffbf} .suites span.ok::before{content:"✓ "}
+.spark{width:100%;height:auto;display:block;margin:6px 0 10px}
+.spark .ln{fill:none;stroke:var(--c);stroke-width:2;stroke-linejoin:round;transition:stroke .4s,opacity .4s}
+.spark .ar{fill:url(#sg);transition:opacity .4s}
+.spark.void .ln{stroke:#5d6b7c;stroke-dasharray:4 4} .spark.void .ar{opacity:0}
+.sp-row{display:flex;justify-content:space-between;align-items:baseline}
+.sp-big{font:400 40px/1 var(--display);color:#fff;transition:color .3s}
+.sp-big.void{color:#5d6b7c;text-decoration:line-through;text-decoration-color:var(--red)}
+.stamp{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--red);color:#ff98aa;font:600 13px/1.45 var(--mono);background:rgba(255,51,85,.08)}
+.stamp.on{display:block}
+.chat{display:flex;flex-direction:column;gap:8px;min-height:120px}
+.bub{max-width:88%;padding:10px 13px;border-radius:18px;font-size:14.5px;line-height:1.45}
+.bub.me{align-self:flex-end;background:color-mix(in srgb,var(--c) 85%,#000);color:#120e00;border-bottom-right-radius:6px}
+.bub.it{align-self:flex-start;background:#13243a;color:var(--body);border-bottom-left-radius:6px}
+.bub.it b{display:block;font:600 12px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;color:var(--c)}
+.bub .tag{display:inline-block;margin-bottom:6px;padding:3px 7px;border-radius:6px;font:600 12px/1 var(--mono)}
+.tag.ok{background:rgba(0,255,136,.16);color:#7dffbf}.tag.warn{background:rgba(245,197,24,.16);color:#ffe27a}.tag.bad{background:rgba(255,51,85,.16);color:#ff98aa}
+.qs{display:flex;gap:8px;overflow-x:auto;margin:12px calc(-1 * var(--gxr)) 0 calc(-1 * var(--gx));padding:0 var(--gxr) 2px var(--gx);scrollbar-width:none;touch-action:pan-x}
+.qs::-webkit-scrollbar{display:none}
+.qs button{flex:none;padding:9px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:color-mix(in srgb,var(--c) 30%,#fff);font:500 13px/1 var(--mono)}
+.tg{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--body)}
+.tg:last-of-type{border-bottom:0}
+.sw{flex:none;position:relative;width:51px;height:31px;border-radius:16px;background:#2a3a4f;transition:background .2s}
+.sw::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.3);transition:transform .22s var(--ease)}
+.tg[aria-checked=true] .sw{background:#34c759}
+.tg[aria-checked=true] .sw::after{transform:translateX(20px)}
+.decl{margin-top:12px;padding:14px;border-radius:14px;background:#f4efe4;color:#1d1a14;font:400 13.5px/1.5 Georgia,'Times New Roman',serif;-webkit-user-select:text;user-select:text}
+.decl h4{font:700 15px/1.2 Georgia,serif;margin-bottom:4px}
+.decl .m{font:500 12px/1.3 var(--mono);color:#5c564a;margin-bottom:8px}
+.decl h5{font:700 12px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:8px 0 2px;color:#3a352b}
+.map{position:relative;height:230px;border-radius:18px;background:radial-gradient(circle at 50% 50%,rgba(0,255,136,.10),transparent 65%),#06101c;border:1px solid var(--line);overflow:hidden}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.map line{stroke:#22405e;stroke-width:.6;transition:stroke .25s}
+.map line.on{stroke:var(--c);stroke-width:.9}
+.nd{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px}
+.nd i{width:22px;height:22px;border-radius:50%;border:2px solid var(--c);background:#06101c;box-shadow:0 0 0 0 var(--c);transition:background .2s,box-shadow .2s}
+.nd.core i{width:30px;height:30px}
+.nd span{font:600 13px/1 var(--mono);color:var(--body);padding:3px 6px;border-radius:6px;background:rgba(2,6,12,.8)}
+.nd[aria-pressed=true] i{background:var(--c);box-shadow:0 0 18px var(--c)}
+.nd[aria-pressed=true] span{color:#fff}
+.np-k{font:600 12px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.np h3{font:400 30px/1 var(--display);letter-spacing:.04em;margin:6px 0 8px}
+.np p{font-size:14.5px;line-height:1.5;color:var(--body)}
+.ag{display:flex;flex-direction:column;gap:2px}
+.ag .an{font:400 32px/.9 var(--display);letter-spacing:.06em;color:var(--ac)}
+.ag .ar{font:600 13px/1.3 var(--mono);color:var(--text);margin-top:4px}
+.ag .bdg{align-self:flex-start;margin:10px 0 6px;padding:4px 8px;border-radius:7px;font:600 12px/1 var(--mono);letter-spacing:.06em;border:1px solid var(--ac);color:var(--ac)}
+.ag .bdg.warn{border-color:var(--amber);color:var(--amber)}
+.ag dl{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.ag dt{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.ag dd{font-size:14.5px;line-height:1.45;color:var(--body);margin-top:3px}
+.ag dd b{color:#fff;font-weight:600}
+.ag-card{--c:var(--ac)}
+.ledger{display:flex;gap:10px}
+.ledger div{flex:1;padding:12px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.ledger strong{display:block;font:400 32px/1 var(--display);color:#fff}
+.ledger span{font-size:13px;color:var(--body)}
+.fw{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 12px}
+.fw i{aspect-ratio:1;border-radius:8px;background:#16253a;border:1px solid #233853}
+.fw i.l{background:var(--green);border-color:var(--green);box-shadow:0 0 10px rgba(0,255,136,.45)}
+.fw i.s{background:rgba(245,197,24,.25);border-color:var(--amber)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--body)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:var(--k);vertical-align:-1px}
+.mods{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.mods span{padding:6px 9px;border-radius:9px;font:600 12px/1 var(--mono);letter-spacing:.06em;border:1px solid}
+.mods .w{color:#7dffbf;border-color:rgba(0,255,136,.45);background:rgba(0,255,136,.08)}
+.mods .s{color:#ffe27a;border-color:rgba(245,197,24,.45);background:rgba(245,197,24,.06)}
+.mods .m{color:var(--dim);border-color:var(--line)}
+.split{position:relative;display:flex;height:18px;border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.split .tr{flex:174;background:repeating-linear-gradient(90deg,#b00000 0 4px,#4a0000 4px 6px)}
+.split .te{flex:25;background:#ff3030}
+.yrs{display:flex;justify-content:space-between;font:500 12px/1 var(--mono);color:var(--body)}
+.q{font:400 27px/1.08 var(--display);letter-spacing:.03em;color:#fff}
+
+/* ---------- folder ---------- */
+#folder{z-index:15;display:grid;place-items:center;padding:var(--gx)}
+#folder[hidden]{display:none}
+#folder .fb{position:absolute;inset:0;background:rgba(2,6,12,.86);-webkit-backdrop-filter:blur(26px) saturate(1.4);backdrop-filter:blur(26px) saturate(1.4)}
+.fold{position:relative;width:min(100%,340px)}
+.fold h3{font:400 34px/1 var(--display);letter-spacing:.06em;color:#fff;text-align:center;margin-bottom:14px}
+.fold .fp{padding:22px 16px;border-radius:36px;background:rgba(40,58,84,.92);border:1px solid rgba(200,225,255,.16);display:grid;grid-template-columns:repeat(3,1fr);row-gap:18px;column-gap:6px}
+.fold .fp .tile{width:min(64px,100%)}
+.fold .hint{margin-top:14px;text-align:center;font-size:13px;color:var(--dim)}
+
+/* ---------- stories ---------- */
+#stories{z-index:30;background:#000;touch-action:none}
+#stories[hidden]{display:none}
+.sv{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .25s var(--ease),opacity .25s}
+.sv-bars{position:absolute;z-index:3;left:var(--gx);right:var(--gxr);top:calc(var(--st) + 10px);display:flex;gap:4px}
+.sv-bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
+.sv-bars i b{display:block;height:100%;width:0;background:#fff}
+.sv-head{position:absolute;z-index:3;left:var(--gx);right:var(--gxr);top:calc(var(--st) + 22px);display:flex;align-items:center;gap:10px}
+.sv-head .av{width:34px;height:34px;border-radius:50%;padding:2px;background:conic-gradient(from 200deg,var(--phos),#8b7bff,var(--green),var(--phos))}
+.sv-head .av span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:#02060c;font:400 13px/1 var(--display);letter-spacing:.04em}
+.sv-head .t{font:600 14px/1.2 var(--mono);color:#fff}
+.sv-head .t small{display:block;font:500 12px/1.2 var(--mono);color:rgba(255,255,255,.75)}
+.sv-head .x{position:static;margin-left:auto;background:rgba(0,0,0,.3)}
+.sv-paused{position:absolute;z-index:3;left:50%;top:calc(var(--st) + 66px);transform:translateX(-50%);padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.5);font:600 12px/1 var(--mono);letter-spacing:.12em;color:#fff;opacity:0;transition:opacity .2s}
+#stories.paused .sv-paused{opacity:1}
+.sv-page{position:absolute;inset:0;padding:calc(var(--st) + 86px) var(--gxr) calc(var(--sb) + 48px) var(--gx);display:flex;flex-direction:column;justify-content:center;
+  background:var(--bgk);overflow:hidden}
+.sv-page::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px);pointer-events:none}
+.sv-page > *{position:relative;z-index:1}
+.sv-date{font:400 clamp(72px,26vw,120px)/.82 var(--display);letter-spacing:.02em;color:var(--k);text-shadow:0 0 34px color-mix(in srgb,var(--k) 55%,transparent)}
+.sv-title{margin-top:14px;font:400 clamp(30px,9vw,40px)/.98 var(--display);letter-spacing:.04em;color:#fff}
+.sv-p{margin-top:14px;font:500 16px/1.55 var(--mono);color:#e7f2ff}
+.sv-kick{font:600 12px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--k);margin-bottom:14px}
+.sv-pts{list-style:none;display:flex;flex-direction:column;gap:16px}
+.sv-pts li{position:relative;padding-left:22px;font:500 17px/1.45 var(--mono);color:#fff}
+.sv-pts li{animation:svli .45s var(--ease) both}
+.sv-pts li:nth-child(2){animation-delay:.25s} .sv-pts li:nth-child(3){animation-delay:.5s}
+@keyframes svli{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.sv-num{position:absolute!important;z-index:0!important;right:calc(var(--gxr) - 6px);bottom:calc(var(--sb) + 40px);font:400 180px/.8 var(--display);color:var(--k);opacity:.10;pointer-events:none}
+.sv-pts li::before{content:"›";position:absolute;left:2px;color:var(--k);font-weight:700}
+.sv-foot{position:absolute;z-index:3;left:0;right:0;bottom:calc(var(--sb) + 14px);text-align:center;font:500 12px/1 var(--mono);color:rgba(255,255,255,.7);pointer-events:none}
+.sv-in{animation:svin .35s var(--ease) both}
+@keyframes svin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.sv-back{animation:svback .35s var(--ease) both}
+@keyframes svback{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+
+/* ---------- compose sheet ---------- */
+#compose{z-index:40}
+#compose[hidden]{display:none}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s}
+#compose.on .scrim{opacity:1}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:calc(var(--st) + 12px);display:flex;flex-direction:column;border-radius:14px 14px 0 0;
+  background:#0b1524;border-top:1px solid rgba(200,225,255,.14);transform:translateY(105%);transition:transform .38s var(--ease);box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+#compose.on .sheet{transform:none}
+.sh-grab{height:22px;display:grid;place-items:center;touch-action:none}
+.sh-grab::before{content:"";width:38px;height:5px;border-radius:3px;background:#3a4c63}
+.sh-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 var(--gxr) 10px var(--gx);touch-action:none}
+.sh-bar .cancel{justify-self:start;font:500 16px/1 var(--mono);color:var(--phos);padding:8px 0}
+.sh-bar h3{font:600 16px/1 var(--mono);color:#fff}
+.sh-bar .send{justify-self:end;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--phos);color:#00121a;font:700 20px/1 var(--mono)}
+.sh-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(var(--sb) + 20px)}
+.fld{display:flex;align-items:center;gap:8px;min-height:50px;padding:0 var(--gxr) 0 var(--gx);border-bottom:1px solid var(--line);font-size:15px}
+.fld > span:first-child{flex:none;color:var(--dim)}
+.fld input{flex:1;min-width:0;background:none;border:0;outline:none;font:500 16px/1.3 var(--mono);color:#fff;padding:12px 0}
+.fld input::placeholder,.msg::placeholder{color:#7189a3}
+.to{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(0,212,255,.15);color:#8fe8ff;font:500 14px/1.2 var(--mono);min-width:0}
+.to-sub{padding:6px var(--gxr) 10px var(--gx);font-size:13px;color:var(--dim);border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.msg{display:block;width:100%;min-height:200px;padding:14px var(--gxr) 14px var(--gx);background:none;border:0;outline:none;resize:none;font:500 16px/1.5 var(--mono);color:#fff}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.out{margin:0 var(--gxr) 0 var(--gx);display:flex;flex-direction:column;gap:6px;font:500 14px/1.45 var(--mono)}
+.out div{padding:0}
+.out .k{color:var(--phos)} .out .ok{color:#7dffbf} .out .err{color:#ff98aa}
+.cnt{padding:6px var(--gxr) 10px var(--gx);text-align:right;font-size:12px;color:var(--dim)}
+.toast{visibility:hidden;position:fixed;z-index:60;left:50%;top:calc(var(--st) + 14px);transform:translate(-50%,-140%);padding:11px 16px;border-radius:14px;
+  background:rgba(20,36,58,.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(200,225,255,.16);font:500 14px/1.3 var(--mono);color:#fff;transition:transform .35s var(--ease);white-space:nowrap}
+.toast.on{visibility:visible;transform:translate(-50%,0)}
+
+/* ---------- boot ---------- */
+#boot{z-index:90;background:#000;display:grid;place-items:center}
+#boot[hidden]{display:none}
+.crt{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:#d8f6ff;box-shadow:0 0 30px 8px rgba(0,212,255,.7);transform:scaleX(0);animation:crt .55s cubic-bezier(.3,.8,.3,1) forwards}
+@keyframes crt{0%{transform:scaleX(0);opacity:1}45%{transform:scaleX(1);height:2px;opacity:1}100%{transform:scaleX(1);height:100%;top:0;margin-top:0;opacity:0}}
+.bt{position:relative;text-align:center;opacity:0;animation:bt .4s .4s ease-out forwards}
+@keyframes bt{to{opacity:1}}
+.bt .mark{margin:0 auto 18px;width:64px;height:64px;border-radius:16px;font-size:30px}
+.bt h1{font:400 clamp(44px,14vw,64px)/.9 var(--display);letter-spacing:.06em;color:var(--phos);text-shadow:0 0 30px rgba(0,212,255,.55)}
+.bt h1 b{font-weight:400;animation:cur 1.05s steps(1) infinite}
+.bt p{margin-top:14px;font:500 13px/1 var(--mono);letter-spacing:.2em;color:var(--dim);animation:pulse 1.4s ease-in-out infinite}
+#boot.out{animation:bootout .45s ease-in forwards}
+@keyframes bootout{to{opacity:0;transform:scale(1.08)}}
+#home.enter .home-in{animation:homein .55s var(--ease) both}
+@keyframes homein{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.15s!important}
+  #home.behind{transform:none;filter:brightness(.45)}
+  .tap:active{transform:none}
+  .sheet{transform:none;opacity:0;transition:opacity .2s!important}
+  #compose.on .sheet{opacity:1}
+  .toast{transform:translate(-50%,0);opacity:0;transition:opacity .2s!important} .toast.on{opacity:1}
+}
+@media (min-width:600px){
+  .home-in,.a-body{max-width:520px;margin:0 auto}
+}
 </style>
-<noscript><style>.app{position:static;display:block;height:auto}body,html{position:static;overflow:auto;height:auto}.view{overflow:visible}.screen{position:static;visibility:visible;overflow:visible}.tabs,.top .back{display:none}.cta{position:static}</style></noscript>
 </head>
 <body>
-<div class="app">
-  <header class="top">
-    <a class="mark" id="mark" href="#signal" aria-label="Back to the start">K·B</a>
-    <button class="back" id="back" type="button" aria-label="Back" hidden>←</button>
-    <div class="now" aria-live="polite"><i class="rec" aria-hidden="true"></i><b id="nowCh">CH 01</b><span id="nowName">SIGNAL</span></div>
-  </header>
+<div class="scan" aria-hidden="true"></div>
 
-  <main class="view" id="view">
-
-<!-- ================= HOME ================= -->
-<section class="screen" id="s-signal" data-ch="CH 01" data-name="SIGNAL" aria-label="Introduction">
-  <div class="kb-logo">
-    <h1 class="name" aria-label="Karam Binning"><span>KARAM</span><span>BINNING<b class="cur" aria-hidden="true">_</b></span></h1>
-    <div class="kb-sub">FINAL YEAR · HISTORY &amp; POLITICS · LOUGHBOROUGH UNIVERSITY</div>
-    <div class="kb-net"><i></i><span>OPEN TO INTERNSHIPS · WINTER 2026/27 · SUMMER 2027</span></div>
+<!-- home screen -->
+<main id="home" class="screen" aria-label="Home">
+  <div class="scroll" id="homeScroll">
+    <div class="home-in">
+      <header class="who">
+        <div class="who-k"><h1 aria-label="Karam Binning">KARAM<br>BINNING<b aria-hidden="true">_</b></h1><span class="mark" aria-hidden="true">K·B</span></div>
+        <p>Final year · History &amp; Politics · Loughborough</p>
+        <span class="pill"><i aria-hidden="true"></i><span>Open to internships · winter 2026/27 · summer 2027</span></span>
+      </header>
+      <nav class="stories" id="rings" aria-label="Timeline stories, March 2026 to now"></nav>
+      <div class="sect" id="workHead"><span>THE WORK</span><span>MARCH 2026 – NOW</span></div>
+      <div class="grid" id="grid"></div>
+    </div>
   </div>
-  <div class="kb-status" aria-label="At a glance">
-    <div><span>STUDY</span><b>HUMANITIES</b></div>
-    <div><span>MAIN TOOL</span><b class="g">CLAUDE</b></div>
-    <div><span>BUILDS</span><b>APPS · SOFTWARE · INFRA</b></div>
-    <div><span>SINCE</span><b>MARCH 2026</b></div>
-  </div>
-  <p class="lede">I study conflict, security and the international order. With Claude as my main tool, I build applications, software and small-scale infrastructure. Everything here was built since March 2026, alongside the degree, with no programming background.</p>
-  <div class="actions">
-    <a class="btn" href="cv/Karam-Binning-CV.pdf?v=0f600964" target="_blank" rel="noopener">Download CV</a>
-    <a class="btn quiet" href="#contact">Get in touch</a>
-  </div>
-  <span class="sub-h">Channels</span>
-  <nav class="rows chans" aria-label="Channels">
-    <a class="row" href="#timeline"><span class="k">CH 02</span><span class="t">March to now</span></a>
-    <a class="row" href="#work"><span class="k">CH 03</span><span class="t">The work</span></a>
-    <a class="row" href="#estate"><span class="k">CH 04</span><span class="t">The estate</span></a>
-    <a class="row" href="#agents"><span class="k">CH 05</span><span class="t">The agents</span></a>
-    <a class="row" href="#proposal"><span class="k">CH 06</span><span class="t">Research design</span></a>
-    <a class="row" href="#dissertation"><span class="k">CH 07</span><span class="t">Dissertation</span></a>
-    <a class="row" href="#contact"><span class="k">CH 08</span><span class="t">Contact</span></a>
+  <nav class="dock" aria-label="Dock">
+    <a class="ico tap" id="dkCv" href="cv/Karam-Binning-CV.pdf?v=0f600964" target="_blank" rel="noopener" style="--c:#00d4ff"><span class="tile" data-g="cv"></span><b>CV</b></a>
+    <button class="ico tap" id="dkMail" type="button" style="--c:#00ff88" aria-label="Contact"><span class="tile" data-g="mail"></span><b>Contact</b></button>
+    <button class="ico tap" id="dkShare" type="button" style="--c:#8b7bff" aria-label="Share"><span class="tile" data-g="share"></span><b>Share</b></button>
   </nav>
+</main>
+
+<!-- an opened app -->
+<section id="app" class="screen" hidden role="dialog" aria-modal="true" aria-labelledby="appName">
+  <div class="splash" id="splash" aria-hidden="true"></div>
+  <div class="scroll a-scroll" id="appScroll"><div class="a-body" id="appBody"></div></div>
+  <div class="a-nav" id="appNav" aria-hidden="true"><span id="navT"></span></div>
+  <div class="a-top"><div class="drag" id="appDrag"></div><span class="grab" aria-hidden="true"></span><button class="x tap" id="appX" type="button" aria-label="Close">✕</button></div>
+  <button class="homebar" id="appHome" type="button" aria-label="Close and go home"></button>
 </section>
 
-<!-- ================= TIMELINE ================= -->
-<section class="screen" id="s-timeline" data-ch="CH 02" data-name="MARCH TO NOW" aria-label="March 2026 to now">
-  <nav class="rail" id="rail" aria-label="Timeline">
-    <a href="#tl-0" class="on">Mar</a><a href="#tl-1">Apr</a><a href="#tl-2">May–Jun</a><a href="#tl-3">Jul – now</a>
-  </nav>
-  <article class="moment" id="tl-0">
-    <div class="date">Mar 2026</div>
-    <h3>First line of code</h3>
-    <p class="copy">A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.</p>
-    <ul class="pts">
-      <li>First Claude session, after a year on ChatGPT, without ever having written a line of code</li>
-      <li>First build: an in-browser AI analyst for live Polymarket data</li>
-      <li>9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place</li>
-      <li>A planetary-intelligence globe and a multi-model AI council follow within weeks</li>
-      <li>The War Room conceived: a seven-agent trading team, run on paper</li>
-    </ul>
-  </article>
-  <article class="moment" id="tl-1">
-    <div class="date">Apr 2026</div>
-    <h3>A security scare, turned into a curriculum</h3>
-    <p class="copy">A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum, built into my dashboard and practised against my own machines. The same month I submitted my research design, built around KAM.</p>
-    <ul class="pts">
-      <li>Set up decoy services and a tamper-evident access log to see what was really happening</li>
-      <li>Learned to read the logs properly; the evidence showed a false alarm</li>
-      <li>Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes</li>
-      <li>Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics</li>
-      <li>Based on public frameworks such as NIST and MITRE ATT&amp;CK, and practised hands-on against my own machines only</li>
-      <li>It later grew into Future Warfare, a wider curriculum on modern conflict</li>
-      <li>Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis</li>
-    </ul>
-  </article>
-  <article class="moment" id="tl-2">
-    <div class="date">May–Jun 2026</div>
-    <h3>A small, semi-autonomous agent fleet</h3>
-    <p class="copy">I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me. Alongside it, the summer brought more tools for study, work and outreach.</p>
-    <ul class="pts">
-      <li>May: the agent fleet consolidated under one director, which takes tasks and reports what it did</li>
-      <li>Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing</li>
-      <li>June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations</li>
-      <li>Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission: research, planning and outreach in one place</li>
-      <li>The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent</li>
-      <li>My own AI academy: a learning path through Anthropic's courses, papers and code, then an AI-engineering track with a tutor</li>
-      <li class="minor">Anthropic Academy: three AI Fluency courses</li>
-    </ul>
-  </article>
-  <article class="moment" id="tl-3">
-    <div class="date">Jul 2026 – now</div>
-    <h3>The estate comes together</h3>
-    <p class="copy">Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.</p>
-    <ul class="pts">
-      <li>July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day</li>
-      <li>A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion</li>
-      <li>The intelligence engine audited and made queryable by my director agent</li>
-      <li>September: one canonical vault with written rules and a checker; Sentinel watching every machine</li>
-      <li>Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop</li>
-      <li>Final year: a dissertation on great-power war as a process, with its own forecasting lab</li>
-    </ul>
-  </article>
-</section>
+<!-- the "Also built" folder -->
+<div id="folder" class="screen" hidden role="dialog" aria-modal="true" aria-label="Also built">
+  <div class="fb" id="folderBg"></div>
+  <div class="fold" id="fold"><h3>ALSO BUILT</h3><div class="fp" id="foldGrid"></div><p class="hint">Smaller apps, built alongside the main work</p></div>
+</div>
 
-<!-- ================= WORK ================= -->
-<section class="screen" id="s-work" data-ch="CH 03" data-name="THE WORK" aria-label="The work">
-  <span class="wk-chip">PROJECTS · 8 TERMINALS · MARCH 2026 – NOW</span>
-  <h2 class="wk-title"><span class="br">[ </span>THE WORK<span class="br"> ]</span><span class="cur" aria-hidden="true">_</span></h2>
-  <span class="wk-hint">&gt; ls ~/work · select one to open its terminal</span>
-  <div class="rows" id="files"></div>
-  <div class="also">
-    <span class="sub-h">ALSO BUILT ›</span>
-    <ul>
-      <li style="--c:#ff3355"><b>Mission OS</b><span>A reusable app for running missions: any objective, from an event to a project, gets its own research, plan, targets, dossier and debrief, with Mission, an analyst I can question about that mission's notes. London Tech Week was the first.</span></li>
-      <li style="--c:#38bdf8"><b>Motion Coach</b><span>Webcam biomechanics scoring with MediaPipe: four movement tests scored live in the browser, reviewed with two Loughborough academics.</span></li>
-      <li style="--c:#22d3ee"><b>FISH</b><span>An offline field app for beginner anglers, driven by live river levels, weather and species data, with a bankside mode for cold hands.</span></li>
-      <li style="--c:#00d4ff"><b>The Dataset</b><span>About 47 million time-synced prediction-market trade prints from the trading work, catalogued with a data dictionary as a research dataset.</span></li>
-      <li style="--c:#00ff88"><b>Morning system</b><span>An alarm that checks I am actually up, switches the room on through smart plugs and prints a morning paper with the day’s brief.</span></li>
-      <li style="--c:#ff7a00"><b>KAM Travel</b><span>A trip planner for a group road trip around Scotland, in the KAM orange style, that works offline on the road.</span></li>
-      <li style="--c:#34d399"><b>KAM Caddy</b><span>A voiced golf caddy that uses GPS, the compass and live weather to solve for wind, with a four-player mode.</span></li>
-      <li style="--c:#ff7700"><b>Binning.AI HQ</b><span>An isometric ops console in TypeScript and Phaser, where each agent is a character in a room.</span></li>
-      <li style="--c:#00bcd4"><b>The Academy</b><span>The learning tools I built for myself. An AI academy: a four-stage path from Anthropic’s courses to papers and code, and an AI-engineering track with a local tutor. A French tutor with spaced repetition and role-play. Maths, physics and economics courses where a skill only counts as mastered after a check three days later. A lab notebook, a reading room and a lecture companion.</span></li>
-    </ul>
+<!-- timeline stories -->
+<section id="stories" class="screen" hidden role="dialog" aria-modal="true" aria-label="Timeline, March 2026 to now">
+  <div class="sv" id="sv">
+    <div class="sv-page" id="svPage"></div>
+    <div class="sv-bars" id="svBars"></div>
+    <div class="sv-head"><span class="av"><span id="svAv"></span></span><span class="t" id="svT"></span><button class="x tap" id="svX" type="button" aria-label="Close stories">✕</button></div>
+    <div class="sv-paused" aria-hidden="true">PAUSED</div>
+    <div class="sv-foot" id="svFoot">tap → next · hold to pause · swipe down to close</div>
   </div>
 </section>
 
-<!-- ================= MORE ================= -->
-<section class="screen" id="s-more" data-ch="CH 04–07" data-name="MORE" aria-label="More: estate, agents and research">
-  <nav class="rows" aria-label="More channels">
-    <a class="row" href="#estate"><span class="k">CH 04</span><span class="t">The estate</span><span class="d">Four Macs on a private mesh and the apps they run.</span></a>
-    <a class="row" href="#agents"><span class="k">CH 05</span><span class="t">The agents</span><span class="d">Agents run as Claude Code sessions: a director that splits the goal, a scout, a builder, a reviewer and an archivist, with a security agent watching every machine.</span></a>
-    <a class="row" href="#proposal"><span class="k">CH 06 · Research · 1 of 2 · submitted April 2026</span><span class="t">The proposal</span><span class="d">How can an AI-assisted OSINT platform provide expert geopolitical and security capabilities, through human-machine teaming, to the civilian across both peacetime and conflict?</span></a>
-    <a class="row" href="#dissertation"><span class="k">CH 07 · Research · 2 of 2 · final year, in progress</span><span class="t">The dissertation</span><span class="d">Great Power War as a Process: what structural indicators of systemic conflict can, and cannot, predict.</span></a>
-  </nav>
-  <div class="actions">
-    <a class="btn" href="cv/Karam-Binning-CV.pdf?v=0f600964" target="_blank" rel="noopener">Download CV</a>
-    <a class="btn quiet" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the research proposal</a>
-  </div>
-  <div class="foot"><a href="index.html?full=1" target="_blank" rel="noopener">› view the full site</a></div>
-</section>
-
-<section class="screen" id="s-estate" data-ch="CH 04" data-name="THE ESTATE" data-parent="more" aria-label="The estate: hardware and apps">
-  <h2 class="mid">The estate</h2>
-  <p class="copy">Four Macs on a private mesh and the apps they run.</p>
-  <div class="data">
-    <div><strong>~46.8M</strong><span>trade prints collected</span></div>
-    <div><strong>4.24M</strong><span>World Cup collector rows</span></div>
-    <div><strong>1.87M</strong><span>market snapshots</span></div>
-    <div><strong>12 TB</strong><span>canonical archive</span></div>
-  </div>
-  <div class="cta"><a class="btn solid" href="demo/w/estate/" target="_blank" rel="noopener">Open the estate ↗</a></div>
-</section>
-
-<section class="screen" id="s-agents" data-ch="CH 05" data-name="THE AGENTS" data-parent="more" aria-label="The agents">
-  <h2 class="mid">The agents</h2>
-  <p class="copy">Agents run as Claude Code sessions: a director that splits the goal, a scout, a builder, a reviewer and an archivist, with a security agent watching every machine. A deterministic supervisor probes every node every sixty seconds and restarts what has failed.</p>
-  <ul class="pts">
-    <li>No agent may mark its own work complete; an independent reviewer decides</li>
-    <li>Failures are kept on the record: 1,054 tasks passed and 91 failed</li>
-    <li>Nothing sends externally, moves money or writes to the vault without my approval</li>
-    <li>Sentinel, born from April, baselines each machine and alerts on any change</li>
-  </ul>
-  <div class="cta"><a class="btn solid" href="demo/w/agents/" target="_blank" rel="noopener">Open the agents ↗</a></div>
-</section>
-
-<section class="screen" id="s-proposal" data-ch="CH 06" data-name="RESEARCH DESIGN" data-parent="more" aria-label="Research proposal">
-  <span class="ch-id">Research · 1 of 2 · submitted April 2026</span>
-  <h2 class="mid">The proposal</h2>
-  <p class="q">How can an AI-assisted OSINT platform provide expert geopolitical and security capabilities, through human-machine teaming, to the civilian across both peacetime and conflict?</p>
-  <p class="copy">My second-year research proposal. It argues that no open-source intelligence platform gives a civilian one unified system for geopolitical and security analysis, and that a shift to a multipolar order makes that gap matter. KAM is the designed instrument: the proposal assesses its NEWS, WORLD, SIGNAL and COUNCIL modules against the academic literature, then uses what it finds to improve them.</p>
-  <ul class="pts">
-    <li><b>Method:</b> design-based research, iterating the platform against the literature rather than writing about it at a distance</li>
-    <li><b>Four literatures:</b> OSINT methodology, war studies and historical context, AI and human-machine teaming, and information resilience in conflict</li>
-    <li><b>Sub-questions:</b> how OSINT democratises intelligence capability, how human-machine teaming augments rather than replaces judgement, and the ethics of a civilian intelligence platform</li>
-    <li><b>Ethics:</b> source bias, dual use and the security of the user, addressed in the proposal itself</li>
-    <li><b>AI use declared</b> on its first page: what Claude was used for, and what was mine</li>
-  </ul>
-  <div class="actions"><a class="btn" href="demo/w/research/" target="_blank" rel="noopener">Open the proposal ↗</a></div>
-  <div class="cta"><a class="btn solid" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the full proposal</a></div>
-</section>
-
-<section class="screen" id="s-dissertation" data-ch="CH 07" data-name="DISSERTATION" data-parent="more" aria-label="Dissertation">
-  <span class="ch-id">Research · 2 of 2 · final year, in progress</span>
-  <h2 class="mid">The dissertation</h2>
-  <p class="q">Great Power War as a Process: what structural indicators of systemic conflict can, and cannot, predict.</p>
-  <p class="copy">Major war read as a long structural process rather than a dated event. A systemic tier measures the condition of the international system from 1816 to 2022 against the build-ups to 1914 and 1939, without attaching a probability. A dyadic tier asks whether a pair of states will start a militarised dispute the following year, trained on 1816–1989 and tested on 1990–2014, split by time and never at random.</p>
-  <p class="copy">Every result reports base rate, AUROC, AUPR and Brier score together, against honest baselines, because predicting "no war" is almost always right, so accuracy rewards silence. Next year: a master's in International Security.</p>
-  <figure class="lab">
-    <div class="lab-bar">Dissertation lab</div>
-    <img src="demo/lab-theatre.jpg" alt="The dissertation lab's Theatre view: a globe of hotspots with dyad risk tables" loading="lazy" decoding="async" width="1440" height="900">
-    <figcaption class="lab-note">The lab I built for the dissertation, shown here on synthetic data. Nothing on screen is a research result.</figcaption>
-  </figure>
-  <div class="cta"><a class="btn solid" href="demo/w/dissertation/" target="_blank" rel="noopener">Open the dissertation ↗</a></div>
-</section>
-
-<!-- ================= CONTACT ================= -->
-<section class="screen" id="s-contact" data-ch="CH 08" data-name="CONTACT" aria-label="Contact">
-  <h2 class="kamh">Get in touch<b class="cur" aria-hidden="true">_</b></h2>
-  <p class="copy">Open to internships for winter 2026/27 and summer 2027. Type a message into the terminal and it goes straight to my university inbox.</p>
-  <a class="mail" href="mailto:K.S.Binning1-24@student.lboro.ac.uk">K.S.Binning1-24@student.lboro.ac.uk</a>
-
-  <form class="tx" id="tx" novalidate aria-label="Send me a message">
-    <div class="tx-bar"><span class="tx-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tx-title">ssh karam@inbox</span><span class="tx-live"><i></i> CONNECTED</span></div>
-    <div class="tx-body">
-      <div class="tx-boot" aria-hidden="true">$ ssh karam@inbox · connected ✓</div>
-      <p class="tx-lead">Write to me here. It goes straight to my university inbox and I reply from there.</p>
-      <label class="tx-f"><span>&gt; your email</span><input name="email" type="email" required autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@company.com" enterkeyhint="next"></label>
-      <label class="tx-f"><span>&gt; subject</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27" enterkeyhint="next"></label>
-      <label class="tx-f"><span>&gt; message</span><textarea name="message" required rows="5" maxlength="4000" placeholder="Hello Karam, …"></textarea></label>
-      <input type="checkbox" name="botcheck" class="tx-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <div class="tx-ctl"><button class="tx-btn go" type="submit">SEND MESSAGE ⏎</button><button class="tx-btn" type="reset">CLEAR</button><span class="tx-count" id="txCount">0 / 4000</span></div>
-      <div class="tx-out" id="txOut" aria-live="polite"></div>
+<!-- contact: a Mail-style compose sheet -->
+<div id="compose" class="screen" hidden role="dialog" aria-modal="true" aria-labelledby="cmpT">
+  <div class="scrim" id="cmpScrim"></div>
+  <form class="sheet" id="tx" novalidate>
+    <div class="sh-grab" id="cmpGrab" aria-hidden="true"></div>
+    <div class="sh-bar" id="cmpBar"><button type="button" class="cancel tap" id="cmpCancel">Cancel</button><h3 id="cmpT">New Message</h3><button type="submit" class="send tap" aria-label="Send">↑</button></div>
+    <div class="sh-body">
+      <div class="fld"><span>To:</span><span class="to">Karam Binning</span></div>
+      <div class="to-sub"><span class="sel">K.S.Binning1-24@student.lboro.ac.uk</span><br>My university inbox. I reply from there.</div>
+      <label class="fld"><span>From:</span><input name="email" type="email" required autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@company.com"></label>
+      <label class="fld"><span>Subject:</span><input name="subject" required maxlength="120" placeholder="Internship · winter 2026/27"></label>
+      <textarea class="msg" name="message" required maxlength="4000" placeholder="Hello Karam, …" aria-label="Message"></textarea>
+      <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="cnt" id="txCount">0 / 4000</div>
+      <div class="out" id="txOut" aria-live="polite"></div>
     </div>
   </form>
+</div>
 
-  <div class="actions">
-    <a class="btn" href="cv/Karam-Binning-CV.pdf?v=0f600964" target="_blank" rel="noopener">Download CV</a>
-    <a class="btn quiet" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the research proposal</a>
-  </div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <div class="sh" id="sh" aria-label="Share this portfolio">
-    <div class="sh-h"><span>[K·B] SHARE · PASS IT ON</span><span class="sh-hint">for a colleague, a manager, anyone</span></div>
-    <div class="sh-link"><span>&gt;</span><input id="shUrl" readonly aria-label="Portfolio link" value="https://karambinning.github.io/portfolio/"><button type="button" class="sh-b" data-s="copy" style="--c:#00d4ff">[ COPY ]</button></div>
-    <div class="sh-row">
-      <a class="sh-b" id="shEmail" style="--c:#00ff88" href="mailto:?subject=Worth%20a%20look%3A%20Karam%20Binning%20%E2%80%94%20portfolio">[ EMAIL ]</a>
-      <a class="sh-b" id="shIn" style="--c:#3388ff" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fkarambinning.github.io%2Fportfolio%2F" target="_blank" rel="noopener">[ LINKEDIN ]</a>
-      <a class="sh-b" id="shWa" style="--c:#25d366" href="https://wa.me/?text=https%3A%2F%2Fkarambinning.github.io%2Fportfolio%2F" target="_blank" rel="noopener">[ WHATSAPP ]</a>
-      <a class="sh-b" id="shX" style="--c:#e6e6e6" href="https://x.com/intent/post?url=https%3A%2F%2Fkarambinning.github.io%2Fportfolio%2F" target="_blank" rel="noopener">[ X ]</a>
-      <button type="button" class="sh-b" data-s="qr" style="--c:#aa66ff" aria-expanded="false" aria-controls="shQr">[ QR ]</button>
-      <button type="button" class="sh-b" data-s="native" style="--c:#ff66cc">[ MORE ]</button>
-    </div>
-    <div class="sh-qr" id="shQr" hidden><div id="shQrBox" aria-label="QR code linking to the portfolio" role="img"></div><span>Point a phone camera here to open the portfolio.</span></div>
-    <div class="sh-out" id="shareNote" aria-live="polite"></div>
-  </div>
-  <div class="foot"><a href="index.html?full=1" target="_blank" rel="noopener">› view the full site</a></div>
-</section>
-
-    <div class="sweep" id="sweep" aria-hidden="true"></div>
-  </main>
-
-  <nav class="tabs" id="tabs" aria-label="Sections">
-    <a href="#signal" data-tab="signal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 3l4 4 4-4"/></svg>Home</a>
-    <a href="#timeline" data-tab="timeline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><path d="M11 7h9M11 17h6"/></svg>Timeline</a>
-    <a href="#work" data-tab="work"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 10l3 2-3 2M12 15h5"/></svg>Work</a>
-    <a href="#more" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg>More</a>
-    <a href="#contact" data-tab="contact"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>Contact</a>
-  </nav>
-  <div class="scan" aria-hidden="true"></div>
+<!-- first-visit power-on -->
+<div id="boot" class="screen" hidden aria-hidden="true">
+  <div class="crt"></div>
+  <div class="bt"><div class="mark">K·B</div><h1>KARAM BINNING<b>_</b></h1><p>TAP TO ENTER</p></div>
 </div>
 
 <script>
 (() => {
-  const $ = s => document.querySelector(s);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = { get(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch (e) {} } };
+document.addEventListener('touchstart', () => {}, { passive:true });   // lets :active pressed states fire on iOS
+document.addEventListener('gesturestart', e => e.preventDefault());    // no pinch-zoom of the app chrome
+document.addEventListener('dblclick', e => e.preventDefault());
 
-  /* ---------- projects: the same FILES data as index.html ---------- */
-  const FILES = [
-    { acc:'#ff8a3d', name:'ICARUS', win:'icarus', app:'icarus', kind:'Autonomous drone flight',
-      line:'A consumer drone flown as an autonomous reconnaissance aircraft, on my own software, at zero cost.',
-      body:['A DJI Mini 2 flown autonomously, with a 2019 Android handset as the flight computer and my own software in between: 14,455 lines of Java across 28 files.',
-            'The airframe has no obstacle sensing and nothing downstream will stop a bad setpoint, so the control law carries its own safety envelope.'],
-      points:['552 self-test assertions in 8 suites run on the physical handset at every launch, and have repeatedly caught regressions before flight','Three crashes documented, each with the specific fault it exposed','One feature paused on a measured physical limit: the camera cannot resolve a hand beyond 5.8 m, so it waits rather than pretends'],
-      proof:'14,455 lines · 552 on-device assertions, all passing · 3 documented crashes' },
-    { acc:'#00d4ff', name:'KAM', win:'kam', app:'kam', kind:'Personal intelligence platform', flag:'private beta',
-      line:'Knowledge Analysis Monitor: one terminal for the world, knowledge, AI and a person\u2019s own life.',
-      body:['The first thing I built, and the platform everything since grew from: a single-page app that brings world news, maps, markets, AI tools and personal records into one dark terminal. Eighteen modules sit behind a hub. WORLD is a globe with switchable layers for weather, alliances, trade routes, infrastructure, biomes and travel. NEWS reads live feeds and filters them by region and by the outlet\u2019s orientation. COUNCIL puts one question to eight AI personas, each on its own model, and a secretariat drafts a resolution, while the person still makes the decision. OFFICE dispatches tasks to six agent roles.',
-            'Its principles are written down: data stays local, privacy is the default, only real data is shown, and AI is an input to the user\u2019s judgement rather than a replacement for it. Honest status: WORLD, NEWS, COUNCIL, OFFICE, FINANCE and several life modules work; LIBRARY, SCHOOL and a handful of others are still mostly scaffolding. It is the instrument my research proposal was built around.'],
-      points:['WORLD: an orthographic globe with weather, alliance, trade, infrastructure and biome layers','COUNCIL: eight personas on separate models deliberate, a secretariat resolves, the person decides','NEWS: live feeds filtered by region and outlet orientation','Local-first and real-data-only, by written principle','First commit 9 March 2026; my first build'],
-      proof:'18 modules · scaffolding labelled as scaffolding · first commit 9 March 2026' },
-    { acc:'#f5c518', name:'THEMIS', win:'themis', app:'themis', demo:'themis', kind:'Cautious legal research',
-      line:'A legal-research agent designed to refuse rather than guess.',
-      body:['A legal-research system over UK capacity law, built for a setting where a wrong answer has real consequences, so the design priority is restraint. Fully local: SQLite and local models, no cloud, no web data ingested.',
-            'It went through a deliberate narrowing, from a nine-layer architecture to one small, cautious agent.'],
-      points:['Abstains when retrieval confidence is low, and refuses advice and prediction questions outright','Quotes the source verbatim before every point, or says the answer is not in its documents','Hybrid retrieval (dense and keyword) that cites the paragraph, not just the page','Only official legislation sources can add law; each document is hashed into an append-only chain of custody'],
-      proof:'1,289 chunks across 612 pages of statute and guidance' },
-    { acc:'#ff3355', name:'Quant Trading', win:'quant', app:'markets', kind:'Market models, paper-traded', flag:'paper only',
-      line:'Two trading models, and the fill check that invalidated my own best result.',
-      body:['War Room: a multi-agent engine for five-minute crypto prediction markets, iterated against fixed baselines over 10,023 strategy cycles. Its best paper run went from $50 to $106.56 over 289 trades at a 64.7% win rate.',
-            'Then I built an honest fill engine that checks every paper trade against the real order book. At the price that run had assumed, an order filled 2 times in 304. The profit was phantom, so I marked the result invalid and kept only what survived: the direction calls. Krabs, an in-play World Cup football model with a computable fair value, was then scored against the market instead: closing-line value and Brier score.'],
-      points:['$50 to $106.56 (+113%) on paper, then invalidated by my own order-book check: 2 fills in 304 at the assumed price','Krabs Brier score improved from 0.24 to about 0.12 across 7 World Cup matches, paper-traded','Closing-line value: the market moved +2.24 points toward Krabs\u2019 prices on average','The lasting output is a ~46.8M-print market-microstructure dataset'],
-      proof:'No capital was ever at risk · the invalidation is in the project\u2019s own record' },
-    { acc:'#c084fc', name:'AI Declaration', win:'declaration', app:'declaration', demo:'declaration', kind:'Academic integrity tool',
-      line:'A tool that states how AI was used in a piece of academic work, on its front page.',
-      body:['Built in Claude Code to govern my own academic AI use. It logs how AI was involved in a piece of work and generates a declaration page for the front of the submission, written to sit inside Loughborough’s AI-use guidelines.',
-            'For my first essay with Claude, on British India, Claude built a reading guide while I read the sources; I wrote the essay entirely myself and the declaration says so.'],
-      points:['Logs AI sessions and dates them','Generates the declaration from a template','Houses the formal declaration for my research proposal'],
-      proof:'In use on my own coursework' },
-    { acc:'#e879f9', name:'K\u00b7A\u00b7M Notch', win:'notch', app:'notch', kind:'Music player for the MacBook notch', demo:'notch',
-      line:'A music player that lives in the MacBook\u2019s notch, as a set of skeuomorphic devices.',
-      body:['A native macOS app that turns the notch into a now-playing display. It reads what is playing and controls Spotify, and draws it as a turntable, a cassette deck, a CD player, a Game Boy, an iOS player or a pixel display.',
-            'It shows synced lyrics, and its equaliser moves to the real audio rather than a canned animation. It runs on my daily machines, built and deployed from one script.'],
-      points:['Swift, with an Objective-C helper to read what is playing','Six device modes in one shared design system','An equaliser driven by a real audio tap','Synced lyrics in the expanded view'],
-      proof:'In daily use on two Macs · 22 design states archived' },
-    { acc:'#facc15', name:'K\u00b7A\u00b7M RIDE', win:'ride', app:'ride', kind:'Offline bike computer',
-      line:'An offline, retro-pixel bike computer that turns a ride into a game.',
-      body:['An Android bike computer built in Kotlin with Jetpack Compose. It records GPS rides and exports them as GPX or TCX, with offline vector maps of the UK and offline route planning, so it works with no signal.',
-            'Over the top sits a game layer in a pixel style: a character who rides with you, bosses on the climbs, a turbo mode and a shop.'],
-      points:['Records rides and exports GPX and TCX','Offline UK vector maps and on-device routing','A game layer: a pixel character, climb bosses and a turbo','Built and installed on my own phone'],
-      proof:'Three Android builds to date' },
-    { acc:'#ff4444', name:'Future Warfare', win:'futurewarfare', kind:'Curriculum and learning game', app:'futurewarfare', flag:'2 of 15 domains live',
-      line:'A 15-domain civilian curriculum on modern conflict, built as a learning game.',
-      body:['A curriculum for civilians and students rather than militaries, on the premise that the modern conflict surface reaches civilians first. It runs as a learning game inside my Command dashboard\u2019s academy: fifteen domains, each with five zones and a hands-on drill, from Civilian Survival through cyber, information and electronic warfare to space, maritime, economic warfare and strategic studies.',
-            'Theory and practice run together. My own cyber security learning was taught this way, with paired defensive and offensive drills against my own infrastructure.'],
-      points:['Civilian Survival is the entry point: threat assessment, shelter, navigation, first aid and communications','Cyber Security is live: five zones from the threat landscape to geopolitics and law','Every domain has a drill: a scenario engine, a deepfake court, a spectrum analyst, a targeting committee and more','Drone and pilot simulators are planned; the other eleven domains are scaffolded with their zones defined','Strategic Studies is the capstone, and connects to my dissertation'],
-      proof:'15 domains · 75 zones · 2 live, 2 awaiting simulators, 11 scaffolded' },
-  ];
+/* ---------- pixel glyphs (7×7 bitmaps) ---------- */
+const G = {
+  icarus:['XX...XX','XX...XX','..X.X..','...X...','..X.X..','XX...XX','XX...XX'],
+  kam:['..XXX..','.X.X.X.','X..X..X','XXXXXXX','X..X..X','.X.X.X.','..XXX..'],
+  themis:['...X...','XXXXXXX','X..X..X','X..X..X','XX.X.XX','...X...','.XXXXX.'],
+  quant:['......X','.....XX','X...X.X','XX.X...','X.X....','.......','XXXXXXX'],
+  declaration:['XXXXX..','X...XX.','X.XXX.X','X.....X','X.XXX.X','X.....X','XXXXXXX'],
+  notch:['..XXXXX','..X...X','..X...X','..X...X','XXX.XXX','XXX.XXX','.......'],
+  ride:['X......','XXX....','X...X..','X..XXX.','..XXXXX','.XXXXXX','XXXXXXX'],
+  shield:['XXXXXXX','X..X..X','X..X..X','XXXXXXX','.X.X.X.','..XXX..','...X...'],
+  futurewarfare:['...X...','.XXXXX.','.X.X.X.','XXX.XXX','.X.X.X.','.XXXXX.','...X...'],
+  estate:['XXXXXXX','X.X...X','XXXXXXX','.......','XXXXXXX','X.X...X','XXXXXXX'],
+  agents:['...X...','.XXXXX.','X.....X','X.X.X.X','X.....X','.XXXXX.','.X...X.'],
+  research:['.XXX...','X...X..','X.X.X..','X...X..','.XXXX..','....XX.','.....XX'],
+  dissertation:['...X...','.XXXXX.','XXXXXXX','.XXXXX.','..XXX.X','..XXX.X','......X'],
+  cv:['XXXXX..','X...XX.','X.X.X.X','X.....X','X.XXX.X','X.....X','XXXXXXX'],
+  mail:['.......','XXXXXXX','XX...XX','X.X.X.X','X..X..X','X.....X','XXXXXXX'],
+  share:['...X...','..XXX..','.X.X.X.','...X...','XX.X.XX','X.....X','XXXXXXX'],
+};
+const glyph = k => { const b = G[k]; if (!b) return ''; let r = '';
+  b.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'X') r += `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`; }));
+  return `<svg viewBox="0 0 7 7" aria-hidden="true" shape-rendering="crispEdges">${r}</svg>`; };
+$$('[data-g]').forEach(t => t.innerHTML = glyph(t.dataset.g));
 
-  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-  const bar = (f, unit) => { const b = el('div', 'wt-bar'); b.setAttribute('aria-hidden', 'true'); b.append(el('i'), el('i'), el('i'), el('span', '', '~/work/' + f.win), el('span', 'wt-u', 'UNIT ' + unit)); return b; };
-  const kind = f => { const k = el('span', 'kind', f.kind); if (f.flag){ k.append(' · '); k.append(el('span', 'flag', f.flag)); } return k; };
-  const list = $('#files'), view = $('#view'), contact = $('#s-contact');
-  FILES.forEach((f, i) => {
-    const unit = String(i + 1).padStart(2, '0');
-    // the card on the work screen
-    const a = el('a', 'proj'); a.href = '#work/' + f.win; a.style.setProperty('--acc', f.acc);
-    const body = el('div', 'wt-body'); body.append(kind(f));
-    const h = el('h3'); h.append(el('span', 'wt-p', '>'), ' ' + f.name); body.append(h, el('p', '', f.line));
-    a.append(bar(f, unit), body); list.append(a);
-    // its detail screen
-    const s = el('section', 'screen pd'); s.id = 's-work-' + f.win; s.style.setProperty('--acc', f.acc);
-    s.dataset.ch = 'UNIT ' + unit; s.dataset.name = '~/WORK/' + f.win.toUpperCase(); s.dataset.parent = 'work'; s.setAttribute('aria-label', f.name);
-    const head = el('div', 'pd-head'), hb = el('div', 'wt-body'); hb.append(kind(f));
-    const h2 = el('h2'); h2.append(el('span', 'wt-p', '> '), f.name, el('span', 'cur', '_')); hb.append(h2); head.append(bar(f, unit), hb);
-    s.append(head, el('p', 'pd-line', f.line));
-    f.body.forEach(p => s.append(el('p', 'copy', p)));
-    const ul = el('ul', 'pts'); f.points.forEach(p => ul.append(el('li', '', p))); s.append(ul);
-    s.append(el('div', 'proof', f.proof));
-    const cta = el('div', 'cta'), go = el('a', 'btn solid'); go.href = 'demo/w/' + f.win + '/'; go.target = '_blank'; go.rel = 'noopener';
-    const lbl = el('span'); lbl.append('[ ', el('b', '', 'OPEN TERMINAL'), ' ] ↗'); go.append(lbl); cta.append(go); s.append(cta);
-    view.insertBefore(s, contact);
-  });
+/* ---------- content: from index.html (PROJECTS, scenes, "Also built") and the windows in demo/w/<id>/ ---------- */
+const NODES = {
+  m1:{ kind:'Mac mini · always on', name:'M1', short:'M1', label:'vault + Command', text:'Holds the canonical vault on a 12 TB drive and serves it to every other machine. Runs Command, the dashboard I operate the estate from. One drive, one writer, one truth.' },
+  m3:{ kind:'MacBook Pro · daily machine', name:'M3', short:'M3', label:'work app', text:'Where I work. Runs the work app: job triage across tracks, a pipeline from found to offer, and an outreach drafter.' },
+  imac:{ kind:'iMac · collector', name:'iMac', short:'iMac', label:'collector', text:'Runs the collector database the rest of the fleet queries for intelligence, and the morning system. After the April incident it served as the forensic honeypot; that evidence is checksummed into the vault. No app of its own.' },
+  yerson:{ kind:'MacBook · intelligence engine', name:'YerSon', short:'YerSon', label:'intel engine', text:'The intelligence engine: collection cycles across open-source intelligence, news, geopolitics, academia, markets, law and jobs, classified by a local model and filed into the vault. It has its own Telegram agent.' },
+};
+const AGENTS = [
+  { n:'THE FLEET', c:'#8b7bff', r:'How it fits together', t:'SEMI-AUTONOMOUS', f:[['What it is','A <b>small-scale, semi-autonomous</b> set of agents that runs and watches the systems I built: the vault, the machines, the apps and the research tools.'],['Checked by','An <b>independent reviewer</b> checks work before it counts. Every result goes in a ledger, failures included.'],['Not allowed','Nothing leaves a machine, moves money or writes to the vault’s human notes <b>without my approval</b>.']] },
+  { n:'YERDAD', c:'#00d4ff', r:'Director', t:'LIVE', f:[['Lives on','<b>M1</b>, the hub machine that holds the vault.'],['Does','Takes my requests by message, works across the estate and hands work to the right machine or agent. Overnight it checks the estate’s health and writes the morning brief.'],['Not allowed','Send anything off a machine, spend money or write to the vault’s human notes without my approval.']] },
+  { n:'BUILDER', c:'#ff7700', r:'Overnight builder', t:'LIVE · STALLED TWICE', warn:1, f:[['Lives on','<b>The iMac</b>, the lab machine.'],['Does','Works through a short task list on the KAM codebase while I sleep, on <b>its own branch only</b>, and runs build checks before it reports.'],['Status','It has <b>stalled twice</b>: runs that stopped part-way through the night. That is recorded, not hidden.']] },
+  { n:'SENTINEL', c:'#ff4060', r:'Security watch', t:'LIVE · PHASE 1', f:[['Runs as','<b>Deterministic code</b>, on a schedule. No language model.'],['Does','Records a baseline for each machine and compares every new reading with it. A change sends an alert by Telegram.'],['Not allowed','Change or block anything itself. It reports; I decide.']] },
+  { n:'YERSON', c:'#00ff88', r:'Intelligence engine agent', t:'LIVE · SCHEDULED', f:[['Lives on','<b>The Intel MacBook</b>, which runs the intelligence engine.'],['Does','Gathers items from public sources, classifies each by topic and region, files it, and sends me a digest of what matters.'],['Not allowed','Act on what it collects, or send it anywhere else.']] },
+  { n:'MISSION', c:'#ff3355', r:'Mission analyst', t:'ON DEMAND', f:[['Runs as','A <b>local model</b>, on demand, with hybrid search. Nothing goes to a cloud service.'],['Does','Works a mission from that mission’s notes, and cites the notes it used. London Tech Week was the first mission.'],['Not allowed','Contact anyone or send anything. It answers; I act.']] },
+  { n:'MOLTIMUS', c:'#ff66aa', r:'Social reconnaissance', t:'LIVE · SCHEDULED', f:[['Runs as','A <b>scheduled job</b>, every few hours.'],['Does','Reads a social network, notes what is new and relevant, and drafts replies or posts for me to look at.'],['Not allowed','<b>Post anything without my approval.</b>']] },
+  { n:'THEMIS', c:'#ffcc00', r:'Legal research', t:'ON DEMAND', f:[['Does','Researches public law, legislation and published judgments, with the source for every point and a note of what it is unsure about.'],['Not allowed','State a conclusion without its source, or act on anything.']] },
+  { n:'SCOUT', c:'#00ff88', r:'Cited web research', t:'LIVE · ON CALL', f:[['Runs as','A <b>Claude Code subagent</b>, one research question at a time.'],['Does','Finds sources on the web, reads them and returns findings with a citation for every claim.'],['Not allowed','Write files: it has <b>no file-writing tools</b>.']] },
+  { n:'ANALYST', c:'#ffcc00', r:'Read-only queries', t:'LIVE · ON CALL', f:[['Does','Answers questions with read-only queries over the machine-output store and the vault. Every number comes with <b>the command that produced it</b>.'],['Not allowed','Change anything. It is read-only.']] },
+  { n:'ARCHIVIST', c:'#aa66ff', r:'Vault lint · read-only', t:'LIVE · ON CALL', f:[['Does','Runs the vault lint, the rule checker for how the vault is laid out, named and labelled, and reports what it finds.'],['Not allowed','<b>Move, rename or write anything.</b> Any fix is my decision.']] },
+  { n:'WARDEN', c:'#9a90c8', r:'Watchdog checks', t:'LIVE · DETERMINISTIC', f:[['Runs as','<b>Deterministic code</b>: the fleet-guard and agent-health checks, on a schedule.'],['Does','Checks that each machine and agent is up and answering, and flags any that has gone quiet.']] },
+  { n:'VERIFIER', c:'#eef6ff', r:'Independent done-gate', t:'BEFORE EVERY DONE', f:[['Runs as','A separate Claude Code session that did not do the work.'],['Does','Checks work against the evidence before it is reported as done, with a literal verdict: <b>VERDICT: PASS</b> or <b>VERDICT: FAIL</b>.'],['Not allowed','Fix the work it is checking. It judges.']] },
+  { n:'KRABS', c:'#ff8a3d', r:'Markets and trading agent', t:'ARCHIVED · FOR NOW', warn:1, f:[['Did','Ran the trading models on paper, logged every signal and position, and was scored against the market rather than against itself.'],['Not allowed','Risk real money. Everything was paper-traded.'],['Status','Archived: its server was decommissioned in September 2026.']] },
+];
 
-  /* ---------- router: tabs are screens, details slide in over them ---------- */
-  const TABS = ['signal', 'timeline', 'work', 'more', 'contact'];
-  const screenOf = r => document.getElementById('s-' + r.replace('/', '-'));
-  const parse = h => { const r = (h || '').replace(/^#/, ''); return r && screenOf(r) ? r : 'signal'; };
-  const tabOf = r => { const s = screenOf(r); return s.dataset.parent || r; };
-  const isDetail = r => !!screenOf(r).dataset.parent;
-  let cur = null, pushed = false;
-  const sweep = $('#sweep');
-  function show(r, dir){
-    const next = screenOf(r), prev = cur && screenOf(cur);
-    if (prev === next) return;
-    if (prev){ prev.classList.remove('on'); prev.inert = true; prev.setAttribute('aria-hidden', 'true'); }
-    next.classList.add('on'); next.inert = false; next.removeAttribute('aria-hidden');
-    cur = r;
-    $('#nowCh').textContent = next.dataset.ch; $('#nowName').textContent = next.dataset.name;
-    const det = isDetail(r); $('#back').hidden = !det; $('#mark').hidden = det;
-    const tab = tabOf(r);
-    document.querySelectorAll('#tabs a').forEach(a => { if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-    document.title = (r === 'signal' ? 'Karam Binning — Portfolio' : next.dataset.name.replace(/^~\/WORK\//, '') + ' · Karam Binning');
-    if (!reduce && dir && next.animate){
-      next.animate([{ transform: `translateX(${dir * 34}px)`, opacity: 0, filter: 'brightness(2.2) contrast(1.4)' },
-                    { transform: `translateX(${dir * -3}px)`, opacity: 1, filter: 'brightness(1.25)', offset: .55 },
-                    { transform: 'none', opacity: 1, filter: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
-      sweep.animate([{ transform: 'translateY(-100%)', opacity: .9 }, { transform: 'translateY(560%)', opacity: 0 }], { duration: 260, easing: 'ease-in' });
-    }
+const APPS = {
+  icarus:{ name:'ICARUS', c:'#ff8a3d', kind:'Autonomous drone flight', win:'icarus',
+    line:'A consumer drone flown as an autonomous reconnaissance aircraft, on my own software, at zero cost.',
+    cards:[
+      ['What it is','<p>A DJI Mini 2 flown autonomously, with a 2019 Android handset as the flight computer and my own software in between.</p><p>14,455 lines of Java across 28 files.</p>'],
+      ['How it stays safe','<p>The Mini 2 has no obstacle sensing, so the limits live in software. Every command passes one guard before it is sent.</p><ul><li><b>Fail closed:</b> an unmeasured radius means 100 m, not unlimited</li><li><b>Late means stop:</b> a missed beat sends zero, so it hovers</li></ul>'],
+      ['Proof','<div class="nums"><div><strong>14,455</strong><span>lines of Java</span></div><div><strong>552</strong><span>on-device assertions, all passing</span></div><div><strong>8</strong><span>test suites, every launch</span></div><div><strong>3</strong><span>crashes, each documented</span></div></div>'],
+      ['Honest limit','<p>Hand control is <b>paused</b>. Beyond about 5.8 m the camera cannot resolve a hand; anything reported past that is noise.</p><p>So it waits rather than pretends.</p>'],
+    ], inter:'selftest' },
+  kam:{ name:'KAM', c:'#00d4ff', kind:'Personal intelligence platform', flag:'private beta', win:'kam',
+    line:'Knowledge Analysis Monitor: one terminal for the world, knowledge, AI and a person’s own life.',
+    cards:[
+      ['What it is','<p>The first thing I built, and the platform everything since grew from: world news, maps, markets, AI tools and personal records in one dark terminal.</p><p>Eighteen modules sit behind a hub.</p>'],
+      ['How it works','<ul><li><b>WORLD:</b> a globe with weather, alliance, trade, infrastructure and biome layers</li><li><b>NEWS:</b> live feeds filtered by region and outlet orientation</li><li><b>COUNCIL:</b> eight AI personas on separate models deliberate; the person decides</li></ul>'],
+      ['Principles','<p>Data stays local, privacy is the default, only real data is shown, and AI is an input to the user’s judgement rather than a replacement for it.</p><p>It is the instrument my research proposal was built around.</p>'],
+      ['Honest status','<p>Some modules work; others are still mostly scaffolding, and are labelled that way.</p><div class="mods"><span class="w">WORLD</span><span class="w">NEWS</span><span class="w">COUNCIL</span><span class="w">OFFICE</span><span class="w">FINANCE</span><span class="s">LIBRARY</span><span class="s">SCHOOL</span><span class="m">+ 11 more</span></div><p class="note" style="margin-top:10px">green: works · amber: mostly scaffolding</p>'],
+    ] },
+  themis:{ name:'THEMIS', c:'#f5c518', kind:'Cautious legal research', win:'themis',
+    line:'A legal-research agent designed to refuse rather than guess.',
+    cards:[
+      ['What it is','<p>Legal research over UK capacity law, where a wrong answer has real consequences, so the design priority is restraint.</p><p>Fully local: SQLite and local models, no cloud, no web data ingested.</p>'],
+      ['How it works','<ul><li>Quotes the source verbatim before every point, or says the answer is not in its documents</li><li>Hybrid retrieval that cites the paragraph, not just the page</li><li>Refuses advice and prediction questions outright</li></ul>'],
+      ['Proof','<div class="nums"><div><strong>1,289</strong><span>chunks</span></div><div><strong>612</strong><span>pages of statute and guidance</span></div><div class="w"><span>Only official legislation sources can add law; each document is hashed into an append-only chain of custody.</span></div></div>'],
+      ['Honest limit','<p>It went through a deliberate narrowing, from a nine-layer architecture to one small, cautious agent.</p><p>When retrieval confidence is low, it abstains.</p>'],
+    ], inter:'themis' },
+  quant:{ name:'QUANT', c:'#ff3355', kind:'Market models, paper-traded', flag:'paper only', win:'quant',
+    line:'Two trading models, and the fill check that invalidated my own best result.',
+    cards:[
+      ['What it is','<p><b>War Room:</b> a multi-agent engine for five-minute crypto prediction markets, iterated over 10,023 strategy cycles.</p><p><b>Krabs:</b> an in-play World Cup football model with a computable fair value.</p>'],
+      ['The catch','<p>I built an honest fill engine that checks every paper trade against the real order book. At the price the best run had assumed, an order filled <b>2 times in 304</b>.</p><p>The profit was phantom, so I marked the result invalid.</p>'],
+      ['What survived','<div class="nums"><div><strong>0.24→0.12</strong><span>Krabs Brier score, 7 World Cup matches</span></div><div><strong>+2.24</strong><span>points of closing-line value</span></div><div class="w"><strong>~46.8M</strong><span>market-microstructure trade prints, kept as a dataset</span></div></div>'],
+      ['Honest limit','<p>Everything was paper-traded. <b>No capital was ever at risk</b>, and the invalidation is in the project’s own record.</p>'],
+    ], inter:'quant' },
+  declaration:{ name:'DECLARATION', c:'#c084fc', kind:'Academic integrity tool', win:'declaration',
+    line:'A tool that states how AI was used in a piece of academic work, on its front page.',
+    cards:[
+      ['What it is','<p>Built in Claude Code to govern my own academic AI use. It logs how AI was involved in a piece of work and generates a declaration page for the front of the submission.</p>'],
+      ['In use','<p>For my first essay with Claude, on British India, Claude built a reading guide while I read the sources.</p><p>I wrote the essay entirely myself, and the declaration says so.</p>'],
+      ['What it does','<ul><li>Logs AI sessions and dates them</li><li>Generates the declaration from a template</li><li>Houses the formal declaration for my research proposal</li></ul>'],
+    ], inter:'declaration' },
+  notch:{ name:'NOTCH', c:'#e879f9', kind:'Music player for the MacBook notch', win:'notch',
+    line:'A music player that lives in the MacBook’s notch, as a set of skeuomorphic devices.',
+    cards:[
+      ['What it is','<p>A native macOS app that turns the notch into a now-playing display. It reads what is playing, controls Spotify, and draws it as a turntable, a cassette deck, a CD player, a Game Boy, an iOS player or a pixel display.</p>'],
+      ['How it works','<ul><li>Swift, with an Objective-C helper to read what is playing</li><li>An equaliser driven by a real audio tap, not a canned animation</li><li>Synced lyrics in the expanded view</li></ul>'],
+      ['Proof','<div class="nums"><div><strong>2</strong><span>Macs, in daily use</span></div><div><strong>6</strong><span>device modes, one design system</span></div><div class="w"><strong>22</strong><span>design states archived</span></div></div>'],
+    ], inter:'notch' },
+  ride:{ name:'RIDE', c:'#facc15', kind:'Offline bike computer', win:'ride',
+    line:'An offline, retro-pixel bike computer that turns a ride into a game.',
+    cards:[
+      ['What it is','<p>An Android bike computer built in Kotlin with Jetpack Compose. It records GPS rides and exports them as GPX or TCX.</p>'],
+      ['Works offline','<p>Offline vector maps of the UK and on-device route planning, so it works with no signal.</p>'],
+      ['The game','<p>Over the top sits a game layer in a pixel style: a character who rides with you, bosses on the climbs, a turbo mode and a shop.</p>'],
+      ['Proof','<div class="nums"><div><strong>3</strong><span>Android builds to date</span></div><div><strong>1</strong><span>phone it runs on: mine</span></div></div>'],
+    ] },
+  futurewarfare:{ name:'FUTURE WARFARE', c:'#ff4444', kind:'Curriculum and learning game', flag:'2 of 15 domains live', win:'futurewarfare',
+    line:'A 15-domain civilian curriculum on modern conflict, built as a learning game.',
+    cards:[
+      ['What it is','<p>A curriculum for civilians and students rather than militaries, on the premise that the modern conflict surface reaches civilians first.</p><p>It runs as a learning game inside my Command dashboard’s academy.</p>'],
+      ['How it works','<p>Fifteen domains, each with five zones and a hands-on drill: a scenario engine, a deepfake court, a spectrum analyst, a targeting committee and more.</p><p>Theory and practice run together.</p>'],
+      ['Live now','<ul><li><b>Civilian Survival</b> is the entry point: threat assessment, shelter, navigation, first aid, communications</li><li><b>Cyber Security:</b> five zones, from the threat landscape to geopolitics and law</li></ul>'],
+      ['Honest status','<div class="fw" aria-label="15 domains: 2 live, 2 awaiting simulators, 11 scaffolded"><i class="l"></i><i class="l"></i><i class="s"></i><i class="s"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="legend"><span style="--k:#00ff88">2 live</span><span style="--k:#f5c518">2 await simulators</span><span style="--k:#2a3d57">11 scaffolded</span></div>'],
+    ] },
+  estate:{ name:'ESTATE', c:'#00ff88', kind:'Hardware and apps', win:'estate',
+    line:'Four Macs on a private mesh, the agents and apps running across them, and one canonical archive underneath.',
+    pre:'estate',
+    cards:[
+      ['What it is','<p>Over the summer the separate pieces became one estate: computers with clear roles, the agents and apps running across them, and one canonical archive underneath.</p><p>It is my agentic infrastructure.</p>'],
+      ['What it holds','<div class="nums"><div><strong>979</strong><span>notes I wrote or promoted</span></div><div><strong>663</strong><span>agent reports, filed</span></div><div><strong>441K</strong><span>machine reports in the lake</span></div><div><strong>46.8M</strong><span>trade prints</span></div><div><strong>4.24M</strong><span>World Cup rows</span></div><div><strong>1.87M</strong><span>market snapshots</span></div></div><p class="note">17 domains, 19 agents filing, about 200 GB used on a 12 TB drive. Counted 11 Oct 2026.</p>'],
+      ['The rules','<p>One canonical vault with written rules and a checker. Sentinel watches every machine against a baseline.</p><p>One drive, one writer, one truth.</p>'],
+    ] },
+  agents:{ name:'AGENTS', c:'#8b7bff', kind:'Semi-autonomous agent fleet', win:'agents',
+    line:'A director, helpers and checks, run as Claude Code sessions, scheduled jobs and plain code. No agent marks its own work done.',
+    pre:'agents', cards:[] },
+  research:{ name:'RESEARCH', c:'#38bdf8', kind:'Research design · submitted April 2026', win:'research',
+    line:'My second-year research proposal, built around KAM.',
+    cards:[
+      ['The question','<p class="q">How can an AI-assisted OSINT platform provide expert geopolitical and security capabilities, through human-machine teaming, to the civilian across both peacetime and conflict?</p>'],
+      ['The argument','<p>No open-source intelligence platform gives a civilian one unified system for geopolitical and security analysis, and a shift to a multipolar order makes that gap matter.</p><p>KAM is the designed instrument.</p>'],
+      ['Method','<ul><li><b>Design-based research:</b> iterating the platform against the literature</li><li><b>Four literatures:</b> OSINT methodology, war studies, AI and human-machine teaming, information resilience in conflict</li></ul>'],
+      ['Ethics and AI use','<p>Source bias, dual use and the security of the user, addressed in the proposal itself.</p><p><b>AI use declared</b> on its first page: what Claude was used for, and what was mine.</p>'],
+    ], inter:'proposal' },
+  dissertation:{ name:'DISSERTATION', c:'#ff3030', kind:'Final year · in progress', win:'dissertation',
+    line:'Great Power War as a Process: what structural indicators of systemic conflict can, and cannot, predict.',
+    cards:[
+      ['The idea','<p>Major war read as a long structural process rather than a dated event.</p><p>Next year: a master’s in International Security.</p>'],
+      ['Systemic tier','<p>Measures the condition of the international system from 1816 to 2022 against the build-ups to 1914 and 1939, <b>without attaching a probability</b>.</p>'],
+      ['Dyadic tier','<p>Will a pair of states start a militarised dispute the following year?</p><div class="split" aria-hidden="true"><i class="tr"></i><i class="te"></i></div><div class="yrs"><span>1816 · train</span><span>1989 | 2014 · test</span></div><p class="note">Split by time, never at random.</p>'],
+      ['Honest scoring','<p>Every result reports base rate, AUROC, AUPR and Brier score together, against honest baselines.</p><p>Predicting “no war” is almost always right, so accuracy rewards silence.</p>'],
+    ], inter:'lab' },
+};
+// "Also built": the data-d text of the chips on index.html
+const ALSO = [
+  ['mission-os','Mission OS','#ff3355','MO','A reusable app for running missions: any objective, from an event to a project, gets its own research, plan, targets, dossier and debrief, with Mission, an analyst I can question about that mission\'s notes. London Tech Week was the first.'],
+  ['motion-coach','Motion Coach','#38bdf8','MC','Webcam biomechanics scoring with MediaPipe: four movement tests scored live in the browser, reviewed with two Loughborough academics.'],
+  ['fish','FISH','#22d3ee','FI','An offline field app for beginner anglers, driven by live river levels, weather and species data, with a bankside mode for cold hands.'],
+  ['dataset','The Dataset','#00d4ff','DS','About 47 million time-synced prediction-market trade prints from the trading work, catalogued with a data dictionary as a research dataset.'],
+  ['morning','Morning','#00ff88','AM','An alarm that checks I am actually up, switches the room on through smart plugs and prints a morning paper with the day’s brief.'],
+  ['kam-travel','KAM Travel','#ff7a00','KT','A trip planner for a group road trip around Scotland, in the KAM orange style, that works offline on the road.'],
+  ['caddy','KAM Caddy','#34d399','KC','A voiced golf caddy that uses GPS, the compass and live weather to solve for wind, with a four-player mode.'],
+  ['hq','HQ','#ff7700','HQ','Binning.AI HQ: an isometric ops console in TypeScript and Phaser, where each agent is a character in a room.'],
+  ['academy','AI Academy','#00bcd4','AI','The learning tools I built for myself. An AI academy: a four-stage path from Anthropic’s courses to papers and code, and an AI-engineering track with a local tutor. A French tutor with spaced repetition and role-play. Maths, physics and economics courses where a skill only counts as mastered after a check three days later. A lab notebook, a reading room and a lecture companion.'],
+];
+ALSO.forEach(([id, name, c, mono, d]) => { APPS[id] = { name: name.toUpperCase(), c, mono, kind:'Also built', line: d.split(/(?<=[.:])\s/)[0], cards:[['What it is', `<p>${d}</p>`]], small:1 }; });
+APPS['academy'].line = 'The learning tools I built for myself.';
+APPS['hq'].line = 'An isometric ops console where each agent is a character in a room.';
+
+const ORDER = ['icarus','kam','themis','quant','declaration','notch','ride','futurewarfare','estate','agents','research','dissertation'];
+const LABEL = { icarus:'ICARUS', kam:'KAM', themis:'THEMIS', quant:'Quant', declaration:'Declaration', notch:'Notch', ride:'RIDE', futurewarfare:'Future Warfare', estate:'Estate', agents:'Agents', research:'Research', dissertation:'Dissertation' };
+const HASH = { estate:'#estate', agents:'#agents', research:'#proposal', dissertation:'#dissertation' };
+const hashOf = id => HASH[id] || '#work/' + id;
+const tileHTML = id => { const a = APPS[id]; return `<span class="tile" style="--c:${a.c}">${G[id] ? glyph(id) : `<span class="mono">${a.mono}</span>`}</span>`; };
+
+/* ---------- timeline: four moments, each a run of stories ---------- */
+const MOMENTS = [
+  { ring:'MAR', g:'kam', label:'Mar', date:'Mar 2026', k:'#00d4ff', bg:'radial-gradient(120% 70% at 20% 0%,rgba(0,212,255,.35),transparent 60%),linear-gradient(180deg,#03121f,#02060c)',
+    title:'First line of code',
+    p:'A humanities student who had never programmed opens Claude and builds an AI analyst for live prediction-market data. Within days it becomes KAM, the platform everything since is built around.',
+    pts:[['First Claude session, after a year on ChatGPT, without ever having written a line of code','First build: an in-browser AI analyst for live Polymarket data','9 March: the first commit of KAM, a local-first terminal that unifies the world, knowledge and AI in one place'],
+         ['A planetary-intelligence globe and a multi-model AI council follow within weeks','The War Room conceived: a seven-agent trading team, run on paper']] },
+  { ring:'APR', g:'shield', label:'Apr', date:'Apr 2026', k:'#ff4060', bg:'radial-gradient(120% 70% at 80% 0%,rgba(255,64,96,.30),transparent 60%),linear-gradient(180deg,#1a0610,#02060c)',
+    title:'A security scare, turned into a curriculum',
+    p:'A suspected security incident on my machines turned out to be a false alarm. Working out how to check properly taught me how little I knew about defending my own setup, so I turned it into a structured cybersecurity curriculum. The same month I submitted my research design, built around KAM.',
+    pts:[['Set up decoy services and a tamper-evident access log to see what was really happening','Learned to read the logs properly; the evidence showed a false alarm','Built Sentinel, a security agent that watches each machine against a baseline and alerts on changes'],
+         ['Wrote the curriculum: threat landscape, network defence, incident response, offensive testing, critical infrastructure, AI in cyber, and cyber geopolitics','Based on public frameworks such as NIST and MITRE ATT&CK, and practised hands-on against my own machines only'],
+         ['It later grew into Future Warfare, a wider curriculum on modern conflict','Submitted my research design, which made KAM the instrument for studying civilian access to geopolitical and security analysis']] },
+  { ring:'MAY–JUN', g:'agents', label:'May–Jun', date:'May–Jun 2026', k:'#a99bff', bg:'radial-gradient(120% 70% at 30% 0%,rgba(139,123,255,.36),transparent 60%),linear-gradient(180deg,#0c0a22,#02060c)',
+    title:'A small, semi-autonomous agent fleet',
+    p:'I built a small fleet of semi-autonomous agents to help run the systems I had made. They take tasks, do the work and report back, but they are not left to run on their own: an independent reviewer checks the work, and anything that leaves the machine waits for me.',
+    pts:[['May: the agent fleet consolidated under one director, which takes tasks and reports what it did','Agents with clear roles and an independent reviewer; anything that only looked alive was shown as failing'],
+         ['June: London Tech Week at Olympia, on a general ticket, to learn rather than pitch: sessions, field notes and about fifteen conversations','Mission OS: a reusable app for running missions, with its own analyst. London Tech Week was the first mission'],
+         ['The trading data packaged as a research dataset, and THEMIS, a cautious legal-research agent','My own AI academy: a learning path through Anthropic’s courses, papers and code, then an AI-engineering track with a tutor','Anthropic Academy: three AI Fluency courses']] },
+  { ring:'JUL–NOW', g:'estate', label:'Jul–now', date:'Jul 2026 – now', k:'#00ff88', bg:'radial-gradient(120% 70% at 70% 0%,rgba(0,255,136,.26),transparent 60%),linear-gradient(180deg,#03150d,#02060c)',
+    title:'The estate comes together',
+    p:'Over the summer the separate pieces became one estate: computers and servers set up with clear roles, the agents and apps running across them, and one canonical archive underneath. It is my agentic infrastructure. Then the final year began.',
+    pts:[['July: ICARUS flies for the first time, inside a safety envelope it cannot leave; a simulator follows the next day','A learning suite in my Work app: a French tutor with spaced repetition and role-play, mastery courses in maths, physics and economics, a lab notebook, a reading room and a lecture companion','The intelligence engine audited and made queryable by my director agent'],
+         ['September: one canonical vault with written rules and a checker; Sentinel watching every machine','Autumn: K·A·M RIDE for my bike rides and K·A·M Notch for my laptop','Final year: a dissertation on great-power war as a process, with its own forecasting lab']] },
+];
+
+/* ---------- build the home screen ---------- */
+ $('#rings').innerHTML = MOMENTS.map((m, i) => `<button class="ring tap" type="button" style="--k:${m.k}" data-story="${i}" aria-label="${m.date}: ${m.title}"><span class="o"><span>${glyph(m.g)}</span></span><em>${m.label}</em></button>`).join('');
+$('#grid').innerHTML = ORDER.map(id => `<button class="ico tap" type="button" data-open="${id}" aria-label="Open ${LABEL[id]}">${tileHTML(id)}<b>${LABEL[id]}</b></button>`).join('')
+  + `<button class="ico tap folder" type="button" id="folderIco" aria-label="Open the Also built folder"><span class="tile"><span class="mini">${ALSO.map(a => `<i style="--c:${a[2]}"></i>`).join('')}</span></span><b>Also built</b></button>`
+  + `<section class="widget" aria-label="At a glance"><h2>SIGNAL<span>since March 2026</span></h2>
+      <p>I study conflict, security and the international order. With Claude as my main tool, I build applications, software and small-scale infrastructure, alongside the degree, with no programming background.</p>
+      <div class="stats"><div><span>STUDY</span><b>HUMANITIES</b></div><div><span>MAIN TOOL</span><b class="g">CLAUDE</b></div><div><span>BUILDS</span><b>APPS · SOFTWARE · INFRA</b></div><div><span>SINCE</span><b>MARCH 2026</b></div></div></section>`
+  + `<p class="foot" style="grid-column:1/-1">Prefer a big screen? <a href="index.html?full=1">Open the full desktop site</a></p>`;
+$('#foldGrid').innerHTML = ALSO.map(([id, name]) => `<button class="ico tap" type="button" data-open="${id}" aria-label="Open ${name}">${tileHTML(id)}<b>${name}</b></button>`).join('');
+const seen = new Set((store.get('kb.seen') || '').split(',').filter(Boolean));
+const markSeen = () => $$('.ring').forEach(r => r.classList.toggle('seen', seen.has(r.dataset.story)));
+markSeen();
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(t){ const n = $('#toast'); n.textContent = t; n.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => n.classList.remove('on'), 2200); }
+
+/* ---------- app renderers ---------- */
+function cardsHTML(a){
+  if (!a.cards.length) return '';
+  return `<div class="cards" data-cards>${a.cards.map(([k, h], i) => `<article class="card${a.cards.length === 1 ? ' solo' : ''}"><div class="ck">${k}${a.cards.length > 1 ? `<i>${i + 1} / ${a.cards.length}</i>` : ''}</div>${h}</article>`).join('')}</div>
+    ${a.cards.length > 1 ? `<div class="dots" aria-hidden="true">${a.cards.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}`;
+}
+const INTER = {
+  selftest:{ h:'Self-test', html:`<div class="panel"><div class="st-run"><div class="st-n" id="stN">0<small>of 552 assertions</small></div><button class="btn tap" type="button" id="stGo" style="flex:1">Run self-test</button></div>
+      <div class="suites" id="stS">${['GUARD','AUTOPILOT','AXES','VISION','VIDEO','VOICE','HAND CONTROL','MISSION'].map(s => `<span>${s}</span>`).join('')}</div>
+      <p class="note">A replay of the check the phone runs at every launch, across its 8 suites. Illustration: the counts are the real totals; it is not live.</p></div>`,
+    init(root){
+      const n = $('#stN', root), go = $('#stGo', root), ss = $$('#stS span', root); let raf = 0;
+      go.addEventListener('click', () => {
+        cancelAnimationFrame(raf); ss.forEach(s => s.classList.remove('ok')); go.textContent = 'Running…';
+        const T = reduce ? 1 : 2600, t0 = performance.now();
+        const step = t => { const p = Math.min(1, (t - t0) / T); const v = Math.round(552 * p);
+          n.firstChild.textContent = v; ss.forEach((s, i) => s.classList.toggle('ok', p >= (i + 1) / 8));
+          if (p < 1) raf = requestAnimationFrame(step); else { go.textContent = '552 / 552 passed ✓'; } };
+        raf = requestAnimationFrame(step);
+      });
+      return () => cancelAnimationFrame(raf);
+    } },
+  quant:{ h:'The paper run', html:`<div class="panel"><div class="sp-row"><span class="np-k">War Room · paper</span><span class="note" style="margin:0" id="qMeta">289 trades</span></div>
+      <div class="sp-row" style="margin-top:6px"><span class="sp-big" id="qBig">$50 → $106.56</span></div>
+      <svg class="spark" id="qSpark" viewBox="0 0 300 96" preserveAspectRatio="none" aria-label="Balance over the paper run"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3355" stop-opacity=".35"/><stop offset="1" stop-color="#ff3355" stop-opacity="0"/></linearGradient></defs><path class="ar" d=""/><path class="ln" d=""/></svg>
+      <button class="btn tap" type="button" id="qGo">Run the fill check</button>
+      <div class="stamp" id="qStamp">INVALID. At the assumed price of $0.52, an order filled 2 times in 304 against the real order book. The profit was phantom; only the direction calls survived.</div></div>`,
+    init(root){
+      const sp = $('#qSpark', root);
+      fetch('demo/w/quant/assets/data.json').then(r => r.json()).then(d => {
+        const w = d.warroom; let b = w.start_balance; const pts = [[0, b]];
+        w.trades.forEach(t => { b += t[2]; pts.push([t[0], b]); });
+        const maxX = w.duration_min || pts[pts.length - 1][0], lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1]));
+        const X = x => (x / maxX * 300).toFixed(1), Y = y => (90 - (y - lo) / (hi - lo) * 82).toFixed(1);
+        const line = pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]) + ' ' + Y(p[1])).join('');
+        $('.ln', sp).setAttribute('d', line); $('.ar', sp).setAttribute('d', line + `L300 96L0 96Z`);
+        $('#qMeta', root).textContent = `${w.trades_closed} trades · ${w.win_rate}% won`;
+        $('#qBig', root).textContent = `$${w.start_balance} → $${w.end_balance.toFixed(2)}`;
+      }).catch(() => {});
+      const go = $('#qGo', root);
+      go.addEventListener('click', () => { const on = !sp.classList.contains('void');
+        sp.classList.toggle('void', on); $('#qBig', root).classList.toggle('void', on); $('#qStamp', root).classList.toggle('on', on);
+        go.textContent = on ? 'Show the run again' : 'Run the fill check'; });
+    } },
+  themis:{ h:'Ask THEMIS', html:`<div class="panel"><div class="chat" id="thC"><div class="bub it"><b>THEMIS</b>Pick a question. I quote before I answer, refuse advice, and abstain when the evidence is thin.</div></div>
+      <div class="qs" id="thQ"><button type="button" class="tap" data-q="test">Test for capacity, s.2</button><button type="button" class="tap" data-q="powers">Court powers, ss.15–16</button><button type="button" class="tap" data-q="abstain">Cite three EWCOP cases</button><button type="button" class="tap" data-q="refuse">Will I win?</button></div>
+      <p class="note">Public-law demo on the Mental Capacity Act 2005. No case data.</p></div>`,
+    init(root){
+      const Q = { test:'What is the legal test for lack of capacity under MCA 2005 s.2?', powers:'What can the Court of Protection decide under ss.15 and 16?', abstain:'Cite three EWCOP cases on financial abuse of a vulnerable adult.', refuse:'Will the court rule in my favour?' };
+      const A = {
+        test:['ok','Answered · 3 sources','<b>Quote</b>MCA 2005 s.2(1): “a person lacks capacity in relation to a matter if at the material time he is unable to make a decision for himself … because of an impairment of, or a disturbance in the functioning of, the mind or brain.”<br><br><b>Answer</b>Capacity is judged decision by decision, at the time the decision is made.'],
+        powers:['ok','Answered · 2 sources','<b>Quote</b>s.15: declarations as to whether a person has or lacks capacity, and as to the lawfulness of any act.<br><br><b>Quote</b>s.16: the court may make the decision on their behalf, or appoint a deputy.'],
+        abstain:['warn','Abstained','Insufficient corpus evidence for this. Retrieval confidence is below threshold, so I will not name cases I cannot quote. Manual research required.'],
+        refuse:['bad','Refused','I don’t give legal advice or predict outcomes. I can show you what the statute and the Code of Practice say.'] };
+      const chat = $('#thC', root); let job = 0;
+      $$('#thQ button', root).forEach(b => b.addEventListener('click', () => {
+        const k = b.dataset.q, my = ++job;
+        chat.innerHTML = `<div class="bub me">${Q[k]}</div>`;
+        setTimeout(() => { if (my !== job) return; const [c, t, h] = A[k]; chat.insertAdjacentHTML('beforeend', `<div class="bub it"><span class="tag ${c}">${t}</span><br>${h}</div>`); }, reduce ? 0 : 450);
+      }));
+    } },
+  declaration:{ h:'Try it', html:`<div class="panel"><div id="dcT">
+      ${[['discussing and refining the research question','Refining the question',1],['suggesting sources, which I then found and read myself','Suggesting sources',1],['building a reading guide while I read the sources','A reading guide',1],['drafting text','Drafting text',0,1],['proofreading','Proofreading',0]].map(([v, l, on, dr]) => `<button type="button" class="tg" role="switch" aria-checked="${on ? 'true' : 'false'}" data-v="${v}"${dr ? ' data-draft' : ''}><span>${l}</span><span class="sw"></span></button>`).join('')}
+      </div><article class="decl" id="dcP" aria-live="polite"></article></div>`,
+    init(root){
+      const page = $('#dcP', root);
+      const render = () => {
+        const on = $$('.tg[aria-checked=true]', root), used = on.map(b => b.dataset.v), drafted = on.some(b => b.hasAttribute('data-draft'));
+        const d = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+        page.innerHTML = `<h4>AI declaration</h4><p class="m">Example module · ${d} · Tool: Claude</p><h5>What I used AI for</h5><p>${used.length ? used.join('; ') + '.' : 'Nothing. This work was produced without AI assistance.'}</p><h5>How I built on it</h5><p>All sources suggested were independently verified, accessed and read by me. ${drafted ? 'Passages drafted with AI assistance are marked in the text and were rewritten by me.' : 'All of the writing is my own.'}</p>`;
+      };
+      $$('.tg', root).forEach(b => b.addEventListener('click', () => { b.setAttribute('aria-checked', b.getAttribute('aria-checked') !== 'true'); render(); }));
+      render();
+    } },
+  notch:{ h:'Device modes', html:`<div class="panel"><div class="seg" role="tablist">${[['v12-kampink-vinyl-open-lyrics','Turntable'],['v0.4-kampink-cassette','Cassette'],['v12-kampink-cd-open-lyrics','CD'],['v0.4-kampink-gameboy','Game Boy']].map(([k, l], i) => `<button type="button" role="tab" data-nt="${k}" aria-selected="${!i}">${l}</button>`).join('')}</div>
+      <div class="shot"><img id="ntI" src="demo/notch-v12-kampink-vinyl-open-lyrics.jpg" alt="K·A·M Notch in turntable mode"></div></div>`,
+    init(root){ const img = $('#ntI', root);
+      $$('[data-nt]', root).forEach(b => b.addEventListener('click', () => { $$('[data-nt]', root).forEach(x => x.setAttribute('aria-selected', x === b)); img.src = `demo/notch-${b.dataset.nt}.jpg`; img.alt = `K·A·M Notch in ${b.textContent} mode`; })); } },
+  lab:{ h:'The lab', html:`<div class="panel"><div class="seg" role="tablist">${['Theatre','Results','Ledger'].map((l, i) => `<button type="button" role="tab" data-lab="${l.toLowerCase()}" aria-selected="${!i}">${l}</button>`).join('')}</div>
+      <div class="shot"><img id="labI" src="demo/lab-theatre.jpg" alt="The dissertation lab's Theatre view: a globe of hotspots with dyad risk tables"></div>
+      <p class="note">The lab I built for the dissertation, shown here on synthetic data. Nothing on screen is a research result.</p></div>`,
+    init(root){ const img = $('#labI', root), ALT = { theatre:"The lab's Theatre view: a globe of hotspots with dyad risk tables", results:"The lab's Results view: base rate, AUROC, AUPR and Brier for each model against baselines", ledger:"The lab's Ledger: every run kept, with its metrics over time" };
+      $$('[data-lab]', root).forEach(b => b.addEventListener('click', () => { $$('[data-lab]', root).forEach(x => x.setAttribute('aria-selected', x === b)); img.src = `demo/lab-${b.dataset.lab}.jpg`; img.alt = ALT[b.dataset.lab]; })); } },
+  proposal:{ h:'Read it', html:`<a class="btn tap" href="docs/Research-Proposal.pdf" target="_blank" rel="noopener">Read the full proposal · PDF</a>`, init(){} },
+};
+const PRE = {
+  estate:{ h:'Tap a machine', html:`<div class="map" id="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line id="l-m3" x1="50" y1="50" x2="20" y2="20"/><line id="l-imac" x1="50" y1="50" x2="80" y2="20"/><line id="l-yerson" x1="50" y1="50" x2="80" y2="80"/><line id="l-m1" x1="50" y1="50" x2="50" y2="50"/></svg>
+      ${[['m1',50,50,1],['m3',20,20],['imac',80,20],['yerson',80,80]].map(([k, x, y, core]) => `<button type="button" class="nd tap${core ? ' core' : ''}" data-node="${k}" style="left:${x}%;top:${y}%" aria-pressed="false" aria-label="${NODES[k].name}: ${NODES[k].kind}"><i></i><span>${NODES[k].short}</span></button>`).join('')}</div>
+      <div class="panel np" style="margin-top:12px" aria-live="polite"><div class="np-k" id="npK"></div><h3 id="npN"></h3><p id="npT"></p></div>`,
+    init(root){ const pick = id => { const n = NODES[id];
+        $$('.nd', root).forEach(b => b.setAttribute('aria-pressed', b.dataset.node === id)); $$('line', root).forEach(l => l.classList.toggle('on', l.id === 'l-' + id));
+        $('#npK', root).textContent = n.kind; $('#npN', root).textContent = `${n.name} · ${n.label}`; $('#npT', root).textContent = n.text; };
+      $$('.nd', root).forEach(b => b.addEventListener('click', () => pick(b.dataset.node))); pick('m1'); } },
+  agents:{ h:'Swipe through the fleet', html:`<div class="cards" data-cards>${AGENTS.map((g, i) => `<article class="card ag-card" style="--ac:${g.c}"><div class="ag"><span class="ck" style="margin:0">${String(i + 1).padStart(2, '0')} / ${AGENTS.length}</span><span class="an">${g.n}</span><span class="ar">${g.r}</span><span class="bdg${g.warn ? ' warn' : ''}">${g.t}</span><dl>${g.f.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div></article>`).join('')}</div>
+      <div class="dots" aria-hidden="true">${AGENTS.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>
+      <div class="ledger" style="margin-top:14px"><div><strong>1,054</strong><span>tasks passed</span></div><div><strong>91</strong><span>failed, kept on the record</span></div></div>
+      <div class="panel" style="margin-top:12px"><div class="card" style="all:unset;display:block;--c:#8b7bff"><ul style="list-style:none;display:flex;flex-direction:column;gap:9px">
+        <li style="position:relative;padding-left:18px;color:var(--body)"><span style="position:absolute;left:2px;color:#8b7bff">›</span>No agent may mark its own work complete; an independent reviewer decides</li>
+        <li style="position:relative;padding-left:18px;color:var(--body)"><span style="position:absolute;left:2px;color:#8b7bff">›</span>A deterministic supervisor probes every node every sixty seconds and restarts what has failed</li>
+        <li style="position:relative;padding-left:18px;color:var(--body)"><span style="position:absolute;left:2px;color:#8b7bff">›</span>Nothing sends externally, moves money or writes to the vault without my approval</li></ul></div></div>`, init(){} },
+};
+
+/* ---------- the app layer: open with a FLIP zoom from the icon ---------- */
+const nav = $('#appNav'), appEl = $('#app'), appBody = $('#appBody'), appScroll = $('#appScroll'), splash = $('#splash'), home = $('#home');
+const S = { app:null, stories:null, compose:false, folder:false };
+let stopApp = null, anim = null;
+
+function renderApp(id){
+  const a = APPS[id];
+  appEl.style.setProperty('--c', a.c);
+  splash.innerHTML = G[id] ? glyph(id) : `<span class="mono">${a.mono}</span>`;
+  const blocks = [];
+  if (a.pre) blocks.push(`<div class="blk"><div class="blk-h">${PRE[a.pre].h}</div></div>${a.pre === 'agents' ? PRE.agents.html.replace('<div class="ledger"', '<div class="blk"><div class="ledger"').replace(/<\/div>\s*$/, '</div></div>') : `<div class="blk">${PRE[a.pre].html}</div>`}`);
+  if (a.cards.length) blocks.push(`${a.pre ? '<div class="blk"><div class="blk-h">About</div></div>' : '<div style="height:14px"></div>'}${cardsHTML(a)}`);
+  if (a.inter) blocks.push(`<div class="blk"><div class="blk-h">${INTER[a.inter].h}</div>${INTER[a.inter].html}</div>`);
+  $('#navT').textContent = a.name; nav.classList.remove('on');
+  appBody.innerHTML = `<header class="hero"><div class="hk">${tileHTML(id)}<div style="min-width:0"><h2 id="appName">${a.name}</h2><div class="kind">${a.kind}</div></div></div>
+      ${a.flag ? `<span class="flag">${a.flag}</span>` : ''}<p>${a.line}</p></header>${blocks.join('')}
+      ${a.win ? `<a class="full" href="demo/w/${a.win}/" target="_blank" rel="noopener"><span>View the full desktop version ↗</span></a>` : '<div class="spacer"></div>'}`;
+  const stops = [];
+  if (a.pre && PRE[a.pre].init) stops.push(PRE[a.pre].init(appBody));
+  if (a.inter && INTER[a.inter].init) stops.push(INTER[a.inter].init(appBody));
+  $$('[data-cards]', appBody).forEach(wireCards);
+  stopApp = () => stops.forEach(f => typeof f === 'function' && f());
+  appScroll.scrollTop = 0;
+}
+function wireCards(row){
+  const dots = row.nextElementSibling && row.nextElementSibling.classList.contains('dots') ? [...row.nextElementSibling.children] : [];
+  if (!dots.length) return;
+  row.addEventListener('scroll', () => { const c = row.firstElementChild; if (!c) return;
+    const i = Math.round(row.scrollLeft / (c.offsetWidth + 12)); dots.forEach((d, k) => d.classList.toggle('on', k === i)); }, { passive:true });
+}
+// geometry for the zoom: the full-screen layer scaled down onto the icon's rounded square
+function iconFrame(r){
+  const W = appEl.clientWidth || innerWidth, H = appEl.clientHeight || innerHeight, s = r.width / W, ct = (H - W) / 2;
+  return { transform:`translate(${r.left}px,${r.top - ct * s}px) scale(${s})`, clipPath:`inset(${ct}px 0px ${H - ct - W}px 0px round ${W * .225}px)` };
+}
+function findIcon(id){
+  const el = S.folder ? $(`#foldGrid [data-open="${id}"] .tile`) : ($(`#grid [data-open="${id}"] .tile`) || (APPS[id] && APPS[id].small ? $('#folderIco .tile') : null));
+  if (!el) return null; const r = el.getBoundingClientRect(); return r.width ? r : null;
+}
+function openApp(id, rect, instant){
+  if (anim) { anim.cancel(); anim = null; }
+  appEl.getAnimations().forEach(a => a.cancel()); splash.getAnimations().forEach(a => a.cancel());
+  renderApp(id); S.app = id;
+  appEl.hidden = false; appEl.style.transform = ''; appEl.style.clipPath = ''; appScroll.scrollTop = 0;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  requestAnimationFrame(() => { appScroll.scrollTop = 0; });
+  home.classList.add('behind');
+  if (instant || reduce || !rect || !appEl.animate){
+    splash.style.opacity = 0;
+    if (!instant) appEl.animate && appEl.animate([{ opacity:0 }, { opacity:1 }], { duration:200 });
+    return;
   }
-  function dirTo(r){
-    if (!cur) return 0;
-    if (isDetail(r) && !isDetail(cur)) return 1;
-    if (!isDetail(r) && isDetail(cur)) return tabOf(cur) === r ? -1 : Math.sign(TABS.indexOf(r) - TABS.indexOf(tabOf(cur))) || -1;
-    return Math.sign(TABS.indexOf(tabOf(r)) - TABS.indexOf(tabOf(cur))) || 1;
-  }
-  function go(r){
-    if (r === cur){ const s = screenOf(r); s.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); return; }
-    if (isDetail(r)){ pushed = true; history.pushState({ r }, '', '#' + r); }
-    else { pushed = false; history.replaceState({ r }, '', '#' + r); }
-    show(r, dirTo(r));
-  }
-  function back(){
-    if (!cur || !isDetail(cur)) return;
-    if (pushed){ pushed = false; history.back(); }
-    else go(tabOf(cur));
-  }
-  // every in-page link goes through the router (no reloads, no document scrolling)
-  document.addEventListener('click', e => {
-    const a = e.target.closest('a[href^="#"]'); if (!a) return;
-    const id = a.getAttribute('href').slice(1);
-    if (id.startsWith('tl-')){ e.preventDefault(); const t = document.getElementById(id); $('#s-timeline').scrollTo({ top: t.offsetTop - 64, behavior: reduce ? 'auto' : 'smooth' }); return; }
-    e.preventDefault();
-    const r = parse('#' + id);
-    // tapping the tab you are in (from one of its details) returns to it
-    go(a.closest('#tabs') && tabOf(cur) === r && isDetail(cur) ? r : r);
-  });
-  $('#back').addEventListener('click', back);
-  window.addEventListener('popstate', () => { const r = parse(location.hash); pushed = false; show(r, dirTo(r)); });
-  window.addEventListener('hashchange', () => { const r = parse(location.hash); if (r !== cur) show(r, dirTo(r)); });
-  document.querySelectorAll('.screen').forEach(s => { s.inert = true; s.setAttribute('aria-hidden', 'true'); });
-  const first = parse(location.hash);
-  if (isDetail(first)){ history.replaceState({ r: tabOf(first) }, '', '#' + tabOf(first)); history.pushState({ r: first }, '', '#' + first); pushed = true; }
-  show(first, 0);
+  const f = iconFrame(rect);
+  anim = appEl.animate([{ transform:f.transform, clipPath:f.clipPath }, { transform:'translate(0px,0px) scale(1)', clipPath:'inset(0px 0px 0px 0px round 0px)' }], { duration:480, easing:'cubic-bezier(.2,.9,.22,1)' });
+  splash.style.opacity = 0;
+  splash.animate([{ opacity:1 }, { opacity:1, offset:.18 }, { opacity:0 }], { duration:400, easing:'ease-out' });
+  anim.onfinish = () => { anim = null; };
+}
+function closeApp(instant){
+  const id = S.app; if (!id) return; S.app = null;
+  if (anim) { anim.cancel(); anim = null; }
+  const done = () => { appEl.getAnimations().forEach(a => a.cancel()); splash.getAnimations().forEach(a => a.cancel()); appEl.hidden = true; appEl.style.transform = ''; appEl.style.clipPath = ''; appEl.style.transition = ''; appBody.innerHTML = ''; anim = null; };
+  if (stopApp) { stopApp(); stopApp = null; }
+  if (!S.folder) home.classList.remove('behind');
+  const r = !instant && !reduce && appEl.animate ? findIcon(id) : null;
+  if (!r){ if (instant || !appEl.animate) return done(); const cur = appEl.style.transform || 'none';
+    anim = appEl.animate([{ opacity:1, transform:cur }, { opacity:0, transform:cur }], { duration:200 }); anim.onfinish = done; return; }
+  const f = iconFrame(r), from = appEl.style.transform || 'translate(0px,0px) scale(1)';
+  appEl.style.transition = '';
+  anim = appEl.animate([{ transform:from, clipPath:`inset(0px 0px 0px 0px round ${appEl.style.transform ? 36 : 0}px)` }, { transform:f.transform, clipPath:f.clipPath }], { duration:420, easing:'cubic-bezier(.3,.8,.25,1)', fill:'forwards' });
+  splash.animate([{ opacity:0 }, { opacity:1, offset:.55 }, { opacity:1 }], { duration:420, fill:'forwards' });
+  anim.onfinish = () => { splash.getAnimations().forEach(a => a.cancel()); done(); };
+}
 
-  /* ---------- swipe: left/right between tabs, right to go back from a detail ---------- */
-  let sx = 0, sy = 0, st = 0, on = false;
-  view.addEventListener('pointerdown', e => {
-    on = e.pointerType !== 'mouse' && !e.target.closest('input,textarea,.rail,.sh-link');
-    sx = e.clientX; sy = e.clientY; st = e.timeStamp;
-  });
-  view.addEventListener('pointercancel', () => { on = false; });
-  view.addEventListener('pointerup', e => {
-    if (!on) return; on = false;
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.7 || e.timeStamp - st > 700) return;
-    if (isDetail(cur)){ if (dx > 0) back(); return; }
-    const i = TABS.indexOf(cur) + (dx < 0 ? 1 : -1);
-    if (i >= 0 && i < TABS.length) go(TABS[i]);
-  });
+appScroll.addEventListener('scroll', () => { const h = $('.hero', appBody); if (h) nav.classList.toggle('on', appScroll.scrollTop > h.offsetHeight - 70); }, { passive:true });
+/* drag down to close: from the top bar or home bar (pointer), or from the content when scrolled to the top (touch) */
+function dragTo(dy){
+  const W = appEl.clientWidth, s = Math.max(.6, 1 - dy / 1400);
+  appEl.style.transition = 'none';
+  appEl.style.transform = `translate(${(W * (1 - s) / 2).toFixed(1)}px,${(dy * .85).toFixed(1)}px) scale(${s.toFixed(3)})`;
+  appEl.style.clipPath = `inset(0px round ${Math.min(36, dy / 3).toFixed(0)}px)`;
+}
+function dragEnd(dy, v){
+  if (dy > 110 || v > .6) { back(); return; }
+  appEl.style.transition = 'transform .3s var(--ease),clip-path .3s var(--ease)';
+  appEl.style.transform = ''; appEl.style.clipPath = '';
+  setTimeout(() => { if (S.app) appEl.style.transition = ''; }, 320);
+}
+function pointerDrag(el, onMove, onEnd, onTap){
+  let id = null, y0 = 0, x0 = 0, t0 = 0, moved = false;
+  el.addEventListener('pointerdown', e => { id = e.pointerId; y0 = e.clientY; x0 = e.clientX; t0 = performance.now(); moved = false; try { el.setPointerCapture(id); } catch (err) {} });
+  el.addEventListener('pointermove', e => { if (e.pointerId !== id) return; const dy = e.clientY - y0; if (Math.abs(dy) > 6) moved = true; if (moved) onMove(dy, e.clientX - x0); });
+  const up = e => { if (e.pointerId !== id) return; id = null; const dy = e.clientY - y0, dt = performance.now() - t0;
+    if (!moved) { onTap && onTap(e); return; } onEnd(dy, dy / Math.max(1, dt), e.clientX - x0); };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', e => { if (e.pointerId === id) { id = null; if (moved) onEnd(0, 0, 0); } });
+}
+pointerDrag($('#appDrag'), dy => dragTo(Math.max(0, dy)), (dy, v) => dragEnd(dy, v));
+pointerDrag($('#appHome'), dy => dragTo(Math.max(0, -dy) * .6), (dy, v) => (dy < -40 || v < -.5) ? back() : dragEnd(0, 0), () => back());
+$('#appX').addEventListener('click', () => back());
+(() => { // touch: pull the whole app down when its content is at the top
+  let y0 = 0, x0 = 0, t0 = 0, on = false, dec = false, dy = 0;
+  appScroll.addEventListener('touchstart', e => { if (e.touches.length !== 1) return; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; t0 = performance.now(); on = false; dec = false; dy = 0; }, { passive:true });
+  appScroll.addEventListener('touchmove', e => {
+    const t = e.touches[0]; dy = t.clientY - y0; const dx = t.clientX - x0;
+    if (!dec && (Math.abs(dy) > 8 || Math.abs(dx) > 8)) { dec = true; on = dy > 0 && Math.abs(dy) > Math.abs(dx) && appScroll.scrollTop <= 0 && !e.target.closest('[data-cards],.qs'); }
+    if (on) { e.preventDefault(); dragTo(dy); }
+  }, { passive:false });
+  appScroll.addEventListener('touchend', () => { if (on) { on = false; dragEnd(dy, dy / Math.max(1, performance.now() - t0)); } });
+})();
 
-  /* ---------- timeline: the date rail follows the reading position ---------- */
-  const railLinks = [...document.querySelectorAll('#rail a')];
-  if ('IntersectionObserver' in window){
-    const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return;
-      railLinks.forEach(a => { const hit = a.getAttribute('href') === '#' + e.target.id; a.classList.toggle('on', hit); if (hit) a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }); }),
-      { root: $('#s-timeline'), rootMargin: '-30% 0px -60% 0px' });
-    document.querySelectorAll('.moment').forEach(m => io.observe(m));
-  }
+/* ---------- folder ---------- */
+const folderEl = $('#folder');
+function openFolder(instant){
+  S.folder = true; folderEl.hidden = false; home.classList.add('behind');
+  if (instant || reduce || !folderEl.animate) return;
+  const r = $('#folderIco .tile').getBoundingClientRect(), f = $('#fold').getBoundingClientRect();
+  const s = r.width / f.width, dx = (r.left + r.width / 2) - (f.left + f.width / 2), dy = (r.top + r.height / 2) - (f.top + f.height / 2);
+  $('#fold').animate([{ transform:`translate(${dx}px,${dy}px) scale(${s})`, opacity:0 }, { transform:'none', opacity:1 }], { duration:380, easing:'cubic-bezier(.2,.9,.25,1)' });
+  $('#folderBg').animate([{ opacity:0 }, { opacity:1 }], { duration:300 });
+}
+function closeFolder(instant){
+  if (!S.folder) return; S.folder = false;
+  if (!S.app) home.classList.remove('behind');
+  if (instant || reduce || !folderEl.animate) { folderEl.hidden = true; return; }
+  const r = $('#folderIco .tile').getBoundingClientRect(), f = $('#fold').getBoundingClientRect();
+  const s = r.width / f.width, dx = (r.left + r.width / 2) - (f.left + f.width / 2), dy = (r.top + r.height / 2) - (f.top + f.height / 2);
+  $('#folderBg').animate([{ opacity:1 }, { opacity:0 }], { duration:260, fill:'forwards' });
+  $('#fold').animate([{ transform:'none', opacity:1 }, { transform:`translate(${dx}px,${dy}px) scale(${s})`, opacity:0 }], { duration:300, easing:'ease-in', fill:'forwards' })
+    .onfinish = () => { folderEl.hidden = true; folderEl.getAnimations({ subtree:true }).forEach(a => a.cancel()); };
+}
+$('#folderBg').addEventListener('click', () => back());
 
-  /* ---------- the keyboard: hide the tab bar while typing ---------- */
-  document.addEventListener('focusin', e => { if (e.target.matches('input:not([readonly]),textarea')) document.body.classList.add('typing'); });
-  // brought back a beat later, so a tap on SEND is not moved out from under the finger as the keyboard closes
-  document.addEventListener('focusout', () => setTimeout(() => { if (!document.activeElement || !document.activeElement.matches('input:not([readonly]),textarea')) document.body.classList.remove('typing'); }, 300));
-
-  /* ---------- contact terminal: FormSubmit delivers to the university inbox (same code as index.html) ---------- */
-  const INBOX = 'K.S.Binning1-24@student.lboro.ac.uk';
-  const tx = $('#tx'), txOut = $('#txOut');
-  const txSay = (t, cls) => { txOut.className = 'tx-out'; txOut.innerHTML = ''; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); };
-  const txLog = (t, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); return d; };
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  const txCount = $('#txCount'); tx.message.addEventListener('input', () => { txCount.textContent = tx.message.value.length + ' / 4000'; });
-  tx.addEventListener('reset', () => { setTimeout(() => { txCount.textContent = '0 / 4000'; txOut.innerHTML = ''; }); });
-  tx.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); const nx = e.target.name === 'email' ? tx.subject : tx.message; nx.focus(); } });
-  tx.addEventListener('submit', async e => {
-    e.preventDefault();
-    const f = new FormData(tx), email = (f.get('email') || '').trim(), subject = (f.get('subject') || '').trim(), message = (f.get('message') || '').trim();
-    if (f.get('botcheck')) return;
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return txSay('✗ error: that email address doesn’t look right.', 'err');
-    if (!subject || !message) return txSay('✗ error: add a subject and a message.', 'err');
-    txOut.innerHTML = ''; txLog('$ send --to university-inbox', 'k'); await wait(160); txLog('packing message · ' + message.length + ' characters ✓', 'ok'); await wait(160); const tr = txLog('sending over https …');
-    try {
-      const r = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(INBOX), {
-        method:'POST', headers:{ 'Content-Type':'application/json', Accept:'application/json' },
-        body: JSON.stringify({ name: email, email, _replyto: email, _subject: 'Portfolio: ' + subject, message, _template: 'box', _captcha: 'false' }) });
-      const j = await r.json().catch(() => ({}));
-      if (r.ok && (j.success === 'true' || j.success === true)){ tr.textContent = 'sending over https ✓'; tr.className = 'ok'; txLog('delivered ✓ thank you. I’ll reply from my university email.', 'ok'); tx.email.value = tx.subject.value = tx.message.value = ''; txCount.textContent = '0 / 4000'; }
-      else if (/activ/i.test(j.message || '')) txLog('✗ this inbox link is still being switched on. For now, email me directly at ' + INBOX + '.', 'err');
-      else txLog('✗ error: the message didn’t send. Please email me directly at ' + INBOX + '.', 'err');
-    } catch (err) { txLog('✗ error: no connection. Please email me directly at ' + INBOX + '.', 'err'); }
+/* ---------- stories ---------- */
+const storyEl = $('#stories');
+const FLAT = []; MOMENTS.forEach((m, mi) => { FLAT.push({ mi, kind:'intro' }); m.pts.forEach((p, pi) => FLAT.push({ mi, kind:'pts', pi })); });
+const DUR = 6000;
+let sIdx = 0, sT = 0, sLast = 0, sRaf = 0, paused = false;
+function storyHTML(st){
+  const m = MOMENTS[st.mi];
+  if (st.kind === 'intro') return `<div class="sv-date">${m.date.replace(' – ', '–<br>')}</div><div class="sv-title">${m.title}</div><p class="sv-p">${m.p}</p>`;
+  return `<div class="sv-num" aria-hidden="true">0${st.pi + 1}</div><div class="sv-kick">${m.date} · ${m.title}</div><ul class="sv-pts">${m.pts[st.pi].map(t => `<li>${t.replace(/&(?!amp;)/g, '&amp;')}</li>`).join('')}</ul>`;
+}
+function showStory(i, dir){
+  sIdx = i; sT = 0; const st = FLAT[i], m = MOMENTS[st.mi];
+  const group = FLAT.map((x, k) => [x, k]).filter(([x]) => x.mi === st.mi), pos = group.findIndex(([, k]) => k === i);
+  storyEl.style.setProperty('--k', m.k);
+  const page = $('#svPage'); page.style.setProperty('--bgk', m.bg); page.style.setProperty('--k', m.k);
+  page.innerHTML = storyHTML(st);
+  page.classList.remove('sv-in', 'sv-back'); void page.offsetWidth; if (!reduce) page.classList.add(dir < 0 ? 'sv-back' : 'sv-in');
+  $('#svBars').innerHTML = group.map((_, k) => `<i><b style="width:${k < pos ? 100 : 0}%"></b></i>`).join('');
+  $('#svAv').textContent = m.ring.split('–')[0];
+  $('#svT').innerHTML = `${m.date}<small>${pos + 1} of ${group.length} · ${m.title}</small>`;
+  $('#svFoot').style.opacity = i === 0 ? 1 : 0;
+  seen.add(String(st.mi)); store.set('kb.seen', [...seen].join(','));
+  if (S.stories !== null) S.stories = st.mi;
+}
+function storyTick(t){
+  if (S.stories === null) return;
+  const dt = Math.min(100, t - (sLast || t)); sLast = t;
+  if (!paused && !document.hidden) sT += dt;
+  const bar = $('#svBars').querySelector(`i:nth-child(${barPos() + 1}) b`); if (bar) bar.style.width = Math.min(100, sT / DUR * 100) + '%';
+  if (sT >= DUR) { nextStory(); }
+  sRaf = requestAnimationFrame(storyTick);
+}
+const barPos = () => { const mi = FLAT[sIdx].mi; return FLAT.slice(0, sIdx).filter(x => x.mi === mi).length; };
+function nextStory(){ if (sIdx + 1 >= FLAT.length) { back(); return; } showStory(sIdx + 1, 1); }
+function prevStory(){ if (sIdx > 0) showStory(sIdx - 1, -1); else showStory(0, -1); }
+function nextMoment(d){ const mi = FLAT[sIdx].mi + d; if (mi < 0) return showStory(0, -1); if (mi >= MOMENTS.length) return back(); showStory(FLAT.findIndex(x => x.mi === mi), d); }
+function openStories(mi, instant){
+  S.stories = mi; storyEl.hidden = false; paused = false; storyEl.classList.remove('paused');
+  const sv = $('#sv'); sv.style.transition = 'none'; sv.style.transform = ''; sv.style.opacity = '';
+  showStory(FLAT.findIndex(x => x.mi === mi), 1);
+  if (!instant && storyEl.animate) storyEl.animate(reduce ? [{ opacity:0 }, { opacity:1 }] : [{ opacity:0, transform:'scale(.9)' }, { opacity:1, transform:'none' }], { duration:300, easing:'cubic-bezier(.2,.9,.25,1)' });
+  cancelAnimationFrame(sRaf); sLast = 0; sRaf = requestAnimationFrame(storyTick);
+}
+function closeStories(instant){
+  if (S.stories === null) return; S.stories = null; cancelAnimationFrame(sRaf); markSeen();
+  const sv = $('#sv');
+  if (instant || !storyEl.animate) { storyEl.hidden = true; return; }
+  sv.style.transition = 'transform .28s ease-in,opacity .28s'; sv.style.transform = reduce ? '' : 'translateY(60%) scale(.85)'; sv.style.opacity = 0;
+  setTimeout(() => { if (S.stories === null) storyEl.hidden = true; }, 290);
+}
+(() => { // tap left/right, hold to pause, swipe down to close, swipe sideways between months
+  let id = null, x0 = 0, y0 = 0, t0 = 0, held = false, hold = 0, mode = '';
+  const sv = $('#sv');
+  storyEl.addEventListener('pointerdown', e => {
+    if (e.target.closest('#svX')) return;
+    id = e.pointerId; x0 = e.clientX; y0 = e.clientY; t0 = performance.now(); held = false; mode = '';
+    try { storyEl.setPointerCapture(id); } catch (err) {}
+    clearTimeout(hold); hold = setTimeout(() => { held = true; paused = true; storyEl.classList.add('paused'); }, 220);
   });
-
-  /* ---------- share: the public address, same text and routes as index.html ---------- */
-  const SITE = 'https://karambinning.github.io/portfolio/';
-  const SHARE_TITLE = 'Karam Binning — portfolio';
-  const SHARE_TEXT = 'A humanities student at Loughborough who builds applications, software and small-scale infrastructure with Claude. Worth a look:';
-  const u = encodeURIComponent(SITE), t = encodeURIComponent(SHARE_TEXT);
-  $('#shUrl').value = SITE;
-  $('#shEmail').href = `mailto:?subject=${encodeURIComponent('Worth a look: ' + SHARE_TITLE)}&body=${encodeURIComponent(SHARE_TEXT + '\n\n' + SITE)}`;
-  $('#shWa').href = `https://wa.me/?text=${t}%20${u}`;
-  $('#shX').href = `https://x.com/intent/post?text=${t}&url=${u}`;
-  const shSay = s => { $('#shareNote').textContent = s; };
-  let qrDone = false, qrLoading = null;
-  const loadQr = () => qrLoading || (qrLoading = new Promise((res, rej) => {
-    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
-    s.onload = res; s.onerror = rej; document.head.appendChild(s);
-  }));
-  document.getElementById('sh').addEventListener('click', async e => {
-    const b = e.target.closest('[data-s]'); if (!b) return;
-    const k = b.dataset.s;
-    if (k === 'copy'){ try { await navigator.clipboard.writeText(SITE); shSay('> link copied. paste it anywhere.'); } catch (err) { $('#shUrl').select(); shSay('> select the link and copy it.'); } }
-    else if (k === 'native'){
-      if (navigator.share){ try { await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SITE }); } catch (err) {} }
-      else shSay('> this browser has no share sheet. use copy or a button above.');
-    }
-    else if (k === 'qr'){
-      const box = $('#shQr'), open = box.hidden; box.hidden = !open; b.setAttribute('aria-expanded', open);
-      if (!open || qrDone) return;
-      try { await loadQr(); } catch (err) {}
-      if (window.qrcode){
-        const q = qrcode(0, 'M'); q.addData(SITE); q.make();
-        const n = q.getModuleCount(), cell = 5, pad = 3, size = (n + pad * 2) * cell;
-        let r = ''; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) r += `<rect x="${(x + pad) * cell}" y="${(y + pad) * cell}" width="${cell}" height="${cell}"/>`;
-        $('#shQrBox').innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="140" height="140"><rect width="${size}" height="${size}" fill="#d8f6ff"/><g fill="#04080f">${r}</g></svg>`;
-        qrDone = true;
-      } else $('#shQrBox').textContent = SITE;
-    }
+  storyEl.addEventListener('pointermove', e => {
+    if (e.pointerId !== id) return; const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (!mode && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) { mode = Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 'down' : 'none') : 'side'; clearTimeout(hold); paused = true; }
+    if (mode === 'down') { sv.style.transition = 'none'; sv.style.transform = `translateY(${dy}px) scale(${Math.max(.8, 1 - dy / 1600)})`; }
+    if (mode === 'side') { sv.style.transition = 'none'; sv.style.transform = `translateX(${dx * .4}px)`; }
   });
+  const up = e => {
+    if (e.pointerId !== id) return; id = null; clearTimeout(hold);
+    const dx = e.clientX - x0, dy = e.clientY - y0, dt = performance.now() - t0;
+    sv.style.transition = 'transform .25s cubic-bezier(.2,.9,.25,1)'; sv.style.transform = '';
+    paused = false; storyEl.classList.remove('paused');
+    if (mode === 'down') { if (dy > 100 || dy / dt > .6) back(); return; }
+    if (mode === 'side') { if (Math.abs(dx) > 60) nextMoment(dx < 0 ? 1 : -1); return; }
+    if (mode || held || e.type === 'pointercancel') return;
+    (e.clientX < storyEl.clientWidth / 3 ? prevStory : nextStory)();
+  };
+  storyEl.addEventListener('pointerup', up); storyEl.addEventListener('pointercancel', up);
+  $('#svX').addEventListener('click', e => { e.stopPropagation(); back(); });
+  document.addEventListener('visibilitychange', () => { sLast = 0; });
+})();
+
+/* ---------- compose sheet (contact) ---------- */
+const cmp = $('#compose'), sheet = $('.sheet', cmp);
+function openCompose(instant){
+  S.compose = true; cmp.hidden = false; void cmp.offsetWidth;
+  if (instant) { sheet.style.transition = 'none'; cmp.classList.add('on'); void sheet.offsetWidth; sheet.style.transition = ''; } else cmp.classList.add('on');
+}
+function closeCompose(instant){
+  if (!S.compose) return; S.compose = false; cmp.classList.remove('on'); sheet.style.transform = '';
+  document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  if (instant) { cmp.hidden = true; return; }
+  setTimeout(() => { if (!S.compose) cmp.hidden = true; }, reduce ? 200 : 380);
+}
+$('#cmpCancel').addEventListener('click', () => back());
+$('#cmpScrim').addEventListener('click', () => back());
+[$('#cmpGrab'), $('#cmpBar')].forEach(el => pointerDrag(el, dy => { sheet.style.transition = 'none'; sheet.style.transform = `translateY(${Math.max(0, dy)}px)`; },
+  (dy, v) => { sheet.style.transition = ''; if (dy > 120 || v > .6) back(); else sheet.style.transform = ''; }));
+
+// Delivery: FormSubmit posts straight to the university inbox (same call and messages as index.html).
+const INBOX = 'K.S.Binning1-24@student.lboro.ac.uk';
+const tx = $('#tx'), txOut = $('#txOut');
+const txSay = (t, cls) => { txOut.innerHTML = ''; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); };
+const txLog = (t, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; txOut.appendChild(d); return d; };
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const txCount = $('#txCount'); tx.message.addEventListener('input', () => { txCount.textContent = tx.message.value.length + ' / 4000'; });
+tx.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); const nx = e.target.name === 'email' ? tx.subject : tx.message; nx.focus(); } });
+tx.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = new FormData(tx), email = (f.get('email') || '').trim(), subject = (f.get('subject') || '').trim(), message = (f.get('message') || '').trim();
+  if (f.get('botcheck')) return;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return txSay('✗ error: that email address doesn’t look right.', 'err');
+  if (!subject || !message) return txSay('✗ error: add a subject and a message.', 'err');
+  txOut.innerHTML = ''; txLog('$ send --to university-inbox', 'k'); await wait(160); txLog('packing message · ' + message.length + ' characters ✓', 'ok'); await wait(160); const tr = txLog('sending over https …');
+  try {
+    const r = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(INBOX), {
+      method:'POST', headers:{ 'Content-Type':'application/json', Accept:'application/json' },
+      body: JSON.stringify({ name: email, email, _replyto: email, _subject: 'Portfolio: ' + subject, message, _template: 'box', _captcha: 'false' }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && (j.success === 'true' || j.success === true)){ tr.textContent = 'sending over https ✓'; tr.className = 'ok'; txLog('delivered ✓ thank you. I’ll reply from my university email.', 'ok'); tx.email.value = tx.subject.value = tx.message.value = ''; txCount.textContent = '0 / 4000'; }
+    else if (/activ/i.test(j.message || '')) txLog('✗ this inbox link is still being switched on. For now, email me directly at ' + INBOX + '.', 'err');
+    else txLog('✗ error: the message didn’t send. Please email me directly at ' + INBOX + '.', 'err');
+  } catch (err) { txLog('✗ error: no connection. Please email me directly at ' + INBOX + '.', 'err'); }
+});
+
+/* ---------- share ---------- */
+const SITE = 'https://karambinning.github.io/portfolio/';
+const SHARE_TITLE = 'Karam Binning — portfolio';
+const SHARE_TEXT = 'A humanities student at Loughborough who builds applications, software and small-scale infrastructure with Claude. Worth a look:';
+$('#dkShare').addEventListener('click', async () => {
+  if (navigator.share) { try { await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SITE }); return; } catch (err) { if (err && err.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(SITE); toast('Link copied'); }
+  catch (err) { const i = document.createElement('input'); i.value = SITE; document.body.appendChild(i); i.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {} i.remove(); toast(ok ? 'Link copied' : SITE); }
+});
+
+/* ---------- router: every screen has a hash, so Back and the edge swipe close what is open ---------- */
+const SECT = { estate:'estate', agents:'agents', proposal:'research', dissertation:'dissertation' };
+function parse(h){
+  h = decodeURIComponent((h || '').replace(/^#/, ''));
+  if (!h || h === 'signal') return {};
+  if (h === 'work') return { work:1 };
+  if (h === 'timeline') return { stories:0 };
+  let m = h.match(/^timeline\/([0-3])$/); if (m) return { stories:+m[1] };
+  if (h === 'contact') return { compose:1 };
+  if (h === 'work/also') return { folder:1 };
+  m = h.match(/^work\/([\w-]+)$/); if (m && APPS[m[1]]) return { app:m[1], folder: !!APPS[m[1]].small && false };
+  if (SECT[h]) return { app:SECT[h] };
+  return {};
+}
+let fromRect = null;
+function apply(t, instant){
+  const r = fromRect; fromRect = null;
+  if (S.compose && !t.compose) closeCompose(instant);
+  if (S.stories !== null && t.stories === undefined) closeStories(instant);
+  if (S.app && S.app !== t.app) closeApp(instant || !!t.app);
+  if (S.folder && !t.folder) closeFolder(instant || !!t.app);
+  if (t.folder && !S.folder) openFolder(instant);
+  if (t.app && S.app !== t.app) openApp(t.app, r || findIcon(t.app), instant);
+  if (t.stories !== undefined && S.stories === null) openStories(t.stories, instant);
+  if (t.compose && !S.compose) openCompose(instant);
+  if (t.work) { const g = $('#workHead'); $('#homeScroll').scrollTo({ top: Math.max(0, g.offsetTop - 12), behavior: instant || reduce ? 'auto' : 'smooth' }); }
+}
+function go(hash, rect){ fromRect = rect || null; history.pushState({ kb:1 }, '', hash); apply(parse(hash)); }
+function back(){
+  if (history.state && history.state.kb) history.back();
+  else { history.replaceState(null, '', location.pathname + location.search); apply({}); }
+}
+addEventListener('popstate', () => apply(parse(location.hash)));
+
+$$('#grid [data-open]').forEach(b => b.addEventListener('click', () => go(hashOf(b.dataset.open), $('.tile', b).getBoundingClientRect())));
+$('#folderIco').addEventListener('click', () => go('#work/also'));
+$$('#foldGrid [data-open]').forEach(b => b.addEventListener('click', () => {
+  // the folder hands over to the app: replace its history entry so Back returns home
+  fromRect = $('.tile', b).getBoundingClientRect(); const h = hashOf(b.dataset.open);
+  if (history.state && history.state.kb) history.replaceState({ kb:1 }, '', h); else history.pushState({ kb:1 }, '', h);
+  apply(parse(h));
+}));
+$$('.ring').forEach(b => b.addEventListener('click', () => go(+b.dataset.story ? '#timeline/' + b.dataset.story : '#timeline')));
+$('#dkMail').addEventListener('click', () => go('#contact'));
+addEventListener('keydown', e => { if (e.key === 'Escape' && (S.app || S.folder || S.compose || S.stories !== null)) back();
+  if (S.stories !== null && e.key === 'ArrowRight') nextStory(); if (S.stories !== null && e.key === 'ArrowLeft') prevStory(); });
+
+/* ---------- boot: CRT power-on, first visit only ---------- */
+const boot = $('#boot');
+function enter(){
+  if (boot.hidden || boot.classList.contains('out')) return;
+  store.set('kb.booted', '1');
+  if (reduce) { boot.hidden = true; return; }
+  boot.classList.add('out'); home.classList.add('enter');
+  setTimeout(() => { boot.hidden = true; home.classList.remove('enter'); }, 560);
+}
+const deep = parse(location.hash);
+if (!store.get('kb.booted') && !Object.keys(deep).length && !/[?&]noboot/.test(location.search)) {
+  boot.hidden = false; boot.addEventListener('pointerdown', enter); setTimeout(enter, reduce ? 900 : 1700);
+}
+if (Object.keys(deep).length) apply(deep, true);
+window.__kb = { S, apply, parse };   // test hook
 })();
 </script>
 </body>
