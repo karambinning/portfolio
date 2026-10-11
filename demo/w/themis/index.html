@@ -89,6 +89,59 @@
     .tally{gap:2px 12px;padding:6px 10px} .tally .t-stat{gap:5px} .tally .t-stat strong{font-size:20px} .tally .t-stat span,.tally .t-stat em{font-size:10px}
     .stg{grid-template-columns:18px 80px minmax(0,1fr)} .stg .r{grid-column:2/-1}
   }
+
+  /* ---------- phones (≤ 600px): ASK is its own tab (the console, then the gates it lights); WHAT, HOW and SOURCES are the others ---------- */
+  @media (max-width:600px){
+    /* the pane buttons become a segmented control: one row, the current pane lit, every segment ≥ 44px */
+    .t-ctl{flex-wrap:nowrap;gap:0;padding:6px 12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+    .t-ctl::-webkit-scrollbar{display:none}
+    .t-ctl .sp{display:none}
+    .t-ctl .t-btn{box-sizing:border-box;min-height:46px;justify-content:center;text-align:center;font-size:12px;line-height:1.15;letter-spacing:.04em;white-space:normal}
+    .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+    .t-ctl [data-pane],.t-ctl [data-ask]{flex:1 1 0;padding:0 6px;letter-spacing:0;border:1px solid var(--line);margin-left:-1px;position:relative;transition:background .18s,box-shadow .18s}
+    .t-ctl [data-ask]{margin-left:0}
+    .t-ctl [data-pane][aria-pressed="true"],.t-ctl [data-ask][aria-pressed="true"]{z-index:1;border-color:color-mix(in srgb,var(--a) 75%,transparent);background:color-mix(in srgb,var(--a) 13%,var(--screen));box-shadow:inset 0 -3px 0 var(--a)}
+    .t-ctl [aria-pressed="true"] span{color:var(--text);text-shadow:0 0 10px color-mix(in srgb,var(--a) 60%,transparent)}
+    .t-ctl #clear,.t-ctl #demo{flex:none;padding:0 9px;margin-left:6px;border:1px solid color-mix(in srgb,var(--a) 45%,transparent)}
+    .t-ctl #demo{background:color-mix(in srgb,var(--a) 9%,transparent)}
+    .t-ctl #demo[aria-pressed="true"]{box-shadow:none;background:color-mix(in srgb,var(--a) 22%,var(--screen))}
+    .t-ctl .t-btn:active{transform:none;opacity:1;background:color-mix(in srgb,var(--a) 22%,var(--screen))}
+
+    body[data-ph="ask"] .left > .pane{display:none}
+    body[data-ph="pane"] .right,body[data-ph="pane"] .left > div:not(.pane){display:none}
+    .th{gap:14px;grid-template-columns:minmax(0,1fr)}
+    .right,.con,.left{min-width:0}
+    .pane .t-p{font-size:13.5px}
+    .pane .t-list li{font-size:13px;padding:6px 0 6px 18px}
+    .tb .cap{font-size:12px;letter-spacing:.06em;top:-9px}
+    .tb{padding:14px 10px 8px}
+    .tb .src{font-size:12px;line-height:1.5;flex-wrap:wrap;padding:3px 0}
+    .tb .src span{flex-basis:100%}
+    .outside{font-size:12px}
+    .stg{font-size:12px} .stg .r{font-size:12px;letter-spacing:.06em}
+
+    /* the console: one screen tall, the answer scrolls inside it, the questions and the input stay at the bottom like a chat */
+    .con{min-height:300px;height:var(--conH,440px)}
+    .tally{gap:2px 14px;padding:6px 10px}
+    .tally .t-stat span,.tally .t-stat em{font-size:12px;letter-spacing:.02em}
+    .log{font-size:12.5px;line-height:1.45;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .log .step,.log .q .sum,.res .why,.quote,.ans,.conf{font-size:12px}
+    .quote .ref,.decl,.res .tag{font-size:12px}
+    .res .head .conf{min-width:0;flex-basis:100%}
+    .presets{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;gap:6px;padding:6px 10px;scroll-snap-type:x proximity}
+    .presets::-webkit-scrollbar{display:none}
+    .pre{box-sizing:border-box;display:inline-flex;align-items:center;flex:none;min-height:44px;padding:0 11px;font-size:12px;scroll-snap-align:start;-webkit-user-select:none;user-select:none}
+    .pre:active{background:color-mix(in srgb,var(--c) 22%,var(--screen));border-color:var(--c)}
+    .ask{padding:2px 10px 4px;min-height:48px}
+    .ask label{font-size:16px}
+    .ask input{font-size:16px;min-height:44px;padding:0}
+    .legend{font-size:12px}
+  }
+  @media (max-width:374px){
+    .t-ctl #demo{width:44px;padding:0}
+    .t-ctl #demo span{display:block;width:1.1ch;overflow:hidden;white-space:nowrap}
+    .t-ctl #clear{padding:0 7px}
+  }
 </style>
 </head>
 <body data-self="themis" data-brand="[THEMIS]" data-icons="§ ¶ ⚖" data-unit="THEMIS · LEGAL RESEARCH AGENT · UNIT 03" data-status="MODELS" data-status-tail="LOCAL"
@@ -317,6 +370,47 @@
     if (demo === token){ demo = null; btn.setAttribute('aria-pressed', 'false'); }
   });
   boot();
+})();
+</script>
+<script>
+/* phones only (≤ 600px): an ASK tab for the console, chips and input that bring the console into view. Nothing here runs on a desktop. */
+(() => {
+  const PH = matchMedia('(max-width:600px)'), B = document.body, body = document.querySelector('.t-body'), ctl = document.querySelector('.t-ctl');
+  const con = document.querySelector('.con'), th = document.querySelector('.th'), smooth = KB.reduce ? 'auto' : 'smooth';
+  const panes = () => [...document.querySelectorAll('[data-pane]')];
+  let ask = null;
+  const size = () => { if (PH.matches) B.style.setProperty('--conH', Math.max(300, body.clientHeight - 16) + 'px'); };
+  const toCon = () => { if (B.dataset.ph === 'ask') body.scrollTo({ top: Math.max(0, th.offsetTop - 4), behavior: smooth }); };
+  function showAsk(){
+    B.dataset.ph = 'ask'; ask.setAttribute('aria-pressed', 'true'); panes().forEach(p => p.setAttribute('aria-pressed', 'false'));
+    KB.twitch(con);
+  }
+  function setup(){
+    if (!PH.matches){
+      if (ask){ ask.remove(); ask = null; delete B.dataset.ph; B.style.removeProperty('--conH');
+        const on = document.querySelector('.pane.on'); panes().forEach(p => p.setAttribute('aria-pressed', on && p.dataset.pane === on.id.slice(2))); }
+      return;
+    }
+    if (!ask){
+      ask = document.createElement('button'); ask.type = 'button'; ask.className = 't-btn'; ask.dataset.ask = '';
+      ask.innerHTML = '<span>ASK</span>'; ctl.prepend(ask);
+      ask.addEventListener('click', () => { showAsk(); toCon(); });
+      showAsk();
+    }
+    size();
+  }
+  panes().forEach(b => b.addEventListener('click', () => {
+    if (!ask) return; B.dataset.ph = 'pane'; ask.setAttribute('aria-pressed', 'false');
+    body.scrollTo({ top: Math.max(0, Math.min(body.scrollTop, th.offsetTop - 4)), behavior: smooth });
+  }));
+  document.getElementById('presets').addEventListener('click', e => { if (ask && e.target.closest('.pre')) toCon(); });
+  document.getElementById('q').addEventListener('focus', () => { if (ask) setTimeout(toCon, 50); });
+  document.getElementById('demo').addEventListener('click', e => {
+    if (!ask || e.currentTarget.getAttribute('aria-pressed') !== 'true') return; showAsk(); toCon();
+  });
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(size, 120); });
+  PH.addEventListener && PH.addEventListener('change', setup);
+  setup();
 })();
 </script>
 </body>
