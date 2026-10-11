@@ -141,7 +141,7 @@ body{animation:t-flicker 6s steps(1) infinite}
   input,textarea,select{font-size:16px}
   .t-head{padding:10px 14px 2px;gap:10px}
   .t-brand{font-size:16px}
-  .t-unit{padding:2px 14px 6px;font-size:11px;gap:8px}
+  .t-unit{padding:2px 14px 6px;font-size:12px;letter-spacing:.03em;gap:8px}
   .t-unit > span:first-child{min-width:0}
   .t-unit .live{white-space:nowrap;flex:none}
   .t-title{font-size:19px}
