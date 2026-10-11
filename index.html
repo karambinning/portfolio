@@ -56,7 +56,7 @@ body{animation:flicker 5s steps(1) infinite}
 .scene > .in-wrap{width:100%;max-width:1180px;margin:auto 0}
 /* big screens: the composition is designed at about 1280x800; above that it scales up as a whole to fill the screen
    (--z is 1 at or below 1280x800, so half-screen windows and phones are untouched) */
-html{zoom:var(--z,1)}
+html.zfit body{width:calc(100vw / var(--z));height:calc(100vh / var(--z));transform:scale(var(--z));transform-origin:0 0;overflow:hidden}
 .ch-id{display:block;font:500 12px/1 var(--mono);color:var(--phos);letter-spacing:.1em;margin-bottom:20px}
 h2.big{font:400 clamp(52px,9vw,124px)/.88 var(--display);margin-bottom:26px}
 /* Get in touch: the K·A·M title treatment (wide tracking, glow, blinking cursor), kept white */
@@ -1338,9 +1338,9 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     abPop.style.setProperty('--c', getComputedStyle(b).getPropertyValue('--c'));
     $('#abPath').textContent = '~/also-built/' + b.dataset.p; abPop.hidden = false;
     const t = $('#abText'); t.textContent = '';
-    const r = b.getBoundingClientRect(), w = abPop.offsetWidth;
-    abPop.style.left = Math.max(12, Math.min(innerWidth - w - 12, r.left)) + 'px';
-    abPop.style.top = 'auto'; abPop.style.bottom = (innerHeight - r.top + 10) + 'px';   // grows upward, never over the chip
+    const z = Z(), r = b.getBoundingClientRect(), w = abPop.offsetWidth;   // rects are on-screen pixels; the page may be scaled by z
+    abPop.style.left = Math.max(12, Math.min(innerWidth / z - w - 12, r.left / z)) + 'px';
+    abPop.style.top = 'auto'; abPop.style.bottom = ((innerHeight - r.top) / z + 10) + 'px';   // grows upward, never over the chip
     const txt = b.dataset.d; let k = 0;
     if (reduce){ t.textContent = txt; } else { const iv = setInterval(() => { if (abCur !== b){ clearInterval(iv); return; } k += 3; t.textContent = txt.slice(0, k); if (k >= txt.length) clearInterval(iv); }, 16); }
   }
@@ -1360,7 +1360,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
     if (fr && fr.contentWindow){
       return new Promise(res => {
         const on = e => { if (e.source !== fr.contentWindow || !e.data) return;
-          if (e.data.kbSeed){ const o = fr.getBoundingClientRect(), r = e.data.kbSeed; seedGlitch({ x: r.x + o.left, y: r.y + o.top, w: r.w, h: r.h }, color); }
+          if (e.data.kbSeed){ const o = fr.getBoundingClientRect(), r = e.data.kbSeed; const z = Z(); seedGlitch({ x: o.left + r.x * z, y: o.top + r.y * z, w: r.w * z, h: r.h * z }, color); }
           if (e.data.kbDismantled === mode){ off(); res(); } };
         const off = () => { removeEventListener('message', on); clearTimeout(tm); };
         const tm = setTimeout(() => { off(); res(); }, ms + 900);
@@ -1381,6 +1381,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   // the infection's entry point: a short, sharp glitch strikes exactly where the takeover begins (the first piece to go)
   function seedGlitch(r, col){
     if (reduce) return;
+    const z = Z(); r = { x: r.x / z, y: r.y / z, w: r.w / z, h: r.h / z };   // on-screen pixels -> page coordinates
     const box = document.createElement('div'), pad = 18;
     box.style.cssText = `position:fixed;left:${r.x - pad}px;top:${r.y - pad}px;width:${r.w + pad * 2}px;height:${r.h + pad * 2}px;z-index:60;pointer-events:none`;
     for (let k = 0; k < 7; k++){
@@ -1735,8 +1736,8 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   setInterval(() => { const s = (performance.now() - t0) / 1000; tc.textContent = `${pad(s/3600)}:${pad(s/60%60)}:${pad(s%60)}:${pad(s*25%25)}`; }, 40);
 
   /* ---------- big screens: scale the composition to fill them ---------- */
-  const fitZ = () => { const w = document.documentElement.clientWidth * (+getComputedStyle(document.documentElement).getPropertyValue('--z') || 1);
-    document.documentElement.style.setProperty('--z', Math.max(1, Math.min(outerWidth && innerWidth ? innerWidth / 1280 : w / 1280, innerHeight / 800, 2)).toFixed(3)); };
+  const Z = () => +getComputedStyle(document.documentElement).getPropertyValue('--z') || 1;
+  const fitZ = () => { const z = Math.max(1, Math.min(innerWidth / 1280, innerHeight / 800, 2)); document.documentElement.style.setProperty('--z', z.toFixed(3)); document.documentElement.classList.toggle('zfit', z > 1.001); };
   fitZ(); addEventListener('resize', fitZ);
 
   /* ---------- start: deep links, then the boot ---------- */
