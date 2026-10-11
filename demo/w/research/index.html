@@ -59,9 +59,9 @@
     .cards .ex{flex:0 0 86%;scroll-snap-align:start;scroll-snap-stop:always;background:rgba(2,12,22,.72);padding:13px 14px}
     .cards .ex:last-child{flex-basis:92%}
     .ex .k{font-size:12px;letter-spacing:.14em;margin-bottom:7px}
-    .q{font-size:15px;line-height:1.45}
+    .q{font-size:14.5px;line-height:1.45}
     .ex p{font-size:13px;line-height:1.5}
-    .ex li{font-size:13px;line-height:1.42;padding:4px 0 4px 14px}
+    .ex li{font-size:12.5px;line-height:1.4;padding:4px 0 4px 13px}
     .dots{display:flex;justify-content:center;gap:8px;margin-top:-4px}
     .dots i{width:6px;height:6px;background:rgba(0,212,255,.3);transition:background .2s,width .2s}
     .dots i.on{background:var(--k);width:18px}
@@ -69,7 +69,7 @@
     .btn{flex:1 1 100%;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 14px;font-size:12px;letter-spacing:.12em;text-align:center;-webkit-user-select:none;user-select:none;transition:transform .12s,background .12s}
     .btn:active{background:#fff;transform:scale(.98)}
     .note,.hold{font-size:12px;line-height:1.3;letter-spacing:.06em;padding:5px 7px}
-    .hold{flex:1 1 0;min-width:0}
+    .page > .hold{align-self:flex-start;margin-top:-2px}
   }
   @media (max-width:600px) and (prefers-reduced-motion:reduce){ .btn,.dots i{transition:none} .btn:active{transform:none} }
 </style>
@@ -215,7 +215,7 @@
   // phones: the three excerpts become one row of swipeable cards; back to the two columns if the window widens
   (function(){
     const page = document.querySelector('.page'), head = page.querySelector('.head'), cols = page.querySelectorAll('.col');
-    const ex = [...page.querySelectorAll('.ex')], row = page.querySelector('.row'), a = row.querySelector('a.btn');
+    const ex = [...page.querySelectorAll('.ex')], row = page.querySelector('.row'), a = row.querySelector('a.btn'), hold = document.getElementById('hold');
     let cards = null, dots = null;
     const mark = () => { let i = 0, b = 1e9; ex.forEach((c, k) => { const d = Math.abs(c.offsetLeft - ex[0].offsetLeft - cards.scrollLeft); if (d < b){ b = d; i = k; } });
       if (cards.scrollLeft + cards.clientWidth >= cards.scrollWidth - 2) i = ex.length - 1; [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i)); };
@@ -223,10 +223,10 @@
       if (PH.matches && !cards){
         cards = document.createElement('div'); cards.className = 'cards'; cards.append(...ex);
         dots = document.createElement('div'); dots.className = 'dots'; dots.setAttribute('aria-hidden', 'true'); dots.innerHTML = ex.map(() => '<i></i>').join('');
-        head.after(cards, dots, row); cards.addEventListener('scroll', mark, { passive:true }); mark();
+        head.after(row, cards, dots, hold); cards.addEventListener('scroll', mark, { passive:true }); mark();
         a.target = '_top'; a.removeAttribute('rel');      // the PDF opens in this tab; Back returns here
       } else if (!PH.matches && cards){
-        cols[0].append(ex[0], ex[1]); cols[1].append(ex[2], row); cards.remove(); dots.remove(); cards = dots = null;
+        cols[0].append(ex[0], ex[1]); cols[1].append(ex[2], row); row.append(hold); cards.remove(); dots.remove(); cards = dots = null;
         a.target = '_blank'; a.rel = 'noopener';
       }
     }

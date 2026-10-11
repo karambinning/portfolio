@@ -56,6 +56,38 @@
   .notapp{border:1px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);padding:9px 11px;font:600 12.5px/1.5 var(--mono);color:var(--text);margin:2px 0 0}
   .info .t-p{font-size:12.5px;line-height:1.5}
   .notapp b{color:var(--a);display:block;letter-spacing:.06em;margin-bottom:2px}
+/* ===phone=== */
+/* phones (≤ 600px): a handheld console — screen on top, the pad under it (kept in reach while the page scrolls),
+   tabs and switches as a segmented 3×2 pad. Nothing here applies above 600px. */
+@media (max-width:600px){
+  .t-unit{font-size:12px}
+  .t-body{gap:10px}
+  .ride{gap:14px}
+  .console{gap:10px}
+  .shell{padding:6px 8px 8px}
+  .shell-top{font:400 12px/1 "Silk",var(--mono);letter-spacing:.08em;padding:2px 2px 6px}
+  .pad{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;position:sticky;bottom:0;z-index:3;padding:8px 2px;
+    background:linear-gradient(transparent,#000 14px);-webkit-touch-callout:none}
+  .pad .dpad{gap:8px}
+  .pk{width:62px;height:56px;border-radius:4px;-webkit-tap-highlight-color:transparent;transition:transform .08s}
+  .pk.a{width:72px;height:72px;border-radius:50%}
+  .pk.down{transform:scale(.94);box-shadow:0 0 14px var(--a)}
+  .padhint{font:700 12px/1.45 var(--mono);color:#b3ae8a;letter-spacing:.02em}
+  .note{font-size:12px}
+  .notapp{font-size:12.5px}
+  .t-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:6px 10px 8px}
+  .t-ctl .sp{display:none}
+  .t-ctl .t-btn{justify-content:center;text-align:center;min-height:44px;padding:2px 4px;font-size:12.5px;line-height:1.15;
+    border:1px solid var(--line);background:color-mix(in srgb,var(--a) 4%,transparent);transition:background-color .15s,border-color .15s,transform .1s}
+  .t-ctl .t-btn::before,.t-ctl .t-btn::after{content:none}
+  .t-ctl .t-btn[data-pane]{border-color:color-mix(in srgb,var(--a) 30%,transparent)}
+  .t-ctl .t-btn[aria-pressed="true"]{border-color:var(--a);background:color-mix(in srgb,var(--a) 16%,transparent)}
+  .t-ctl .t-btn[aria-pressed="true"] span{color:var(--b)}
+  .t-ctl .t-btn:active{transform:scale(.96);background:color-mix(in srgb,var(--a) 22%,transparent)}
+}
+@media (max-width:360px){ .pk{width:54px} .pk.a{width:66px;height:66px} .pad{gap:6px} .padhint{font-size:12px;line-height:1.35} }
+@media (max-width:600px) and (prefers-reduced-motion:reduce){ .pk,.t-ctl .t-btn{transition:none} .pk.down,.t-ctl .t-btn:active{transform:none} }
+/* ===phone-end=== */
 </style>
 </head>
 <body data-self="ride" data-brand="[K·A·M RIDE]" data-icons="◎ ▲ ♪" data-unit="K·A·M RIDE · 8-BIT RIDE CONSOLE · UNIT 07"

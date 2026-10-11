@@ -201,6 +201,66 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
 
     .t-ctl .note{display:none}
   }
+  /* ---------- phone (≤600px): the brain fills the screen, the words scroll up beneath it, a machine profile is a full panel ---------- */
+  @media (max-width:600px){
+    .t-body.est{overscroll-behavior:contain;scroll-behavior:smooth}
+    /* the brain takes the whole window; the first callout title peeks in below it as the cue to scroll */
+    .stage{height:calc(100% - 38px);min-height:340px}
+    .host{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+    .hud{top:6px;width:calc(100% - 24px);white-space:normal;font-size:12px;letter-spacing:.06em;line-height:1.35}
+    .hud .big{font-size:30px;letter-spacing:.14em}
+    .tip{display:none!important}
+    .float{font-size:12px}
+    .mnode{min-height:44px;padding:5px 9px 6px;-webkit-tap-highlight-color:transparent}
+    .mnode b{font-size:22px}
+    .mnode .k{font-size:12px;letter-spacing:.04em}
+    .mnode:active{background:color-mix(in srgb,var(--c) 34%,var(--screen))}
+    .dock{bottom:4px;gap:2px;width:calc(100% - 20px)}
+    .zoom{width:100%;gap:6px;font-size:12px;letter-spacing:.06em}
+    .zoom span{flex:1;margin-right:0;min-width:0}
+    .zoom button{width:44px;height:44px;font:800 18px/44px var(--mono);-webkit-tap-highlight-color:transparent}
+    .zoom button:active{background:color-mix(in srgb,var(--a) 30%,var(--screen))}
+    .ticker{font-size:12px}
+    .ticker b{min-width:0;margin-right:6px}
+    .readout{bottom:96px;width:calc(100% - 20px);font-size:12.5px;padding:10px 12px}
+    .readout b{font-size:12px;padding-right:48px}
+    .readout button{right:0;top:0;width:44px;height:44px;text-align:center;line-height:44px;font-size:13px}
+    .readout button:active{color:var(--text)}
+    /* the words, beneath the brain */
+    .callouts{gap:18px;padding:14px 14px 28px}
+    .co h3{font-size:12.5px}
+    .co p{font-size:13px}
+    .co .chips{font-size:12px;letter-spacing:.04em;gap:6px 12px}
+    .tiers{font-size:12.5px}
+    .figs span{font-size:12px;letter-spacing:.04em}
+    .co .small{font-size:12px}
+    /* the control row: five even, thumb-sized cells; it stays put while a profile is open */
+    .term>.t-ctl{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:0 2px;padding:2px 8px calc(4px + env(safe-area-inset-bottom) * .5)}
+    .term>.t-ctl>.sp,.term>.t-ctl>.note{display:none}
+    .term>.t-ctl .t-btn{justify-content:center;min-width:44px;padding:0 4px;font-size:13.5px;letter-spacing:.02em}
+    .t-ctl .t-btn.m[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:inset 0 -2px 0 var(--c)}
+    body.ssh .t-ctl{display:flex}
+    /* intelligence profile: a full panel between the header and the control row, sliding up */
+    .profile{position:fixed;left:0;right:0;bottom:54px;width:auto;max-width:100%;z-index:25;border-left:0;border-top:2px solid var(--c);
+      box-shadow:0 -14px 34px rgba(0,0,0,.5);transform:translateY(100%);transition:transform .34s cubic-bezier(.2,.8,.2,1)}
+    .profile.open{transform:none}
+    .p-top{min-height:52px;padding:2px 12px 2px 6px;gap:8px}
+    .p-top .t-btn{font-size:14px;min-height:44px;padding:0 6px;-webkit-tap-highlight-color:transparent}
+    .p-top .tag{font-size:12px;letter-spacing:.08em;line-height:1.3;text-align:right;min-width:0}
+    .p-scroll{padding:10px 14px 22px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .p-ssh{font-size:12px;min-height:56px}
+    .p-body{gap:12px}
+    .p-name b{font-size:40px}
+    .p-name span,.p-where{font-size:12px}
+    .p-role,.p-sec .t-p{font-size:13px}
+    .p-specs{font-size:13px;gap:4px 14px}
+    .p-specs i{font-size:12px}
+    .runs li{font-size:13px;line-height:1.45}
+    .specs{font-size:13px} .specs dt{font-size:12px}
+    .stat-row{font-size:12px;gap:10px 16px} .stat-row small{font-size:12px}
+    .p-log-in{font-size:12px;white-space:normal}
+    .p-open{font-size:12px}
+  }
   @media (prefers-reduced-motion:reduce){
     .p-log-in .cur{animation:none}
     .mnode::before{animation:none;display:none}
@@ -228,7 +288,7 @@ addEventListener('message', function (e) { if (e.data && e.data.kbArrive) window
           <button type="button" id="zOut" aria-label="Zoom out">−</button><button type="button" id="zIn" aria-label="Zoom in">+</button><button type="button" id="zReset" aria-label="Reset view">⟲</button></div>
         <div class="ticker" id="ticker" aria-hidden="true"></div>
       </div>
-      <div class="profile" id="profile" role="region" aria-label="Intelligence profile" aria-hidden="true">
+      <div class="profile" id="profile" role="region" aria-label="Intelligence profile" aria-hidden="true" data-noswipe>
         <div class="p-top">
           <button class="t-btn" id="pBack"><span>◂ BACK TO THE BRAIN</span></button>
           <span class="sp"></span><span class="tag" id="pTag"></span>

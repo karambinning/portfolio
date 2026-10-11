@@ -378,6 +378,8 @@ const hubLocal = id => brain.worldToLocal(MX[id].pos.clone());
 let D = 7, zf = 1, offX = 0, offTgt = 0, sel = null, aspect = 1;
 const look = new THREE.Vector3(0, -.1, 0), lookTgt = look.clone(), camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
 const narrow = () => W() < 600;
+// phone layout (CSS ≤600px): every phone-only behaviour below is gated on this
+const PHONE = () => matchMedia('(max-width:600px)').matches, TOUCH = () => PHONE() && matchMedia('(pointer:coarse)').matches;
 function homeCam(){ camTgt.set(0, .35, D / zf); lookTgt.set(0, -.1, 0); offTgt = 0; }
 function layout(){
   const w = W(), h = H(); if (w < 20 || h < 20) return;
@@ -696,6 +698,13 @@ function fitProfile(){
   if (!profile.classList.contains('open')) return;
   const scr = pBody.querySelector('.p-screen'), isShow = !!(scr && scr.dataset.show), isLog = scr && (scr.classList.contains('p-log') || isShow);
   pBody.style.zoom = ''; if (scr){ scr.style.height = '0px'; scr.style.width = ''; }
+  if (PHONE()){
+    if (!scr) return;
+    const fw = scr.parentElement.getBoundingClientRect().width;
+    const hh = isShow ? fw / 1.45 : isLog ? scr.firstElementChild.getBoundingClientRect().height + 14 : fw * SCR_H / SCR_W;
+    scr.style.height = Math.round(hh) + 'px'; scr.style.width = '100%'; scr.style.setProperty('--s', (fw / SCR_W).toFixed(4));
+    return;
+  }
   const padB = 12, top = pScroll.getBoundingClientRect().top;
   const contentBottom = () => pBody.getBoundingClientRect().bottom - top + pScroll.scrollTop + padB;
   const room = () => pScroll.clientHeight - contentBottom() - 2;
@@ -727,7 +736,9 @@ function go(id){
   if (!narrow()) showCallouts(false);
   // phone: flush under the header (the frame's .term is the containing block for the fixed profile)
   profile.style.top = narrow() ? Math.round(document.querySelector('.term > header').getBoundingClientRect().bottom - termEl.getBoundingClientRect().top) + 'px' : '';   // phone: sit flush under the header
+  if (PHONE()){ const ctl = document.getElementById('ctl'); profile.style.bottom = Math.max(0, Math.round(termEl.getBoundingClientRect().bottom - ctl.getBoundingClientRect().top)) + 'px'; }
   profile.style.setProperty('--c', m.c); profile.classList.add('open'); profile.setAttribute('aria-hidden', 'false');
+  if (PHONE()) profile.querySelector('.p-scroll').scrollTop = 0;
   pTag.textContent = `INTELLIGENCE PROFILE · ${m.name.toUpperCase()}`;
   pBody.classList.remove('in'); stopShow(); pBody.innerHTML = render(m); requestAnimationFrame(fitProfile);
   const sh = pBody.querySelector('[data-show]'); if (sh && window.KBShow) stopShow = KBShow.mount(sh, sh.dataset.show);
@@ -735,7 +746,7 @@ function go(id){
   KB.beep(520, 50); KB.twitch(profile);
   log('SSH', ` connecting to ${m.name}…`, m.c);
   if (!reduce) for (let i = 0; i < 5; i++) setTimeout(() => sel === id && live && synapse(hubLocal(id), pick(graph.nodes).pos, m.c, 1.2), i * 160);
-  $('#pBack').focus({ preventScroll: true });
+  if (!TOUCH()) $('#pBack').focus({ preventScroll: true });
   const q = s => pSsh.querySelector(s);
   KB.type(q('.cmd'), `ssh ${id}`, 22)
     .then(() => my === seq && KB.type(q('.l1'), `→ tunnel up · brain ⇄ ${m.name} · key accepted`, 90))
@@ -755,7 +766,7 @@ function home(){
   hTop.textContent = '~/VAULT'; hTop.style.color = 'var(--a)'; hTail.textContent = '· inside the second brain';
   showCallouts(true);
   log('SSH', ' logout · back in the brain', '#00f0ff');
-  KB.beep(330, 50); nodeBtns[was].focus({ preventScroll: true });
+  KB.beep(330, 50); if (!TOUCH()) nodeBtns[was].focus({ preventScroll: true });
   dirty = true;
 }
 const BUILD_LOG = [
@@ -944,6 +955,7 @@ new ResizeObserver(layout).observe(host);
 layout();
 BOOT_BUILD();
 log('SYSTEM', ' vault mounted · 4 machines · lint clean', '#ff2e88');
+if (TOUCH()){ const zs = document.querySelector('.zoom span'); if (zs) zs.textContent = 'drag to turn · tap a node'; }
 if (reduce){
   floatAt('10-kam/notes/2026-10-09--globe-layer-ideas.md', byGroup['10-kam'][0].pos, DOM['10-kam'].col, 1e9);
   floatAt('intel → lake/reports/intel/markets/', LAKE, '#8b7bff', 1e9);
