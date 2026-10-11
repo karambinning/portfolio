@@ -218,6 +218,16 @@
   #pScr .cc,#pScr .facts{cursor:zoom-out}
   .tline{position:relative;padding-right:150px} .pclose{position:absolute;right:0;top:0}
   @media (max-width:760px){ .tline{padding-right:0} .pclose{position:static;margin-top:6px} }
+
+  /* hologram projection for profiles and the wheel */
+  .scr.holo{animation:hoOpen .62s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes hoOpen{0%{clip-path:inset(50% 0 50% 0);opacity:.55;filter:sepia(1) hue-rotate(150deg) saturate(3) brightness(1.5)}
+    55%{clip-path:inset(0 0 0 0);opacity:.75;filter:sepia(.8) hue-rotate(150deg) saturate(2.4) brightness(1.3)}
+    62%{opacity:.5} 68%{opacity:.85} 74%{opacity:.6} 100%{clip-path:inset(0 0 0 0);opacity:1;filter:none}}
+  .hl{position:fixed;left:0;right:0;height:2px;top:50%;z-index:60;pointer-events:none;background:#bff6ff;box-shadow:0 0 18px 5px rgba(0,212,255,.7)}
+  .hl.t{animation:hlT .62s cubic-bezier(.2,.8,.2,1) both} .hl.b{animation:hlB .62s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes hlT{0%{top:50%}85%{opacity:1}100%{top:0;opacity:0}} @keyframes hlB{0%{top:50%}85%{opacity:1}100%{top:100%;opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .scr.holo,.hl{animation:none} .hl{display:none} }
 </style>
 </head>
 <body data-channel data-self="agents" data-brand="[K·B AGENTS]" data-unit="K·B AGENT FLEET · SMALL-SCALE · SEMI-AUTONOMOUS" data-status="FLEET" data-status-tail="LIVE"
@@ -819,9 +829,14 @@
     SIMS[a.sim]($('simb'), a);
     KB.twitch($('prof'));
   }
+  function holo(el){
+    if (KB.reduce) return;
+    el.classList.remove('holo'); void el.offsetWidth; el.classList.add('holo');
+    ['t','b'].forEach(k => { const l = document.createElement('div'); l.className = 'hl ' + k; document.body.appendChild(l); setTimeout(() => l.remove(), 700); });
+  }
   function open(id){
     mode = 'profile';
-    $('sScr').classList.remove('on'); $('pScr').classList.add('on');
+    $('sScr').classList.remove('on'); $('pScr').classList.add('on'); holo($('pScr'));
     $('ctlS').hidden = true; $('ctlP').hidden = false;
     render(id);
     document.querySelector('.t-body').scrollTop = 0;
@@ -838,7 +853,7 @@
   document.addEventListener('click', e => { if (mode === 'profile' && e.target.closest('#pClose')) back(); });
   function back(){
     mode = 'select'; clear();
-    $('pScr').classList.remove('on'); $('sScr').classList.add('on');
+    $('pScr').classList.remove('on'); $('sScr').classList.add('on'); holo($('sScr'));
     $('ctlP').hidden = true; $('ctlS').hidden = false;
     const i = WHEEL.indexOf(curId); if (i >= 0 && i !== sel) go(i, false);
     banner(); layout(); KB.beep(330, 60);

@@ -439,6 +439,21 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 @keyframes shutter{0%{transform:none}18%{transform:translate3d(calc(var(--dir) * 2%),0,0);filter:brightness(1.6)}100%{transform:translate3d(calc(var(--dir) * 110%),0,0)}}
 .scene.redboot{animation:redboot .8s ease-out both}
 @keyframes redboot{0%{filter:sepia(1) hue-rotate(-50deg) saturate(5) brightness(1.8)}45%{filter:sepia(.6) hue-rotate(-50deg) saturate(3) brightness(1.2)}100%{filter:none}}
+/* ---------- hologram projection (agents) ---------- */
+.holo-lines[hidden]{display:none}
+.holo-lines{position:fixed;inset:0;z-index:49;pointer-events:none}
+.holo-lines i{position:absolute;left:0;right:0;height:2px;background:#bff6ff;box-shadow:0 0 18px 5px rgba(0,212,255,.7),0 0 2px #fff;top:50%}
+.holo-lines.closing i.t{animation:hlCloseT .32s cubic-bezier(.6,0,.4,1) both} .holo-lines.closing i.b{animation:hlCloseB .32s cubic-bezier(.6,0,.4,1) both}
+@keyframes hlCloseT{from{top:0}to{top:50%}} @keyframes hlCloseB{from{top:100%}to{top:50%}}
+.holo-lines.opening i.t{animation:hlOpenT .7s cubic-bezier(.2,.8,.2,1) both} .holo-lines.opening i.b{animation:hlOpenB .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes hlOpenT{0%{top:50%;opacity:1}85%{opacity:1}100%{top:0;opacity:0}} @keyframes hlOpenB{0%{top:50%;opacity:1}85%{opacity:1}100%{top:100%;opacity:0}}
+.scene.holo-close{animation:hoClose .32s cubic-bezier(.6,0,.4,1) both}
+@keyframes hoClose{to{clip-path:inset(50% 0 50% 0);filter:brightness(1.6)}}
+.scene.holo-open{animation:hoOpen .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes hoOpen{0%{clip-path:inset(50% 0 50% 0);opacity:.55;filter:sepia(1) hue-rotate(150deg) saturate(3) brightness(1.5)}
+  55%{clip-path:inset(0 0 0 0);opacity:.75;filter:sepia(.8) hue-rotate(150deg) saturate(2.4) brightness(1.3)}
+  62%{opacity:.5} 68%{opacity:.85} 74%{opacity:.6}
+  100%{clip-path:inset(0 0 0 0);opacity:1;filter:none}}
 /* ---------- the ssh terminal that opens into the vault ---------- */
 .sshw{position:fixed;z-index:49;left:50%;top:50%;width:min(620px,calc(100% - 32px));transform:translate(-50%,-50%);background:#03070d;border:1px solid rgba(0,212,255,.55);box-shadow:0 0 40px rgba(0,212,255,.18);font:500 13px/1.55 var(--mono);animation:stOpen .22s cubic-bezier(.2,.8,.2,1)}
 @keyframes stOpen{from{transform:translate(-50%,-50%) scale(.9);opacity:0}}
@@ -580,6 +595,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
 <div class="scan" aria-hidden="true"></div>
 <div class="roll" aria-hidden="true"></div>
 <div class="beam" id="beam" aria-hidden="true"></div>
+<div class="holo-lines" id="holoLines" hidden aria-hidden="true"><i class="t"></i><i class="b"></i></div>
 <div class="atk-tint" id="atkTint" aria-hidden="true"></div>
 <div id="atkLayer" hidden aria-hidden="true"></div>
 <div class="atk-fx" id="atkFx" hidden aria-hidden="true"><div class="atk-tears"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="atk-edge"></div></div>
@@ -747,7 +763,7 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
   </div>
 </section>
 
-<section class="scene" id="agents" data-name="THE AGENTS" aria-label="The agents">
+<section class="scene" id="agents" data-holo data-name="THE AGENTS" aria-label="The agents">
   <div class="in-wrap ag-ch">
     <div>
       <h2 class="mid">The agents</h2>
@@ -1509,6 +1525,17 @@ body.under-attack #stage{animation:shake .09s steps(2) infinite}
       b.scrollTop = 0; b.classList.add('active'); cur = n; update();
       await attackOut();
       busy = false; lockUntil = performance.now() + 300; return;
+    }
+    if (b.dataset.holo !== undefined || (a.dataset.holo !== undefined && !b.dataset.warp && !b.dataset.attack)){ // hologram projection: close to a line, then project open between two scan lines
+      const hl = $('#holoLines');
+      a.classList.add('holo-close'); hl.hidden = false; hl.className = 'holo-lines closing';
+      await new Promise(r => setTimeout(r, reduce ? 0 : 320));
+      a.classList.remove('active', 'holo-close'); restore(a);
+      b.scrollTop = 0; b.classList.add('active', 'holo-open'); cur = n; update();
+      hl.className = 'holo-lines opening';
+      await new Promise(r => setTimeout(r, reduce ? 0 : 700));
+      b.classList.remove('holo-open'); hl.hidden = true; hl.className = 'holo-lines';
+      busy = false; lockUntil = performance.now() + 250; return;
     }
     if (b.dataset.warp !== undefined){ // into the second brain: one continuous dive through an ssh terminal
       SFX.channel(); a.classList.add('crtoff');

@@ -598,7 +598,7 @@ function frame(now){
       else if (!hoverNode) brain.rotation.y += dt * .07;
     }
     if (live && T > nextFire){ nextFire = T + .22 + Math.random() * .25; fireRandom(); }
-    if (live && T > nextEvent){ nextEvent = T + 1.8 + Math.random() * 1.2; fireEvent(); }
+    if (filings && T > nextEvent){ nextEvent = T + 1.8 + Math.random() * 1.2; fireEvent(); }
     if (live && T > nextLint){ nextLint = T + 9; lintT = T; log('SYSTEM', ' lint pass · 0 faults', '#ff2e88'); }
   }
   // camera eases toward its target (snaps under reduced motion)
@@ -733,7 +733,7 @@ function go(id){
   pSsh.innerHTML = '<div><span class="pr">visitor@estate ~ %</span> <span class="cmd"></span></div><div class="l1"></div><div class="l2 ok"></div>';
   KB.beep(520, 50); KB.twitch(profile);
   log('SSH', ` connecting to ${m.name}…`, m.c);
-  if (!reduce) for (let i = 0; i < 5; i++) setTimeout(() => sel === id && synapse(hubLocal(id), pick(graph.nodes).pos, m.c, 1.2), i * 160);
+  if (!reduce) for (let i = 0; i < 5; i++) setTimeout(() => sel === id && live && synapse(hubLocal(id), pick(graph.nodes).pos, m.c, 1.2), i * 160);
   $('#pBack').focus({ preventScroll: true });
   const q = s => pSsh.querySelector(s);
   KB.type(q('.cmd'), `ssh ${id}`, 22)
@@ -800,7 +800,9 @@ const showCallouts = on => cos.forEach(c => c.classList.toggle('hide', !on));
    same window, expands it to full screen and constructs the scene on a timeline. Nothing is created per frame: the build
    only moves a clipping plane, draw ranges, scales, visibility and opacity. Reduced motion shows the finished state. */
 const BUILD_END = 2.8, FR = 6, BAR = 27;   // frame inset from the edges, and its title bar
-let buildT0 = null, waiting = false, finalDone = false, live = true, hubsLive = true, buildY = 99;
+// nothing ambient runs until the build has made the things it needs: firing and the lint once the links are drawn,
+// hub filings once the hubs exist
+let buildT0 = null, waiting = false, finalDone = false, live = false, filings = false, hubsLive = true, buildY = 99;
 let revealed = false, titleTyped = false, firstFire = false, logIdx = 0;
 const ease = k => 1 - Math.pow(1 - Math.max(0, Math.min(1, k)), 3);
 const clamp01 = k => Math.max(0, Math.min(1, k));
@@ -868,8 +870,9 @@ function applyBuild(s){
   HOLO.visible = s > 1.15; HOLO.scale.setScalar(.75 + .25 * ease((s - 1.15) / .5));
   if (orbitLine) orbitLine.visible = s > 1.35;
   floatsEl.style.opacity = clamp01((s - 1.3) / .4);
-  live = s > 1.45;
-  if (live && !firstFire){ firstFire = true; for (let i = 0; i < 5; i++) fireRandom(); }
+  live = s > 1.7; filings = s > 2.0;
+  if (live && !firstFire){ firstFire = true; for (let i = 0; i < 5; i++) fireRandom(); nextFire = T + .3; nextLint = T + 3; nextEvent = T + 99; }
+  if (filings && nextEvent > T + 50) nextEvent = T + .6;
   // 3 · the hubs spawn from a point with a ring, then start to orbit
   IDS.forEach((id, i) => { MX[id].spawn = ease((s - 1.4 - i * .08) / .35); nodeBtns[id].classList.toggle('pre', s < 1.75 + i * .07); });
   hubsLive = s > 1.85;
@@ -889,7 +892,7 @@ function finalize(){
   linkGeo.setDrawRange(0, nLinks * 2);
   CONSTRUCT.visible = false; HOLO.visible = true; HOLO.scale.setScalar(1); if (orbitLine) orbitLine.visible = true;
   floatsEl.style.opacity = ''; hud.style.opacity = ''; dockEl.style.opacity = '';
-  live = true; hubsLive = true; IDS.forEach(id => { MX[id].spawn = 1; nodeBtns[id].classList.remove('pre'); });
+  live = true; filings = true; hubsLive = true; IDS.forEach(id => { MX[id].spawn = 1; nodeBtns[id].classList.remove('pre'); });
   countK = 1; counts();
   if (!titleTyped){ titleTyped = true; bigEl.textContent = 'THE ESTATE'; }
   if (!revealed){ revealed = true; reveal(); }
@@ -900,6 +903,11 @@ function startBuild(){
   if (sel) home(); closeReadout();
   buildT0 = performance.now(); waiting = false; finalDone = false;
   revealed = titleTyped = firstFire = false; logIdx = 0; blog.innerHTML = '';
+  // a replay starts clean: nothing left in flight from before
+  live = filings = false;
+  while (firings.length) kill(firings.pop());
+  PENDING.length = 0; FL.forEach(f => f.el.remove()); FL.length = 0;
+  nextFire = T + 99; nextEvent = T + 99; nextLint = T + 99;
   bigEl.textContent = ''; cos.forEach(c => c.classList.add('hide'));
   IDS.forEach(id => nodeBtns[id].classList.add('pre'));
   for (const id of IDS) MX[id].spawn = 0;
