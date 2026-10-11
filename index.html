@@ -723,6 +723,149 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   .scene.out,.scene.in,.beam.go,.twitch,dialog[open],.boot.off{animation:none}
   #static{display:none}
 }
+/* ======================================================================================
+   PHONES (≤ 600px). The same portfolio, laid out for a thumb: an app shell with a compact top bar, a bottom tab bar
+   (the channel dial), one full-screen channel per page, swipe up/down between them. Nothing here applies above 600px.
+   (The timeline channel is owned elsewhere and is deliberately not styled here.)
+   ====================================================================================== */
+.wk-dots,.ab-scrim,.ab-x{display:none}
+@media (max-width:600px){
+  :root{--top:calc(env(safe-area-inset-top) + 46px);--tab:56px;--tabh:calc(var(--tab) + env(safe-area-inset-bottom));--bot:calc(var(--tabh) + 26px)}
+  html,body{height:100%;height:100dvh;overscroll-behavior:none}
+  body{position:fixed;inset:0;width:100%;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  a,button,label,.file,.ab{-webkit-tap-highlight-color:transparent}
+  .mark,.readout,.term,.dial,.wk-head,.wk-dots,.also-k,.ab,.btn,.sh-h,.tx-bar,.tv-bar,.ab-bar{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input,textarea,select{font-size:16px}
+
+  /* top bar: K·B, the channel and the clock, inside the safe area */
+  #stage::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(var(--top) + 8px);z-index:35;pointer-events:none;background:linear-gradient(var(--void) 72%,transparent)}
+  .mark{top:env(safe-area-inset-top);left:6px;padding:13px 10px 11px;font-size:20px;letter-spacing:.12em}
+  .mark:active{opacity:.6}
+  .readout{top:env(safe-area-inset-top);right:16px;height:46px;gap:9px;font-size:11px;letter-spacing:.06em;max-width:calc(100vw - 92px)}
+  .readout > span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .readout .lbl{display:inline;color:var(--text)}
+  .readout #tc{flex:none;font-variant-numeric:tabular-nums}
+
+  /* bottom: the typing line, then the dial as a tab bar */
+  .chrome-fade{display:block;height:calc(var(--bot) + 18px);background:linear-gradient(transparent,var(--void) 34%)}
+  .term{left:16px;right:16px;bottom:calc(var(--tabh) + 6px);font-size:11px;line-height:16px}
+  .dial{left:0;right:0;bottom:0;gap:0;padding:0 2px env(safe-area-inset-bottom);background:rgba(4,8,15,.94);border-top:1px solid #12263e;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);counter-reset:ch;box-shadow:0 -1px 0 rgba(0,212,255,.06)}
+  .dial button{flex:1 1 0;min-width:0;width:auto;height:var(--tab);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;counter-increment:ch;position:relative;transition:background .15s}
+  .dial button::after{content:counter(ch,decimal-leading-zero);font:500 12px/1 var(--mono);letter-spacing:.04em;color:#7f9fbf;transition:color .2s}
+  .dial button i{width:16px;height:3px;transition:width .25s,background .2s}
+  .dial button[aria-current="true"] i{width:26px;height:3px}
+  .dial button[aria-current="true"]::after{color:var(--phos);text-shadow:0 0 10px rgba(0,212,255,.7)}
+  .dial button[aria-current="true"]::before{content:"";position:absolute;inset:6px 3px;border:1px solid rgba(0,212,255,.28);background:rgba(0,212,255,.06)}
+  .dial button:hover i{background:var(--rule)} .dial button[aria-current="true"]:hover i{background:var(--phos)}
+  .dial button:active{background:rgba(0,212,255,.1)}
+  .dial button:focus-visible{outline-offset:-3px}
+
+  /* every channel is one full-screen page; a tall one scrolls inside, and only a swipe at its end changes channel */
+  .scene:not(#timeline){padding:var(--top) 16px var(--bot);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .scene.chan{padding:var(--top) 0 var(--tabh)}
+  .scene.chan .chan-app{height:100%}
+  .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;font-size:14px;transition:background .12s,color .12s,transform .1s}
+  .btn:active{transform:scale(.97);background:color-mix(in srgb,var(--phos) 22%,transparent)}
+  .btn:hover{background:transparent;color:var(--phos)} .btn.quiet:hover{color:var(--text)}
+
+  /* CH01 signal: the hero on one screen */
+  #signal > .in-wrap{margin:auto 0}
+  #signal .kb-logo{padding-left:12px;margin-bottom:14px}
+  #signal .name{font-size:clamp(54px,min(18.5vw,10.5vh),84px);margin-bottom:8px}
+  #signal .kb-sub{font-size:11px;letter-spacing:.18em;line-height:1.45}
+  #signal .kb-net{font-size:11px;letter-spacing:.12em;line-height:1.4;align-items:flex-start;margin-top:8px}
+  #signal .kb-net i{margin-top:3px;flex:none}
+  #signal .kb-status{margin-bottom:14px}
+  #signal .kb-status div{padding:7px 10px}
+  #signal .kb-status span{font-size:11px;letter-spacing:.14em}
+  #signal .kb-status b{font-size:12.5px}
+  #signal .lede{font-size:14px;line-height:1.55}
+  #signal .actions{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #signal .howto{display:none}
+  #signal .actions::after{content:"↑  swipe up to change channel";grid-column:1/-1;text-align:center;font-size:12px;letter-spacing:.06em;color:var(--dim);margin-top:4px}
+
+  /* CH03 the work: the eight terminals as a swipeable deck, then "also built" as a row of chips */
+  .wk-head{margin-bottom:12px;gap:5px}
+  .wk-chip{font-size:11px;letter-spacing:.12em;line-height:1.3}
+  .wk-title{font-size:clamp(26px,8.4vw,34px)}
+  .wk-hint{font-size:12px;line-height:1.4}
+  #work .files{display:flex;position:relative;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;gap:12px;margin:0 -16px;padding:2px 16px 6px;scroll-padding:0 16px;scrollbar-width:none}
+  #work .files::-webkit-scrollbar{display:none}
+  #work .file{flex:0 0 calc(100% - 44px);scroll-snap-align:start;min-height:0;transition:border-color .15s,transform .12s}
+  #work .file:hover{transform:none;box-shadow:none;border-color:color-mix(in srgb,var(--acc) 30%,#0d1e35)}
+  #work .file:active{transform:scale(.98);border-color:var(--acc)}
+  #work .file .wt-c{opacity:1;animation:blink 1s steps(1) infinite}
+  #work .file .wt-bar{font-size:11px;padding:8px 10px}
+  #work .file h3{font-size:19px;margin:8px 0 6px}
+  #work .file p{font-size:13.5px;line-height:1.5}
+  #work .file .open{margin-top:10px;font-size:13px;padding:8px 0 2px}
+  .wk-dots{display:flex;justify-content:center;gap:6px;margin:8px 0 2px}
+  .wk-dots i{width:6px;height:6px;background:#1e3a5f;transition:width .25s,background .2s}
+  .wk-dots i.on{width:18px;background:var(--phos);box-shadow:0 0 8px var(--phos)}
+  .also{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;margin:10px -16px 0;padding:0 16px;gap:0 8px;scrollbar-width:none;scroll-snap-type:x proximity;
+    -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .also::-webkit-scrollbar{display:none}
+  .also-k{flex:none;font-size:12px}
+  .ab{flex:none;min-height:44px;display:inline-flex;align-items:center;padding:0 10px;font-size:12px;scroll-snap-align:start;border:1px solid color-mix(in srgb,var(--c) 32%,transparent);background:color-mix(in srgb,var(--c) 6%,transparent)}
+  .ab:hover{text-shadow:none;text-decoration:none}
+  .ab[aria-expanded="true"],.ab:active{text-shadow:0 0 12px var(--c);border-color:var(--c)}
+  /* tapping a chip opens its README as a bottom sheet */
+  .ab-scrim:not([hidden]){display:block;position:fixed;inset:0;z-index:68;background:rgba(2,5,10,.66);animation:abFade .2s ease-out}
+  @keyframes abFade{from{opacity:0}}
+  .ab-pop{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto;max-height:72dvh;overflow:auto;z-index:70;pointer-events:auto;
+    border-width:1px 0 0;padding-bottom:env(safe-area-inset-bottom);font-size:14px;animation:abUp .3s cubic-bezier(.2,.8,.2,1);box-shadow:0 -14px 60px rgba(0,0,0,.75),0 0 30px color-mix(in srgb,var(--c,var(--phos)) 22%,transparent)}
+  @keyframes abUp{from{transform:translateY(100%)}}
+  .ab-bar{min-height:48px;padding:0 4px 0 14px;font-size:12px}
+  .ab-x{all:unset;box-sizing:border-box;cursor:pointer;margin-left:auto;width:44px;height:44px;display:grid;place-items:center;color:var(--text);font-size:16px}
+  .ab-x:active{opacity:.6}
+  .ab-body{padding:14px 18px 22px}
+  .ab-pr{font-size:12px}
+  .ab-body p{font-size:14.5px;line-height:1.6}
+
+  /* contact: everything stacks, the buttons sit in a clean grid, the message box stays usable with the keyboard up */
+  #contact .ct{gap:22px;align-items:stretch}
+  h2.kamh{font-size:clamp(38px,12.4vw,56px);margin-bottom:14px}
+  #contact .copy{font-size:14px}
+  #contact .mail{font-size:clamp(16px,5.2vw,22px)}
+  #contact .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px!important}
+  #contact .actions .btn{padding:10px 8px;font-size:13px;text-align:center}
+  #contact .actions .btn.hack,#contact .actions .btn.inbox{grid-column:1/-1}
+  .btn.inbox .arw{transform:rotate(90deg);animation:none}
+  .sh{max-width:none;margin-top:18px;padding:10px 12px}
+  .sh-h{font-size:11px;letter-spacing:.1em}
+  .sh-hint{color:#6f93b8}
+  .sh-link{padding-bottom:4px;margin-bottom:4px}
+  .sh-link input{font-size:16px}
+  .sh-row{gap:0 14px}
+  .sh-b{min-height:44px;display:inline-flex;align-items:center}
+  .sh-b:active{opacity:.6}
+  .tx-bar{font-size:11px;padding:10px 12px}
+  .tx-f span{font-size:12px}
+  .tx-f input,.tx-f textarea{font-size:16px;padding:10px 11px;border-radius:0}
+  .tx-ctl{gap:10px}
+  .tx-btn{min-height:46px;display:inline-flex;align-items:center;justify-content:center;flex:1}
+  .tx-btn.go{flex:2}
+  .tx-btn:active{transform:scale(.97)}
+  .tx-out{font-size:12.5px}
+  /* the on-screen keyboard is up: the bars step aside, the page fits what is left */
+  html.kb #stage{bottom:auto;top:var(--vvt,0px);height:var(--vvh,100%)}
+  html.kb .dial,html.kb .term,html.kb .chrome-fade{display:none}
+  html.kb .scene:not(#timeline){padding-bottom:20px}
+
+  /* a project opens full screen inside the portfolio, with one clear way out */
+  dialog.full{width:100%;max-width:none;height:100%;height:100dvh;max-height:none;margin:0;border:0;box-shadow:none}
+  dialog::backdrop{background:var(--void)}
+  dialog.full .tv-bar{min-height:calc(50px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 6px 0 16px;font-size:12px;gap:10px;border-bottom-color:color-mix(in srgb,var(--acc) 35%,var(--rule))}
+  dialog.full .tv-bar #dvTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;text-shadow:0 0 12px color-mix(in srgb,var(--acc) 50%,transparent)}
+  .tv-pop{display:none!important}
+  .tv-bar .close{margin-left:auto;min-height:44px;min-width:44px;box-sizing:border-box;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:var(--text);border-color:color-mix(in srgb,var(--acc) 45%,var(--rule))}
+  .tv-bar .close:active{background:color-mix(in srgb,var(--acc) 20%,transparent)}
+}
+@media (max-width:600px) and (prefers-reduced-motion:reduce){
+  .ab-pop,.ab-scrim:not([hidden]){animation:none}
+  .dial button i,.wk-dots i{transition:none}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
 <script src="demo/_frame/dismantle.js?v=10111540"></script>
@@ -1731,7 +1874,7 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   let ty = null, tTop = false, tBot = false;
   addEventListener('touchstart', e => { const s = scenes[cur]; ty = e.touches[0].clientY; tTop = !canScroll(s, -1); tBot = !canScroll(s, 1); }, { passive:true });
   addEventListener('touchend', e => {
-    if (ty === null || dv.open) return;
+    if (ty === null || dv.open || isPhone()) return;   // phones: see "phones" below
     const dy = ty - e.changedTouches[0].clientY; ty = null;
     if (dy > 50 && tBot) go(cur + 1); else if (dy < -50 && tTop) go(cur - 1);
   }, { passive:true });
@@ -1771,6 +1914,67 @@ body.under-defence #stage{animation:shake .12s steps(2) 6}
   const Z = () => +getComputedStyle(document.documentElement).getPropertyValue('--z') || 1;
   const fitZ = () => { const z = Math.max(1, Math.min(innerWidth / 1280, innerHeight / 800, 2)); document.documentElement.style.setProperty('--z', z.toFixed(3)); document.documentElement.classList.toggle('zfit', z > 1.001); };
   fitZ(); addEventListener('resize', fitZ);
+
+  /* ---------- phones (≤ 600px): an app shell around the same channels. Nothing here runs above 600px. ---------- */
+  function isPhone(){ return matchMedia('(max-width:600px)').matches; }
+  (function phone(){
+    // 1. the page never rubber-bands: a drag only moves something that can actually scroll that way
+    const scroller = (el, ax, d) => { for (let n = el; n && n !== document.body && n !== document.documentElement; n = n.parentElement){
+      const cs = getComputedStyle(n), ov = ax === 'x' ? cs.overflowX : cs.overflowY; if (!/(auto|scroll)/.test(ov)) continue;
+      if (ax === 'x' ? n.scrollWidth > n.clientWidth + 1 : (d > 0 ? n.scrollTop + n.clientHeight < n.scrollHeight - 1 : n.scrollTop > 0)) return n; } return null; };
+    let sx = 0, sy = 0, g = null;
+    addEventListener('touchmove', e => {
+      if (!isPhone() || e.touches.length > 1 || !e.cancelable) return;
+      const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy, el = e.target;
+      if (!el.closest || el.closest('input,textarea,select')) return;
+      if (Math.abs(dx) > Math.abs(dy)){ if (!scroller(el, 'x')) e.preventDefault(); }
+      else if (!scroller(el, 'y', dy < 0 ? 1 : -1)) e.preventDefault();
+    }, { passive:false });
+    // 2. swipe up / down changes channel, like a feed, but only from the end of a tall channel, and never sideways, from a field, or with a sheet open
+    const typing = () => /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '');
+    addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY;
+      if (!isPhone() || e.touches.length > 1){ g = null; return; }
+      const s = scenes[cur]; g = { x: sx, y: sy, t: performance.now(), up: !canScroll(s, -1), down: !canScroll(s, 1), el: e.target }; }, { passive:true });
+    addEventListener('touchend', e => {
+      if (!g) return; const s = g; g = null; const t = e.changedTouches[0], dx = t.clientX - s.x, dy = s.y - t.clientY;
+      if (dv.open || !abPop.hidden || typing() || busy) return;
+      if (s.el.closest && s.el.closest('input,textarea,select,.ab-pop,.ab-scrim,.dial')) return;
+      if (Math.abs(dy) < 50 || Math.abs(dy) < Math.abs(dx) * 1.3 || performance.now() - s.t > 900) return;
+      if (dy > 0 && s.down) go(cur + 1); else if (dy < 0 && s.up) go(cur - 1);
+    }, { passive:true });
+    // 3. the work: a dot per terminal under the deck, following the swipe
+    const files = $('#files');
+    if (files){
+      const dots = document.createElement('div'); dots.className = 'wk-dots'; dots.setAttribute('aria-hidden', 'true');
+      dots.innerHTML = FILES.map(() => '<i></i>').join(''); files.after(dots);
+      const setDot = () => { const mid = files.scrollLeft + 16; let k = 0, best = 1e9;
+        [...files.children].forEach((c, i) => { const d = Math.abs(c.offsetLeft - mid); if (d < best){ best = d; k = i; } });
+        [...dots.children].forEach((d, i) => d.classList.toggle('on', i === k)); };
+      let raf = 0; files.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; setDot(); }); }, { passive:true }); setDot();
+    }
+    // 4. "also built": on a phone a tap opens the README as a bottom sheet (no hover popup)
+    if (isPhone()) document.body.appendChild(abPop);   // above the tab bar, outside the channel
+    const scrim = document.createElement('div'); scrim.className = 'ab-scrim'; scrim.hidden = true; document.body.appendChild(scrim);
+    const abX = document.createElement('button'); abX.type = 'button'; abX.className = 'ab-x'; abX.setAttribute('aria-label', 'Close'); abX.textContent = '✕';
+    abPop.querySelector('.ab-bar').appendChild(abX);
+    abX.addEventListener('click', () => abHide()); scrim.addEventListener('click', () => abHide());
+    new MutationObserver(() => { scrim.hidden = abPop.hidden || !isPhone(); }).observe(abPop, { attributes: true, attributeFilter: ['hidden'] });
+    ['mouseenter', 'mouseleave', 'focus', 'blur'].forEach(ev => document.addEventListener(ev, e => {
+      if (isPhone() && e.target.closest && e.target.closest('.ab')) e.stopPropagation(); }, true));
+    // 5. a project opens full screen in the portfolio's own frame; the system back gesture closes it
+    new MutationObserver(() => { if (dv.open && isPhone() && !(history.state && history.state.kbDlg)) history.pushState({ kbDlg: 1 }, ''); })
+      .observe(dv, { attributes: true, attributeFilter: ['open'] });
+    addEventListener('popstate', () => { if (dv.open) dv.close(); });
+    dv.addEventListener('close', () => { if (history.state && history.state.kbDlg) history.back(); });
+    // 6. the on-screen keyboard: the bars step aside and the field being typed in stays in view
+    const vv = window.visualViewport, root = document.documentElement;
+    const onVV = () => { if (!vv) return; const k = isPhone() && typing() && innerHeight - vv.height > 120;
+      root.classList.toggle('kb', k); root.style.setProperty('--vvh', vv.height + 'px'); root.style.setProperty('--vvt', vv.offsetTop + 'px'); };
+    if (vv){ vv.addEventListener('resize', onVV); vv.addEventListener('scroll', onVV); }
+    document.addEventListener('focusin', e => { if (!isPhone() || !/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+      setTimeout(() => { onVV(); e.target.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' }); }, 320); });
+    document.addEventListener('focusout', () => setTimeout(onVV, 120));
+  })();
 
   /* ---------- start: deep links, then the boot ---------- */
   scenes.forEach(textNodes);
