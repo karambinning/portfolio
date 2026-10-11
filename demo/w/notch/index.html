@@ -79,8 +79,8 @@
 #scr .hwnotch{position:absolute;top:0;left:50%;width:200px;height:32px;transform:translateX(-50%);background:#000;border-radius:0 0 10px 10px;z-index:5}
 /* a call to action until the viewer has opened the notch once */
 #scr .cta{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:center}
-#scr .cta i{width:216px;height:42px;margin-top:-6px;border-radius:0 0 16px 16px;border:2px solid #ff66cc;border-top:0;box-shadow:0 0 18px #ff66cc;animation:ctaRing 1.6s ease-in-out infinite}
-#scr .cta b{margin-top:10px;font:700 13px/1 var(--sf,-apple-system,sans-serif);letter-spacing:.06em;color:#fff;background:#ff2e88;padding:6px 11px;border-radius:999px;box-shadow:0 0 18px rgba(255,46,136,.7);animation:ctaBob 1.6s ease-in-out infinite}
+#scr .cta i{display:none}
+#scr .cta{top:64px;z-index:6} #scr .cta b{margin-top:0;font:700 13px/1 var(--sf,-apple-system,sans-serif);letter-spacing:.06em;color:#fff;background:#ff2e88;padding:6px 11px;border-radius:999px;box-shadow:0 0 18px rgba(255,46,136,.7);animation:ctaBob 1.6s ease-in-out infinite}
 #scr .cta .cta-p{display:none}
 #scr.seen .cta{display:none}
 @keyframes ctaRing{50%{opacity:.25;transform:scale(1.04)}}

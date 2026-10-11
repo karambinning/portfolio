@@ -109,6 +109,10 @@ function pal() {
   const t = THEMES[UI.theme];
   P = { bg: t.screen, ink: t.ink, ink2: t.ink2, lab: t.label, acc: t.accent,
         d1: mix(t.screen, t.ink2, .10), d2: mix(t.screen, t.ink2, .22), d3: mix(t.screen, t.ink2, .42), dw: mix(t.screen, t.ink, .45) };
+  // the whole window wears the theme, not just the game screen
+  const WIN = { kam: ["#00d4ff", "#aa66ff"], ride: ["#ffe400", "#ffffff"], nes: ["#fca044", "#f83800"], vboy: ["#ff1a1a", "#ff5050"] }[t.id] || ["#ffe400", "#ffffff"];
+  document.body.style.setProperty("--a", WIN[0]); document.body.style.setProperty("--b", WIN[1]);
+  document.body.dataset.theme = t.id;
 }
 pal();
 const species = () => SPECIES.find(s => s.id === UI.species) || SPECIES[0];
